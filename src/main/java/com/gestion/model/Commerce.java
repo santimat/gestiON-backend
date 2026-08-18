@@ -17,13 +17,13 @@ public class Commerce {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, name = "business_name")
     private String businessName;
 
     @Column(nullable = false, unique = true, length = 100)
     private String address;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, unique = true, length = 100, name = "phone_number")
     private String phoneNumber;
 
     @Column(nullable = false, unique = true, length = 100)

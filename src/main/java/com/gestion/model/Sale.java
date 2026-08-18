@@ -1,6 +1,5 @@
 package com.gestion.model;
 
-import com.gestion.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,10 +20,15 @@ public class Sale {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "commerce_id")
     private Commerce commerce;
 
+    @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
 
     private Float subtotal;
@@ -33,9 +37,11 @@ public class Sale {
 
     private Float total;
 
+    @Column(name = "created_at")
     private Date createdAt;
 
     private String observations;
 
-    private Enum state;
+    @Enumerated(EnumType.STRING)
+    private SaleStatus status;
 }
