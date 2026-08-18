@@ -20,11 +20,16 @@ public class Sale {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "commerce_id")
     private Commerce commerce;
 
-    private Enum paymentMethod;
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
 
     private Float subtotal;
 
@@ -32,9 +37,11 @@ public class Sale {
 
     private Float total;
 
+    @Column(name = "created_at")
     private Date createdAt;
 
     private String observations;
 
-    private Enum state;
+    @Enumerated(EnumType.STRING)
+    private SaleStatus status;
 }

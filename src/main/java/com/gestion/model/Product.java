@@ -14,35 +14,38 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table (name = "products")
+@Table(name = "products")
 public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    @Column(length = 50, nullable = false)
     private String name;
 
     @Column
     private String description;
 
-    @Column
+    @Column(nullable = false)
     private Float costPrice;
 
-    @Column
+    @Column(nullable = false)
     private Float salePrice;
 
-    @Column
     private String image;
 
-    @Column
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
     private Category category;
 
+    @Column(nullable = false, name = "min_stock")
     private Integer minStock;
 
+    @Column(nullable = false, name = "current_stock")
     private Integer currentStock;
 
-    private Date updateDate;
+    @Column(nullable = false, name = "updated_at")
+    private Date updatedAt;
 
 }
