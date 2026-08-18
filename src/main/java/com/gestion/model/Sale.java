@@ -1,5 +1,6 @@
 package com.gestion.model;
 
+import com.gestion.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,7 +25,7 @@ public class Sale {
 
     private Commerce commerce;
 
-    private Enum paymentMethod;
+    private PaymentMethod paymentMethod;
 
     private Float subtotal;
 
