@@ -33,7 +33,8 @@ public class Product {
     @Column(nullable = false)
     private Float salePrice;
 
-    private String image;
+    @Column(name = "image_url")
+    private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
