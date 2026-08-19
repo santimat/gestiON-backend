@@ -2,10 +2,7 @@ package com.gestion.dto.request.user;
 
 import com.gestion.enums.Role;
 import com.gestion.enums.UserStatus;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public record UserRequest(
         @NotBlank(message = "Name is required")
@@ -24,6 +21,11 @@ public record UserRequest(
         Role role,
 
         @NotNull(message = "User status is required")
-        UserStatus status
+        UserStatus status,
+
+        @NotNull(message = "Commerce ID is required")
+        @Positive(message = "Commerce ID must be a positive number")
+        Long commerceId
+
 ) {
 }
