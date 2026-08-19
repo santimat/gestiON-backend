@@ -1,10 +1,17 @@
 package com.gestion.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "sale_details")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class SaleDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
