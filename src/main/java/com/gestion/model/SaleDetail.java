@@ -1,6 +1,7 @@
 package com.gestion.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 
 @Entity
 @Table(name = "sale_details")
