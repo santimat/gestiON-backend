@@ -6,8 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -46,7 +48,12 @@ public class Product {
     @Column(nullable = false, name = "current_stock")
     private Integer currentStock;
 
+    @CreationTimestamp
+    @Column(nullable = false, name = "created_at")
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
     @Column(nullable = false, name = "updated_at")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 
 }
