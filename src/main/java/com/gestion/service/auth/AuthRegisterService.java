@@ -8,6 +8,4 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class AuthRegisterService {
     private final PasswordEncoder passwordEncoder;
-
-    
 }
