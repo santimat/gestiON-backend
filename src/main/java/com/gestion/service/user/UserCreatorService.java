@@ -3,6 +3,7 @@ package com.gestion.service.user;
 import com.gestion.dto.request.user.UserRequest;
 import com.gestion.exception.DuplicateResourceException;
 import com.gestion.mappers.UserMapper;
+import com.gestion.model.Commerce;
 import com.gestion.model.User;
 import com.gestion.repository.JpaUserRepository;
 import lombok.AllArgsConstructor;
@@ -16,15 +17,16 @@ public class UserCreatorService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
-    public User createUser(UserRequest request) {
-        // ifPresent ejecuta una función si eixste un usuario con ese email.
-        // al tirar la excepción no hace falta un return, ya que el throw corta la ejecución de lo de debajo.
-        userRepository.findByEmail(request.email()).ifPresent((user) -> {
+    public User createUser(UserRequest request, Commerce commerce) {
+        // existsByEmail retorna un boolean
+        if (userRepository.existsByEmail(request.email())) {
+            // al tirar la excepción no hace falta un return, ya que el throw corta la ejecución de lo de debajo.
             throw new DuplicateResourceException("User with email " + request.email() + " already exists");
-        });
+        }
 
         User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setCommerce(commerce);
         return userRepository.save(user);
     }
 }
