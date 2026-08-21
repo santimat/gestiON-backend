@@ -1,4 +1,4 @@
-package com.gestion.repository.category;
+package com.gestion.repository;
 
 import com.gestion.model.Category;
 import org.springframework.data.jpa.repository.JpaRepository;

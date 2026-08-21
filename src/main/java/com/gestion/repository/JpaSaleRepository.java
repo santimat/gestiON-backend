@@ -1,4 +1,4 @@
-package com.gestion.repository.sale;
+package com.gestion.repository;
 
 import com.gestion.model.Sale;
 import org.springframework.data.jpa.repository.JpaRepository;

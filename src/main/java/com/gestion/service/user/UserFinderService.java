@@ -2,17 +2,17 @@ package com.gestion.service.user;
 
 import com.gestion.exception.ResourceNotFoundException;
 import com.gestion.model.User;
-import com.gestion.repository.user.JpaUserRepository;
+import com.gestion.repository.JpaUserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
 public class UserFinderService {
-    private final JpaUserRepository jpaUserRepository;
+    private final JpaUserRepository userRepository;
 
     public User findById(Long id) {
-        return jpaUserRepository.findById(id)
+        return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
     }
 }
