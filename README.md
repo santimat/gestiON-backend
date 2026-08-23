@@ -28,3 +28,12 @@ Se crearon excepciones generales permitiendo pasarles el mensaje de error para q
 
 Se crean mappers separados de los DTO, para seguir cumpliendo con el principio de responsabilidad única.
 Estos mappers tienen la anotación @Component para poder ser reconocidos e inyectados por Spring.
+
+### Uso de EntityManager para proxys
+
+Esta clase nos permite crear proxys de las entidades. 
+Estos van a ser objetos que solo existen en memoria. Los cuales nos van a permitir crear las relaciones entre 
+entidades ahorrandonos consultas a la base de datos.
+- Por ejemplo en el ProductCreatorService se usa uno de estos proxys para la relación del producto con el comercio. De 
+esta forma solo con el id podemos establecer la relación.
+En este caso es usable debido a que el comercio va a estar validado ya que llega desde el jwt token previamente validado por el filtro de seguridad.
