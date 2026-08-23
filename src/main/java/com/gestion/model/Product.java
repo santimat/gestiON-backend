@@ -1,7 +1,7 @@
 package com.gestion.model;
 
+import com.gestion.enums.ProductStatus;
 import jakarta.persistence.*;
-import jdk.jfr.Category;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -30,10 +31,10 @@ public class Product {
     private String description;
 
     @Column(nullable = false)
-    private Float costPrice;
+    private BigDecimal costPrice;
 
     @Column(nullable = false)
-    private Float salePrice;
+    private BigDecimal salePrice;
 
     @Column(name = "image_url")
     private String imageUrl;
@@ -47,6 +48,13 @@ public class Product {
 
     @Column(nullable = false, name = "current_stock")
     private Integer currentStock;
+
+    @Enumerated(EnumType.STRING)
+    private ProductStatus status;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "commerce_id")
+    private Commerce commerce;
 
     @CreationTimestamp
     @Column(nullable = false, name = "created_at")
