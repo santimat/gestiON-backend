@@ -9,11 +9,12 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class UserDeleterService {
     private final JpaUserRepository userRepository;
-    private final UserFinderService userFinderService;
-
+    private final UserFinderByService userFinderByService;
 
     public void delete(Long id) {
-        User user = userFinderService.findById(id);
+
+        // TODO: chequear la eliminación debido a que este puede tener relaciones.
+        User user = userFinderByService.findById(id);
         userRepository.delete(user);
     }
 }

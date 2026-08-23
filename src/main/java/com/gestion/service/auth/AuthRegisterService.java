@@ -23,5 +23,4 @@ public class AuthRegisterService {
         userCreatorService.createUser(userRequest, commerce);
         // TODO: enviar correo de confirmación al usuario
     }
-
 }
