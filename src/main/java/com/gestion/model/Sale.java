@@ -1,5 +1,7 @@
 package com.gestion.model;
 
+import com.gestion.enums.PaymentMethod;
+import com.gestion.enums.SaleStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
