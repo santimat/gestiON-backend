@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class UserDeleterService {
     private final JpaUserRepository userRepository;
-    private final UserFinderByService userFinderByService;
+    private final UserFinderByIdService userFinderByService;
 
     public void delete(Long id) {
 
