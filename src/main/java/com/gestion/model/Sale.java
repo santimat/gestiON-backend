@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Entity
@@ -33,11 +34,11 @@ public class Sale {
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
 
-    private Float subtotal;
+    private BigDecimal subtotal;
 
     private Double discount;
 
-    private Float total;
+    private BigDecimal total;
 
     @Column(name = "created_at")
     private Date createdAt;

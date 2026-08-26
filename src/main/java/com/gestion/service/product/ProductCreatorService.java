@@ -19,7 +19,7 @@ public class ProductCreatorService {
     private final ProductMapper productMapper;
     private final EntityManager entityManager;
 
-    public Product createProduct(ProductRequest request) {
+    public Product createProduct(ProductRequest request, Long commerceId) {
 
         Category category = categoryFinderByIdService.findById(request.categoryId());
         Product newProduct = productMapper.toEntity(request);
@@ -27,7 +27,7 @@ public class ProductCreatorService {
 
         // para crear el proxy tomamos la referencía de la clase con Commerce.class y luego le pasamos el id del comercio que viene en el request
         // Este va a ser una instancia del objeto Commerce que solo vive en memoria y va a contener simplemente el id del comercio.
-        Commerce commerceProxy = entityManager.getReference(Commerce.class, request.commerceId());
+        Commerce commerceProxy = entityManager.getReference(Commerce.class, commerceId);
         newProduct.setCommerce(commerceProxy);
 
         // TODO: trabajar lo de la imagen
