@@ -1,15 +1,18 @@
-package com.gestion.dto.request.sale;
+package com.gestion.dto.response.sale;
 
 import com.gestion.enums.PaymentMethod;
 import com.gestion.enums.SaleStatus;
 
 import java.util.Date;
 
-public record SaleRequest(
+
+public record SaleResponse(
+        Long id,
+        String userName,
         PaymentMethod paymentMethod,
-        BigDecimal subtotal,
+        Float subtotal,
         Double discount,
-        BigDecimal total,
+        Float total,
         Date createdAt,
         String observations,
         SaleStatus status

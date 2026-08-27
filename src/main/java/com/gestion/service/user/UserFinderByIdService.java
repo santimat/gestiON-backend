@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
-public class UserFinderByService {
+public class UserFinderByIdService {
     private final JpaUserRepository userRepository;
 
     public User findById(Long id) {
