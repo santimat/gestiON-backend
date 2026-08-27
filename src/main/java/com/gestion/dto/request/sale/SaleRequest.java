@@ -1,7 +1,18 @@
 package com.gestion.dto.request.sale;
 
-public record SaleRequest(
+import com.gestion.enums.PaymentMethod;
+import com.gestion.enums.SaleStatus;
 
-        List <SaleDetailRequest> saleDetails,
+import java.util.Date;
+
+public record SaleRequest(
+        PaymentMethod paymentMethod,
+        BigDecimal subtotal,
+        Double discount,
+        BigDecimal total,
+        Date createdAt,
+        String observations,
+        SaleStatus status
+
 ) {
 }
