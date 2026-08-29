@@ -3,6 +3,7 @@ package com.gestion.dto.request.sale;
 import com.gestion.enums.PaymentMethod;
 import com.gestion.enums.SaleStatus;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 public record SaleRequest(
