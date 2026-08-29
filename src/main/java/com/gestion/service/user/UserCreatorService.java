@@ -18,9 +18,7 @@ public class UserCreatorService {
     private final UserMapper userMapper;
 
     public User createUser(UserRequest request, Commerce commerce) {
-        // existsByEmail retorna un boolean
         if (userRepository.existsByEmail(request.email())) {
-            // al tirar la excepción no hace falta un return, ya que el throw corta la ejecución de lo de debajo.
             throw new DuplicateResourceException("User with email " + request.email() + " already exists");
         }
 
