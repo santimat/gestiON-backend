@@ -4,7 +4,6 @@ import com.gestion.utils.TokenPayload;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -14,14 +13,14 @@ import java.util.Date;
 
 
 @Service
-@AllArgsConstructor
 public class JwtService {
-    @Value("${jwt.secret}")
     private final String secretWord;
-
-    // Expiration time in milliseconds
-    @Value("${jwt.expiration}")
     private final Long expirationTime;
+
+    public JwtService(@Value("${jwt.secret}") String secretWord, @Value("${jwt.expiration}") Long expirationTime) {
+        this.secretWord = secretWord;
+        this.expirationTime = expirationTime;
+    }
 
     public Key getSecretKey() {
         return Keys.hmacShaKeyFor(secretWord.getBytes());
