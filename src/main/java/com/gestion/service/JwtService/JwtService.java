@@ -1,4 +1,4 @@
-package com.gestion.service.JWTService;
+package com.gestion.service.JwtService;
 
 import com.gestion.utils.TokenPayload;
 import io.jsonwebtoken.Claims;
@@ -30,6 +30,7 @@ public class JwtService {
     public String generateToken(TokenPayload payload) {
         return Jwts.builder()
                 .subject(payload.email())
+                .claim("name", payload.name())
                 .claim("userId", payload.userId())
                 .claim("role", payload.role())
                 .issuedAt(new Date())
