@@ -11,8 +11,8 @@ public class CommerceDeleterService {
     private final JpaCommerceRepository jpaCommerceRepository;
     private final CommerceFinderByIdService commerceFinderByService;
 
-    public void delete(Long id){
-        Commerce commerce = commerceFinderByService.findBy(id);
+    public void delete(Long id) {
+        Commerce commerce = commerceFinderByService.findById(id);
         jpaCommerceRepository.delete(commerce);
     }
 }

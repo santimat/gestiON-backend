@@ -3,7 +3,6 @@ package com.gestion.controller.user;
 import com.gestion.dto.request.user.UserRequest;
 import com.gestion.dto.response.user.UserResponse;
 import com.gestion.mappers.UserMapper;
-import com.gestion.model.Commerce;
 import com.gestion.model.User;
 import com.gestion.service.user.UserCreatorService;
 import lombok.AllArgsConstructor;
@@ -22,8 +21,8 @@ public class UserPostController {
     private final UserMapper userMapper;
 
     @PostMapping
-    public ResponseEntity<UserResponse> create(@RequestBody UserRequest request, Commerce commerce) {
-        User user = userCreatorService.createUser(request, commerce);
+    public ResponseEntity<UserResponse> create(@RequestBody UserRequest request) {
+        User user = userCreatorService.createUser(request);
         UserResponse response = userMapper.toResponse(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

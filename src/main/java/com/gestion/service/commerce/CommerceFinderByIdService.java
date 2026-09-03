@@ -11,8 +11,8 @@ import org.springframework.stereotype.Service;
 public class CommerceFinderByIdService {
     private final JpaCommerceRepository jpaCommerceRepository;
 
-    public Commerce findBy(Long id){
+    public Commerce findById(Long id) {
         return jpaCommerceRepository.findById(id).
-                orElseThrow(()-> new ResourceNotFoundException("Commerce with id " + id + "not found"));
+                orElseThrow(() -> new ResourceNotFoundException("Commerce with id " + id + "not found"));
     }
 }

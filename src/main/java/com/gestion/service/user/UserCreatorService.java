@@ -6,6 +6,7 @@ import com.gestion.mappers.UserMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.User;
 import com.gestion.repository.JpaUserRepository;
+import com.gestion.service.commerce.CommerceFinderByIdService;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,13 +15,16 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class UserCreatorService {
     private final JpaUserRepository userRepository;
+    private final CommerceFinderByIdService commerceFinderByIdService;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
-    public User createUser(UserRequest request, Commerce commerce) {
+    public User createUser(UserRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateResourceException("User with email " + request.email() + " already exists");
         }
+
+        Commerce commerce = commerceFinderByIdService.findById(request.commerceId());
 
         User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(user.getPassword()));

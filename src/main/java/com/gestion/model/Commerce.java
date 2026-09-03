@@ -29,6 +29,6 @@ public class Commerce {
     @Column(nullable = false, unique = true, length = 100)
     private String cuit;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = true)
     private String logoUrl;
 }

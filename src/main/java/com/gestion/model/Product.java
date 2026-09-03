@@ -36,7 +36,7 @@ public class Product {
     @Column(nullable = false)
     private BigDecimal salePrice;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", nullable = true)
     private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
