@@ -64,4 +64,7 @@ public class Product {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "image_name", nullable = true)
+    private String imageName;
+
 }
