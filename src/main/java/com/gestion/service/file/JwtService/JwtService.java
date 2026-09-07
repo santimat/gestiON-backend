@@ -1,4 +1,4 @@
-package com.gestion.service.JwtService;
+package com.gestion.service.file.JwtService;
 
 import com.gestion.utils.TokenPayload;
 import io.jsonwebtoken.Claims;

@@ -17,7 +17,6 @@ public class MinioConfig {
     @Value("${minio.access-key}")
     private String accessKey;
 
-
     @Bean
     public MinioClient minioClient(){
         return MinioClient.builder()

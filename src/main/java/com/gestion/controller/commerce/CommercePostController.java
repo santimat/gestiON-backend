@@ -3,6 +3,7 @@ package com.gestion.controller.commerce;
 import com.gestion.dto.request.commerce.CommerceRequest;
 import com.gestion.dto.response.commerce.CommerceResponse;
 import com.gestion.service.commerce.CommerceCreatorService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ public class CommercePostController {
     private final CommerceCreatorService commerceCreatorService;
 
     @PostMapping()
-    public ResponseEntity<CommerceResponse> createCommerce(@RequestBody CommerceRequest request) {
+    public ResponseEntity<CommerceResponse> createCommerce(@RequestBody @Valid CommerceRequest request) {
         CommerceResponse newCommerce = commerceCreatorService.createCommerce(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(newCommerce);
     }

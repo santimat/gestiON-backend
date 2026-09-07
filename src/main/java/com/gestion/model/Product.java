@@ -27,8 +27,11 @@ public class Product {
     @Column(length = 50, nullable = false)
     private String name;
 
-    @Column
+    @Column(length = 200, nullable = true)
     private String description;
+
+    @Column(name = "image_name", nullable = true)
+    private String imageName;
 
     @Column(nullable = false)
     private BigDecimal costPrice;
@@ -36,8 +39,6 @@ public class Product {
     @Column(nullable = false)
     private BigDecimal salePrice;
 
-    @Column(name = "image_url", nullable = true)
-    private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
@@ -63,8 +64,5 @@ public class Product {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @Column(name = "image_name", nullable = true)
-    private String imageName;
 
 }

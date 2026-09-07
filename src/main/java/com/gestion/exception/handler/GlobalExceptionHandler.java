@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Toma la clase ya que esta existe en build-time
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<String> handleUserNotFoundException(ResourceNotFoundException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
@@ -23,13 +22,12 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(FileManagerException.class)
-    public ResponseEntity<String> handleFileManagerException(FileManagerException exception) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exception.getMessage());
+    public ResponseEntity<String> handleFileException(FileManagerException exception){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
     }
 
-    // Caso general para cualquier otra excepción no manejada
     @ExceptionHandler(Exception.class)
-    public String handleException(Exception exception) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " + exception.getMessage()).toString();
+    public ResponseEntity<String> handleException(Exception exception) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " + exception.getMessage());
     }
 }

@@ -5,6 +5,7 @@ import com.gestion.dto.response.user.UserResponse;
 import com.gestion.mappers.UserMapper;
 import com.gestion.model.User;
 import com.gestion.service.user.UserCreatorService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class UserPostController {
     private final UserMapper userMapper;
 
     @PostMapping
-    public ResponseEntity<UserResponse> create(@RequestBody UserRequest request) {
+    public ResponseEntity<UserResponse> create(@RequestBody @Valid UserRequest request) {
         User user = userCreatorService.createUser(request);
         UserResponse response = userMapper.toResponse(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
