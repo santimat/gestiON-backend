@@ -4,6 +4,7 @@ import com.gestion.enums.PaymentMethod;
 import com.gestion.enums.SaleStatus;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public record SaleRequest(
@@ -11,7 +12,7 @@ public record SaleRequest(
         BigDecimal subtotal,
         Double discount,
         BigDecimal total,
-        Date createdAt,
+        LocalDateTime createdAt,
         String observations,
         SaleStatus status
 

@@ -14,7 +14,7 @@ public class CommerceMapper {
                 commerce.getAddress(),
                 commerce.getPhoneNumber(),
                 commerce.getCuit(),
-                commerce.getLogoUrl()
+                commerce.getLogoName()
         );
     }
 

@@ -30,5 +30,5 @@ public class Commerce {
     private String cuit;
 
     @Column(unique = true, nullable = true)
-    private String logoUrl;
+    private String logoName;
 }

@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "offers")
 @AllArgsConstructor
@@ -22,5 +24,12 @@ public class Offer {
     @JoinColumn(name = "product_id")
     private Product product;
 
+    @Column(nullable = false)
     private Double value;
+
+    @Column(name="start_date")
+    private LocalDateTime startDate;
+
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
 }

@@ -27,6 +27,11 @@ public class SaleDetail {
     @JoinColumn(name = "product_id")
     private Product product;
 
+    // el optional es porque puede que se tenga o no oferta
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "offer_id")
+    private Offer offer;
+
     @Column(nullable = false)
     private Integer quantity;
 
