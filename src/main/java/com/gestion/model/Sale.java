@@ -31,6 +31,10 @@ public class Sale {
     @JoinColumn(name = "commerce_id")
     private Commerce commerce;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id")
+    private Client client;
+
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
 
