@@ -19,6 +19,9 @@ public class CommerceMapper {
     }
 
     public Commerce toEntity(CommerceRequest request) {
+        if(request == null) {
+            return null;
+        }
         Commerce commerce = new Commerce();
         commerce.setBusinessName(request.businessName());
         commerce.setAddress(request.address());

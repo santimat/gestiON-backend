@@ -7,6 +7,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class CategoryMapper {
     public Category toEntity(CategoryRequest request) {
+        if(request == null) {
+            return null;
+        }
         Category category = new Category();
         category.setName(request.name());
         return category;
