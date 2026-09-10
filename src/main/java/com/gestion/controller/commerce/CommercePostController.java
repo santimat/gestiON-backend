@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CommercePostController {
     private final CommerceCreatorService commerceCreatorService;
 
-    @PostMapping()
+    @PostMapping
     public ResponseEntity<CommerceResponse> createCommerce(@RequestBody @Valid CommerceRequest request) {
         CommerceResponse newCommerce = commerceCreatorService.createCommerce(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(newCommerce);
