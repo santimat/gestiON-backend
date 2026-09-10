@@ -27,10 +27,10 @@ public class Product {
     @Column(length = 50, nullable = false)
     private String name;
 
-    @Column(length = 200, nullable = true)
+    @Column(length = 200)
     private String description;
 
-    @Column(name = "image_name", nullable = true)
+    @Column(name = "image_name")
     private String imageName;
 
     @Column(nullable = false)
@@ -38,7 +38,6 @@ public class Product {
 
     @Column(nullable = false)
     private BigDecimal salePrice;
-
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")

@@ -23,7 +23,6 @@ public class Client {
     @Column(name = "last_name")
     private String lastName;
 
-    @Column
     private String address;
 
     @Column(name = "phone_number")
