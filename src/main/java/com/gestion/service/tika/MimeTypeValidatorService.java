@@ -1,7 +1,7 @@
 package com.gestion.service.tika;
 
 
-import com.gestion.exception.FileManagerException;
+import com.gestion.exception.FileException;
 import org.apache.tika.Tika;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,12 +22,11 @@ public class MimeTypeValidatorService {
     );
 
     public static boolean isValidMimeType(MultipartFile file) {
-        try{
+        try {
             String fileMimeType = tika.detect(file.getInputStream());
             return ALLOWED_MIME_TYPES.contains(fileMimeType);
-        }catch(IOException e){
-            throw new FileManagerException("Error while validating file mime type: " + e.getMessage());
+        } catch (IOException e) {
+            throw new FileException("Error while validating file mime type: " + e.getMessage());
         }
-
     }
 }

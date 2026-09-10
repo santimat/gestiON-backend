@@ -1,7 +1,7 @@
 package com.gestion.exception.handler;
 
 import com.gestion.exception.DuplicateResourceException;
-import com.gestion.exception.FileManagerException;
+import com.gestion.exception.FileException;
 import com.gestion.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +21,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
     }
 
-    @ExceptionHandler(FileManagerException.class)
-    public ResponseEntity<String> handleFileException(FileManagerException exception){
+    @ExceptionHandler(FileException.class)
+    public ResponseEntity<String> handleFileException(FileException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
     }
 

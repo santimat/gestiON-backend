@@ -1,7 +1,7 @@
 package com.gestion.config;
 
 import com.gestion.mappers.UserPrincipalMapper;
-import com.gestion.service.file.JwtService.JwtService;
+import com.gestion.service.JwtService.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
