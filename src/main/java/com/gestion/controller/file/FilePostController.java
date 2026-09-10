@@ -1,13 +1,10 @@
 package com.gestion.controller.file;
 
-import com.gestion.dto.request.file.FileRequest;
 import com.gestion.service.file.FileUploaderService;
-import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/files")
@@ -16,7 +13,9 @@ public class FilePostController {
     private final FileUploaderService fileUploaderService;
 
     @PostMapping
-    public void uploadFile(@RequestBody @Valid FileRequest fileRequest){
-        fileUploaderService.uploadFile(fileRequest);
+    public ResponseEntity<String> uploadFile(MultipartFile file){
+        String objectName = fileUploaderService.uploadFile(file);
+
+        return ResponseEntity.ok(objectName);
     }
 }

@@ -1,7 +1,7 @@
 package com.gestion.config;
 
 import com.gestion.mappers.UserPrincipalMapper;
-import com.gestion.service.JwtService.JwtService;
+import com.gestion.service.jwt.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,6 +26,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws IOException, ServletException {
+
         String token = null;
         if (request.getCookies() != null) {
             // .stream() nos permite crear un flujo de datos para poder trabajar de forma individual con cada elemento de un array
@@ -41,14 +42,14 @@ public class JwtFilter extends OncePerRequestFilter {
         if (token == null || token.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            response.getWriter().write("{'error': 'Unauthorized: Missing token'}");
+            response.getWriter().write("{\"error\": \"Unauthorized: Missing token\"}");
             return;
         }
 
         if (!jwtService.isTokenValid(token)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("aplication/json");
-            response.getWriter().write("{'error': 'Unauthorized: Invalid token'}");
+            response.getWriter().write("{\"error\": \"Unauthorized: Invalid token\"}");
         }
 
         // En este punto el token existe y es valido
@@ -62,7 +63,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // una vez hemos cargado la sesión dejamos que siga el flujo normal
         filterChain.doFilter(request, response);
-
     }
 
 }
