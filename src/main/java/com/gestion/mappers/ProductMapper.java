@@ -3,12 +3,10 @@ package com.gestion.mappers;
 import com.gestion.dto.request.product.ProductRequest;
 import com.gestion.dto.response.product.ProductResponse;
 import com.gestion.model.Product;
-import org.springframework.stereotype.Component;
 
-@Component
 public class ProductMapper {
 
-    public Product toEntity(ProductRequest request) {
+    public static Product toEntity(ProductRequest request) {
         Product product = new Product();
 
         product.setName(request.name());
@@ -21,7 +19,7 @@ public class ProductMapper {
         return product;
     }
 
-    public ProductResponse toResponse(Product product) {
+    public static ProductResponse toResponse(Product product) {
         if (product == null) {
             return null;
         }

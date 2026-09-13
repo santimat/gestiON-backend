@@ -2,12 +2,10 @@ package com.gestion.mappers;
 
 import com.gestion.dto.request.category.CategoryRequest;
 import com.gestion.model.Category;
-import org.springframework.stereotype.Component;
 
-@Component
 public class CategoryMapper {
-    public Category toEntity(CategoryRequest request) {
-        if(request == null) {
+    public static Category toEntity(CategoryRequest request) {
+        if (request == null) {
             return null;
         }
         Category category = new Category();

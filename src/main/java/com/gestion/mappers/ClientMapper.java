@@ -3,12 +3,10 @@ package com.gestion.mappers;
 import com.gestion.dto.request.client.ClientRequest;
 import com.gestion.dto.response.client.ClientResponse;
 import com.gestion.model.Client;
-import org.springframework.stereotype.Component;
 
-@Component
 public class ClientMapper {
 
-    public ClientResponse toResponse(Client client) {
+    public static ClientResponse toResponse(Client client) {
         return new ClientResponse(
                 client.getId(),
                 client.getName(),
@@ -19,7 +17,7 @@ public class ClientMapper {
         );
     }
 
-    public Client toEntity(ClientRequest request) {
+    public static Client toEntity(ClientRequest request) {
         if (request == null) {
             return null;
         }
