@@ -13,6 +13,7 @@ import lombok.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -22,7 +23,15 @@ import java.util.Arrays;
 @AllArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
-    private final UserPrincipalMapper userPrincipalMapper;
+    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
+
+    @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest req) {
+        String path = req.getRequestURI();
+        String method = req.getMethod();
+
+        return (antPathMatcher.match("/api/auth/**", path) && "POST".equals(method));
+    }
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws IOException, ServletException {
@@ -36,7 +45,6 @@ public class JwtFilter extends OncePerRequestFilter {
                     .map(Cookie::getValue)
                     .findFirst()
                     .orElse(null);
-
         }
 
         if (token == null || token.isEmpty()) {
@@ -54,7 +62,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // En este punto el token existe y es valido
         Claims tokenClaims = jwtService.getClaimsFromToken(token);
-        UserPrincipal userPrincipal = userPrincipalMapper.toEntity(tokenClaims);
+        UserPrincipal userPrincipal = UserPrincipalMapper.toEntity(tokenClaims);
 
         // esta clase es la forma en la que springboot encapsula información de sesión, credenciales y roles, para luego inyectarlo en el security context.
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
