@@ -13,15 +13,14 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class CommerceCreatorService {
     private final JpaCommerceRepository commerceRepository;
-    private final CommerceMapper commerceMapper;
 
     public CommerceResponse createCommerce(CommerceRequest request) {
         if (commerceRepository.existsByCuit(request.cuit())) {
             throw new DuplicateResourceException("Commerce with cuit " + request.cuit() + " already exists");
         }
 
-        Commerce commerce = commerceMapper.toEntity(request);
+        Commerce commerce = CommerceMapper.toEntity(request);
         // TODO logica de guardado de la imagen en el storage y setear la url en commerce.setLogoUrl(url);
-        return commerceMapper.toResponse(commerceRepository.save(commerce));
+        return CommerceMapper.toResponse(commerceRepository.save(commerce));
     }
 }

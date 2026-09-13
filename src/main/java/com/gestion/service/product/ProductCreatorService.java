@@ -16,13 +16,12 @@ import org.springframework.stereotype.Service;
 public class ProductCreatorService {
     private final JpaProductRepository productRepository;
     private final CategoryFinderByIdService categoryFinderByIdService;
-    private final ProductMapper productMapper;
     private final EntityManager entityManager;
 
     public Product createProduct(ProductRequest request, Long commerceId) {
 
         Category category = categoryFinderByIdService.findById(request.categoryId());
-        Product newProduct = productMapper.toEntity(request);
+        Product newProduct = ProductMapper.toEntity(request);
         newProduct.setCategory(category);
 
         // para crear el proxy tomamos la referencía de la clase con Commerce.class y luego le pasamos el id del comercio que viene en el request

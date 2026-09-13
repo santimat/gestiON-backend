@@ -1,6 +1,8 @@
 package com.gestion.service.user;
 
 import com.gestion.dto.request.user.UserRequest;
+import com.gestion.enums.Role;
+import com.gestion.enums.UserStatus;
 import com.gestion.exception.DuplicateResourceException;
 import com.gestion.mappers.UserMapper;
 import com.gestion.model.Commerce;
@@ -17,7 +19,6 @@ public class UserCreatorService {
     private final JpaUserRepository userRepository;
     private final CommerceFinderByIdService commerceFinderByIdService;
     private final PasswordEncoder passwordEncoder;
-    private final UserMapper userMapper;
 
     public User createUser(UserRequest request) {
         if (userRepository.existsByEmail(request.email())) {
@@ -26,9 +27,11 @@ public class UserCreatorService {
 
         Commerce commerce = commerceFinderByIdService.findById(request.commerceId());
 
-        User user = userMapper.toEntity(request);
+        User user = UserMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setCommerce(commerce);
+        user.setRole(Role.OWNER);
+        user.setStatus(UserStatus.ACTIVE);
         return userRepository.save(user);
     }
 }

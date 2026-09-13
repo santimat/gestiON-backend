@@ -1,0 +1,29 @@
+package com.gestion.controller.auth;
+
+import com.gestion.dto.request.user.UserRequest;
+import com.gestion.dto.response.user.UserResponse;
+import com.gestion.mappers.UserMapper;
+import com.gestion.model.User;
+import com.gestion.service.user.UserCreatorService;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/auth/register")
+@AllArgsConstructor
+public class AuthRegisterPostController {
+    private final UserCreatorService userCreatorService;
+
+    @PostMapping
+    public ResponseEntity<UserResponse> create(@RequestBody @Valid UserRequest request) {
+        User user = userCreatorService.createUser(request);
+        UserResponse response = UserMapper.toResponse(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+}

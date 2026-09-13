@@ -3,6 +3,7 @@ package com.gestion.exception.handler;
 import com.gestion.exception.DuplicateResourceException;
 import com.gestion.exception.FileException;
 import com.gestion.exception.ResourceNotFoundException;
+import com.gestion.exception.WrongPasswordException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -24,6 +25,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(FileException.class)
     public ResponseEntity<String> handleFileException(FileException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+    }
+
+    @ExceptionHandler(WrongPasswordException.class)
+    public ResponseEntity<String> handleWrongPasswordException(WrongPasswordException exception) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(exception.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

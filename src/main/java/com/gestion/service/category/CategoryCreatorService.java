@@ -11,9 +11,8 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class CategoryCreatorService {
     private final JpaCategoryRepository categoryRepository;
-    private final CategoryMapper categoryMapper;
 
     public Category createCategory(CategoryRequest request) {
-        return categoryRepository.save(categoryMapper.toEntity(request));
+        return categoryRepository.save(CategoryMapper.toEntity(request));
     }
 }

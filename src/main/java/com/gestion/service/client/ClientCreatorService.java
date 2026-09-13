@@ -12,14 +12,13 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class ClientCreatorService {
     private final JpaClientRepository clientRepository;
-    private final ClientMapper clientMapper;
 
     public Client createClient(ClientRequest request) {
         if (clientRepository.existsByDni(request.dni())) {
             throw new DuplicateResourceException("Client with DNI: " + request.dni() + "already exists");
         }
-        
-        Client newClient = clientMapper.toEntity(request);
+
+        Client newClient = ClientMapper.toEntity(request);
         return clientRepository.save(newClient);
     }
 }
