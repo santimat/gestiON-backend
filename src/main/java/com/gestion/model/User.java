@@ -39,6 +39,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;

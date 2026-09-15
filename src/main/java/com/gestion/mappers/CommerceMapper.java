@@ -10,7 +10,6 @@ public class CommerceMapper {
                 commerce.getId(),
                 commerce.getBusinessName(),
                 commerce.getAddress(),
-                commerce.getPhoneNumber(),
                 commerce.getCuit(),
                 commerce.getLogoName()
         );
@@ -23,7 +22,6 @@ public class CommerceMapper {
         Commerce commerce = new Commerce();
         commerce.setBusinessName(request.businessName());
         commerce.setAddress(request.address());
-        commerce.setPhoneNumber(request.phoneNumber());
         commerce.setCuit(request.cuit());
         return commerce;
     }

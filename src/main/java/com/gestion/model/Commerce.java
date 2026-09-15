@@ -23,9 +23,6 @@ public class Commerce {
     @Column(nullable = false, unique = true, length = 100)
     private String address;
 
-    @Column(nullable = false, unique = true, length = 100, name = "phone_number")
-    private String phoneNumber;
-
     @Column(nullable = false, unique = true, length = 100)
     private String cuit;
 

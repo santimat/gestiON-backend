@@ -1,9 +1,7 @@
 package com.gestion.controller.auth;
 
 import com.gestion.dto.request.user.UserRequest;
-import com.gestion.dto.response.user.UserResponse;
-import com.gestion.mappers.UserMapper;
-import com.gestion.model.User;
+import com.gestion.dto.response.user.UserTokenResponse;
 import com.gestion.service.user.UserCreatorService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -21,9 +19,8 @@ public class AuthRegisterPostController {
     private final UserCreatorService userCreatorService;
 
     @PostMapping
-    public ResponseEntity<UserResponse> create(@RequestBody @Valid UserRequest request) {
-        User user = userCreatorService.createUser(request);
-        UserResponse response = UserMapper.toResponse(user);
+    public ResponseEntity<UserTokenResponse> create(@RequestBody @Valid UserRequest request) {
+        UserTokenResponse response = userCreatorService.createUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

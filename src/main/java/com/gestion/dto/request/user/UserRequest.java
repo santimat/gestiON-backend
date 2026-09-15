@@ -1,6 +1,7 @@
 package com.gestion.dto.request.user;
 
 import jakarta.validation.constraints.*;
+import org.hibernate.validator.constraints.Length;
 
 public record UserRequest(
         @NotBlank(message = "Name is required")
@@ -14,6 +15,9 @@ public record UserRequest(
         @NotBlank(message = "Password is required")
         @Size(min = 3, max = 50, message = "Password's length must be between 3 and 50")
         String password,
+
+        @Length(min = 2, max = 20, message = "The phone number must be between 2 and 100 characters")
+        String phoneNumber,
 
         @NotNull(message = "Commerce ID is required")
         @Positive(message = "Commerce ID must be a positive number")

@@ -1,6 +1,7 @@
 package com.gestion.service.user;
 
 import com.gestion.dto.request.user.UserRequest;
+import com.gestion.dto.response.user.UserTokenResponse;
 import com.gestion.enums.Role;
 import com.gestion.enums.UserStatus;
 import com.gestion.exception.DuplicateResourceException;
@@ -20,7 +21,7 @@ public class UserCreatorService {
     private final CommerceFinderByIdService commerceFinderByIdService;
     private final PasswordEncoder passwordEncoder;
 
-    public User createUser(UserRequest request) {
+    public UserTokenResponse createUser(UserRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateResourceException("User with email " + request.email() + " already exists");
         }
@@ -32,7 +33,8 @@ public class UserCreatorService {
         user.setCommerce(commerce);
         user.setRole(Role.OWNER);
         user.setStatus(UserStatus.ACTIVE);
-        return userRepository.save(user);
+        User newUser = userRepository.save(user);
+        return UserMapper.toTokenResponse(newUser);
     }
 }
 
