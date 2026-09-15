@@ -2,7 +2,6 @@ package com.gestion.service.commerce;
 
 import com.gestion.dto.request.commerce.CommerceRequest;
 import com.gestion.dto.response.commerce.CommerceResponse;
-import com.gestion.exception.DuplicateResourceException;
 import com.gestion.mappers.CommerceMapper;
 import com.gestion.model.Commerce;
 import com.gestion.repository.JpaCommerceRepository;
@@ -16,16 +15,15 @@ import org.springframework.stereotype.Service;
 public class CommerceCreatorService {
     private final JpaCommerceRepository commerceRepository;
     private final FileUploaderService fileUploaderService;
+    private final CommerceValidatorByCuitService commerceValidatorByCuitService;
+    private final CommerceValidatorByAddressService commerceValidatorByAddressService;
 
     @Transactional
     public CommerceResponse createCommerce(CommerceRequest request) {
-        if (commerceRepository.existsByCuit(request.cuit()))
-            throw new DuplicateResourceException("Commerce with cuit " + request.cuit() + " already exists");
 
-        if (commerceRepository.existsByAddress(request.address()))
-            throw new DuplicateResourceException("Commerce with address " + request.address() + " already exists");
+        commerceValidatorByCuitService.checkExistingCommerceByCuit(request.cuit());
+        commerceValidatorByAddressService.checkExistingCommerceByAddress(request.address());
 
-        // TODO: preguntar por manejo de archivos en caso de error en el guardo en la db
         String commerceLogoName = fileUploaderService.uploadFile(request.logo());
 
         Commerce commerce = CommerceMapper.toEntity(request);
