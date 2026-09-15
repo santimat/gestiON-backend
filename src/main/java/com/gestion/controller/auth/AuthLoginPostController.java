@@ -1,7 +1,7 @@
 package com.gestion.controller.auth;
 
 import com.gestion.dto.request.user.UserLoginRequest;
-import com.gestion.dto.response.user.UserResponse;
+import com.gestion.dto.response.user.UserTokenResponse;
 import com.gestion.mappers.UserMapper;
 import com.gestion.service.auth.AuthLoginService;
 import com.gestion.service.jwt.JwtService;
@@ -23,8 +23,8 @@ public class AuthLoginPostController {
     private final JwtService jwtService;
 
     @PostMapping
-    public ResponseEntity<UserResponse> login(@RequestBody @Valid UserLoginRequest userRequest,
-                                              HttpServletResponse response) {
+    public ResponseEntity<UserTokenResponse> login(@RequestBody @Valid UserLoginRequest userRequest,
+                                                   HttpServletResponse response) {
         String jwtToken = authLoginService.login(userRequest);
 
         Cookie cookie = new Cookie("token", jwtToken);
