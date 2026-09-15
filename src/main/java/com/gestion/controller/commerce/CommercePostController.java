@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +20,7 @@ public class CommercePostController {
     private final CommerceCreatorService commerceCreatorService;
 
     @PostMapping
+    @PreAuthorize("hasRole('SUDO')")
     public ResponseEntity<CommerceResponse> createCommerce(@ModelAttribute @Valid CommerceRequest request) {
         CommerceResponse newCommerce = commerceCreatorService.createCommerce(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(newCommerce);

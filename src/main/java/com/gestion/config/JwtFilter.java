@@ -30,7 +30,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String path = req.getRequestURI();
         String method = req.getMethod();
 
-        return (antPathMatcher.match("/api/auth/**", path) && "POST".equals(method));
+        return (antPathMatcher.match("/api/auth/login", path) && "POST".equals(method));
     }
 
     @Override

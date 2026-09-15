@@ -31,6 +31,9 @@ public class UserCreatorService {
         User user = UserMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setCommerce(commerce);
+        // TODO: preguntar manejo del rol
+        // opciones, crear dos endpoints (un para crear el usuario owner y otro usuario cashier), por ahi tiene
+        // sentido ya que requieren roles distintos.
         user.setRole(Role.OWNER);
         user.setStatus(UserStatus.ACTIVE);
         User newUser = userRepository.save(user);
