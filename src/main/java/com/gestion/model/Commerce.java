@@ -17,7 +17,7 @@ public class Commerce {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false, name = "business_name")
+    @Column(nullable = false, name = "business_name")
     private String businessName;
 
     @Column(nullable = false, unique = true, length = 100)
