@@ -15,6 +15,7 @@ public record CommerceRequest(
         @NotBlank
         @Length(min = 8, max = 20, message = "The CUIT must be between 8 and 20 characters")
         String cuit,
+        
         MultipartFile logo
 ) {
 }
