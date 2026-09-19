@@ -58,6 +58,7 @@ public class JwtFilter extends OncePerRequestFilter {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("aplication/json");
             response.getWriter().write("{\"error\": \"Unauthorized: Invalid token\"}");
+            return;
         }
 
         // En este punto el token existe y es valido
