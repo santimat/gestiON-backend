@@ -12,63 +12,31 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.WebUtils;
 
 import java.io.IOException;
-import java.util.Arrays;
 
-@Component
 @AllArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
     @Override
-    protected boolean shouldNotFilter(@NonNull HttpServletRequest req) {
-        String path = req.getRequestURI();
-        String method = req.getMethod();
-
-        return (antPathMatcher.match("/api/auth/**", path) && "POST".equals(method));
-    }
-
-    @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws IOException, ServletException {
 
-        String token = null;
-        if (request.getCookies() != null) {
-            // .stream() nos permite crear un flujo de datos para poder trabajar de forma individual con cada elemento de un array
-            token = Arrays.stream(request.getCookies())
-                    // nos quedamos solo con la cookie
-                    .filter(cookie -> "token".equals(cookie.getName()))
-                    .map(Cookie::getValue)
-                    .findFirst()
-                    .orElse(null);
+        Cookie cookie = WebUtils.getCookie(request, "token");
+
+
+        if (cookie != null && StringUtils.hasText(cookie.getValue()) && jwtService.isTokenValid(cookie.getValue())) {
+            Claims claims = jwtService.getClaimsFromToken(cookie.getValue());
+            UserPrincipal userPrincipal = UserPrincipalMapper.toEntity(claims);
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userPrincipal,
+                    null, userPrincipal.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authToken);
         }
-
-        if (token == null || token.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Unauthorized: Missing token\"}");
-            return;
-        }
-
-        if (!jwtService.isTokenValid(token)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("aplication/json");
-            response.getWriter().write("{\"error\": \"Unauthorized: Invalid token\"}");
-            return;
-        }
-
-        // En este punto el token existe y es valido
-        Claims tokenClaims = jwtService.getClaimsFromToken(token);
-        UserPrincipal userPrincipal = UserPrincipalMapper.toEntity(tokenClaims);
-
-        // esta clase es la forma en la que springboot encapsula información de sesión, credenciales y roles, para luego inyectarlo en el security context.
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
-
-        SecurityContextHolder.getContext().setAuthentication(authToken);
 
         // una vez hemos cargado la sesión dejamos que siga el flujo normal
         filterChain.doFilter(request, response);

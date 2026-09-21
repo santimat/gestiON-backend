@@ -2,6 +2,7 @@ package com.gestion.config;
 
 
 import com.gestion.enums.Role;
+import com.gestion.enums.UserStatus;
 import jakarta.annotation.Nullable;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,9 +18,10 @@ import java.util.List;
 @Setter
 public class UserPrincipal implements UserDetails {
 
-    private Long userId;
+    private Long id;
     private String email;
     private String name;
+    private UserStatus status;
     private Role role;
 
     @Override

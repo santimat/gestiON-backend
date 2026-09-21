@@ -1,8 +1,9 @@
 package com.gestion.mappers;
 
+import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.user.UserRequest;
+import com.gestion.dto.response.user.AuthenticatedUserResponse;
 import com.gestion.dto.response.user.UserResponse;
-import com.gestion.dto.response.user.UserTokenResponse;
 import com.gestion.enums.Role;
 import com.gestion.enums.UserStatus;
 import com.gestion.model.User;
@@ -20,8 +21,18 @@ public class UserMapper {
         );
     }
 
-    public static UserTokenResponse toTokenResponse(User user) {
-        return new UserTokenResponse(
+    public static AuthenticatedUserResponse toTokenResponseFromUserPrincipal(UserPrincipal authenticatedUser) {
+        return new AuthenticatedUserResponse(
+                authenticatedUser.getId(),
+                authenticatedUser.getName(),
+                authenticatedUser.getEmail(),
+                authenticatedUser.getRole(),
+                authenticatedUser.getStatus()
+        );
+    }
+
+    public static AuthenticatedUserResponse toTokenResponse(User user) {
+        return new AuthenticatedUserResponse(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
@@ -41,10 +52,10 @@ public class UserMapper {
         return user;
     }
 
-    public static UserTokenResponse toResponseFromClaims(Claims userClaims) {
+    public static AuthenticatedUserResponse toTokenResponseFromClaims(Claims userClaims) {
         Role userRole = Role.valueOf(userClaims.get("role", String.class));
         UserStatus userStatus = UserStatus.valueOf(userClaims.get("status", String.class));
-        return new UserTokenResponse(
+        return new AuthenticatedUserResponse(
                 userClaims.get("userId", Long.class),
                 userClaims.get("name", String.class),
                 userClaims.getSubject(),
@@ -52,4 +63,5 @@ public class UserMapper {
                 userStatus
         );
     }
+
 }
