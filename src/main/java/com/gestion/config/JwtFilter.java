@@ -29,7 +29,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
         Cookie cookie = WebUtils.getCookie(request, "token");
 
-
         if (cookie != null && StringUtils.hasText(cookie.getValue()) && jwtService.isTokenValid(cookie.getValue())) {
             Claims claims = jwtService.getClaimsFromToken(cookie.getValue());
             UserPrincipal userPrincipal = UserPrincipalMapper.toEntity(claims);

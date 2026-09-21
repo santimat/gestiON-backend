@@ -31,7 +31,7 @@ public class UserMapper {
         );
     }
 
-    public static AuthenticatedUserResponse toTokenResponse(User user) {
+    public static AuthenticatedUserResponse toAuthenticatedResponse(User user) {
         return new AuthenticatedUserResponse(
                 user.getId(),
                 user.getName(),

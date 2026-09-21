@@ -1,5 +1,6 @@
 package com.gestion.service.user;
 
+import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.user.UserRequest;
 import com.gestion.dto.response.user.AuthenticatedUserResponse;
 import com.gestion.enums.Role;
@@ -21,7 +22,7 @@ public class UserCreatorService {
     private final CommerceFinderByIdService commerceFinderByIdService;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthenticatedUserResponse createUser(UserRequest request) {
+    public AuthenticatedUserResponse createUser(UserRequest request, UserPrincipal authenticatedUser) {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateResourceException("User with email " + request.email() + " already exists");
         }
@@ -31,13 +32,12 @@ public class UserCreatorService {
         User user = UserMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setCommerce(commerce);
-        // TODO: preguntar manejo del rol
-        // opciones, crear dos endpoints (un para crear el usuario owner y otro usuario cashier), por ahi tiene
-        // sentido ya que requieren roles distintos.
-        user.setRole(Role.OWNER);
+
+        String roleToSet = Role.SUDO.equals(authenticatedUser.getRole()) ? "OWNER" : "CASHIER";
+        user.setRole(Role.valueOf(roleToSet));
         user.setStatus(UserStatus.ACTIVE);
         User newUser = userRepository.save(user);
-        return UserMapper.toTokenResponse(newUser);
+        return UserMapper.toAuthenticatedResponse(newUser);
     }
 }
 
