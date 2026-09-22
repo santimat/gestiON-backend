@@ -14,16 +14,16 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @Configuration
 public class SecurityConfig {
     private final JwtFilter jwtFilter;
-    private final CorsConfigurationSource corsConfigSource;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     public SecurityConfig(JwtFilter jwtFilter, CorsConfigurationSource corsConfigurationSource) {
         this.jwtFilter = jwtFilter;
-        this.corsConfigSource = corsConfigurationSource;
+        this.corsConfigurationSource = corsConfigurationSource;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) {
-        httpSecurity.cors(cors -> cors.configurationSource(corsConfigSource))
+        httpSecurity.cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         auth ->
