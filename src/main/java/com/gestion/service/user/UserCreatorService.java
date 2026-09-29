@@ -1,16 +1,13 @@
 package com.gestion.service.user;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.user.UserRequest;
-import com.gestion.dto.response.user.AuthenticatedUserResponse;
 import com.gestion.enums.Role;
-import com.gestion.enums.UserStatus;
 import com.gestion.exception.DuplicateResourceException;
 import com.gestion.mappers.UserMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.User;
 import com.gestion.repository.JpaUserRepository;
-import com.gestion.service.commerce.CommerceFinderByIdService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,25 +16,21 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class UserCreatorService {
     private final JpaUserRepository userRepository;
-    private final CommerceFinderByIdService commerceFinderByIdService;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthenticatedUserResponse createUser(UserRequest request, UserPrincipal authenticatedUser) {
+    @Transactional
+    public User createUser(UserRequest request, Role userRole, Commerce commerce) {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateResourceException("User with email " + request.email() + " already exists");
         }
-
-        Commerce commerce = commerceFinderByIdService.findById(request.commerceId());
 
         User user = UserMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setCommerce(commerce);
 
-        String roleToSet = Role.SUDO.equals(authenticatedUser.getRole()) ? "OWNER" : "CASHIER";
-        user.setRole(Role.valueOf(roleToSet));
-        user.setStatus(UserStatus.ACTIVE);
-        User newUser = userRepository.save(user);
-        return UserMapper.toAuthenticatedResponse(newUser);
+        user.setRole(userRole);
+        user.setActive(true);
+        return userRepository.save(user);
     }
 }
 

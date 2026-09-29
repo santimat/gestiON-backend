@@ -2,7 +2,6 @@ package com.gestion.config;
 
 
 import com.gestion.enums.Role;
-import com.gestion.enums.UserStatus;
 import jakarta.annotation.Nullable;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -21,8 +20,8 @@ public class UserPrincipal implements UserDetails {
     private Long id;
     private String email;
     private String name;
-    private UserStatus status;
     private Role role;
+    private Boolean active;
 
     @Override
     @NonNull
@@ -40,6 +39,6 @@ public class UserPrincipal implements UserDetails {
     @Override
     @NonNull
     public String getUsername() {
-        return this.name;
+        return this.email;
     }
 }

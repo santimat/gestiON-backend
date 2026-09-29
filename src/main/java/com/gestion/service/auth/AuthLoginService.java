@@ -1,6 +1,7 @@
 package com.gestion.service.auth;
 
 import com.gestion.dto.request.user.UserLoginRequest;
+import com.gestion.exception.InactiveResourceException;
 import com.gestion.exception.WrongPasswordException;
 import com.gestion.mappers.TokenPayloadMapper;
 import com.gestion.model.User;
@@ -19,6 +20,10 @@ public class AuthLoginService {
 
     public String login(UserLoginRequest userRequest) {
         User loginUser = userFinderByEmailService.findByEmail(userRequest.email());
+
+        if (!loginUser.getActive())
+            throw new InactiveResourceException("User with id " + loginUser.getId() +
+                    " is inactive");
 
         boolean passwordMatches = passwordEncoder.matches(userRequest.password(), loginUser.getPassword());
         if (!passwordMatches) throw new WrongPasswordException("Wrong password");

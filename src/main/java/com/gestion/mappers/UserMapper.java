@@ -1,11 +1,11 @@
 package com.gestion.mappers;
 
 import com.gestion.config.UserPrincipal;
+import com.gestion.dto.request.commerce.CommerceWithOwnerRequest;
 import com.gestion.dto.request.user.UserRequest;
 import com.gestion.dto.response.user.AuthenticatedUserResponse;
 import com.gestion.dto.response.user.UserResponse;
 import com.gestion.enums.Role;
-import com.gestion.enums.UserStatus;
 import com.gestion.model.User;
 import io.jsonwebtoken.Claims;
 
@@ -16,8 +16,17 @@ public class UserMapper {
                 user.getName(),
                 user.getEmail(),
                 user.getRole(),
-                user.getStatus(),
+                user.getActive(),
                 user.getPhoneNumber()
+        );
+    }
+
+    public static UserRequest toRequest(CommerceWithOwnerRequest request) {
+        return new UserRequest(
+                request.username(),
+                request.email(),
+                request.password(),
+                request.phoneNumber()
         );
     }
 
@@ -27,7 +36,7 @@ public class UserMapper {
                 authenticatedUser.getName(),
                 authenticatedUser.getEmail(),
                 authenticatedUser.getRole(),
-                authenticatedUser.getStatus()
+                authenticatedUser.getActive()
         );
     }
 
@@ -37,7 +46,7 @@ public class UserMapper {
                 user.getName(),
                 user.getEmail(),
                 user.getRole(),
-                user.getStatus()
+                user.getActive()
         );
     }
 
@@ -49,18 +58,18 @@ public class UserMapper {
         user.setName(request.name());
         user.setEmail(request.email());
         user.setPassword(request.password());
+        user.setPhoneNumber(request.phoneNumber());
         return user;
     }
 
     public static AuthenticatedUserResponse toTokenResponseFromClaims(Claims userClaims) {
         Role userRole = Role.valueOf(userClaims.get("role", String.class));
-        UserStatus userStatus = UserStatus.valueOf(userClaims.get("status", String.class));
         return new AuthenticatedUserResponse(
                 userClaims.get("userId", Long.class),
                 userClaims.get("name", String.class),
                 userClaims.getSubject(),
                 userRole,
-                userStatus
+                userClaims.get("active", Boolean.class)
         );
     }
 
