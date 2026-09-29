@@ -7,4 +7,6 @@ public interface JpaCommerceRepository extends JpaRepository<Commerce, Long> {
     boolean existsByCuit(String cuit);
 
     boolean existsByAddress(String address);
+
+
 }
