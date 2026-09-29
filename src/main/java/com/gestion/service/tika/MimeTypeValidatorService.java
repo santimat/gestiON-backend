@@ -3,13 +3,11 @@ package com.gestion.service.tika;
 
 import com.gestion.exception.FileException;
 import org.apache.tika.Tika;
-import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Set;
 
-@Service
 public class MimeTypeValidatorService {
 
     private final static Tika tika = new Tika();
