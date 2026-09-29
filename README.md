@@ -24,11 +24,6 @@ Se agregó un Global Exception Handler, este captura las distintas excepciones l
 directamente envía el mensaje declarado en cada excepción al cliente.
 Se crearon excepciones generales permitiendo pasarles el mensaje de error para que sean reutilizables en distintos contextos.
 
-### Creación de Mappers
-
-Se crean mappers separados de los DTO, para seguir cumpliendo con el principio de responsabilidad única.
-Estos mappers tienen la anotación @Component para poder ser reconocidos e inyectados por Spring.
-
 ### Uso de EntityManager para proxys
 
 Esta clase nos permite crear proxys de las entidades. 
