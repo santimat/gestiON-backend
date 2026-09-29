@@ -38,7 +38,7 @@ public class CommerceWithOwnerCreatorService {
 
         String businessLogoUrl = null;
 
-        if (commerceRequest.logo() != null) {
+        if (commerceRequest.logo() != null && !commerceRequest.logo().isEmpty()) {
             String bussinesLogoName = fileUploaderService.uploadFile(request.businessLogo(), "business-logos");
 
             commerce.setLogoName(bussinesLogoName);
