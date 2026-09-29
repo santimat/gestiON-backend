@@ -1,6 +1,7 @@
 package com.gestion.dto.request.commerce;
 
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,7 +16,8 @@ public record CommerceRequest(
         @NotBlank
         @Length(min = 8, max = 20, message = "The CUIT must be between 8 and 20 characters")
         String cuit,
-        
+
+        @Nullable
         MultipartFile logo
 ) {
 }

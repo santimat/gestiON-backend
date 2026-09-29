@@ -1,7 +1,6 @@
 package com.gestion.service.commerce;
 
 import com.gestion.dto.request.commerce.CommerceRequest;
-import com.gestion.dto.response.commerce.CommerceResponse;
 import com.gestion.mappers.CommerceMapper;
 import com.gestion.model.Commerce;
 import com.gestion.repository.JpaCommerceRepository;
@@ -19,16 +18,14 @@ public class CommerceCreatorService {
     private final CommerceValidatorByAddressService commerceValidatorByAddressService;
 
     @Transactional
-    public CommerceResponse createCommerce(CommerceRequest request) {
+    public Commerce createCommerce(CommerceRequest request) {
 
         commerceValidatorByCuitService.checkExistingCommerceByCuit(request.cuit());
         commerceValidatorByAddressService.checkExistingCommerceByAddress(request.address());
 
-        String commerceLogoName = fileUploaderService.uploadFile(request.logo());
-
         Commerce commerce = CommerceMapper.toEntity(request);
-        commerce.setLogoName(commerceLogoName);
-        Commerce newCommerce = commerceRepository.save(commerce);
-        return CommerceMapper.toResponse(newCommerce);
+
+        commerce.setActive(true);
+        return commerceRepository.save(commerce);
     }
 }
