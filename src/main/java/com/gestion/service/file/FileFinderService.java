@@ -19,13 +19,13 @@ public class FileFinderService {
         this.minioClient = minioClient;
     }
 
-    public String getObjectUrl(String objectName) {
+    public String getObjectUrl(String objectName, String subDir) {
         try {
             return minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Http.Method.GET)
                             .bucket(bucketName)
-                            .object(objectName)
+                            .object(subDir + "/" + objectName)
                             .expiry(5, TimeUnit.HOURS)
                             .build()
             );
