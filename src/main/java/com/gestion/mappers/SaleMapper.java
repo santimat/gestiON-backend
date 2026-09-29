@@ -10,11 +10,7 @@ public class SaleMapper {
         sale.setPaymentMethod(request.paymentMethod());
         sale.setSubtotal(request.subtotal());
         sale.setDiscount(request.discount());
-        sale.setTotal(request.total());
-        sale.setCreatedAt(request.createdAt());
         sale.setObservations(request.observations());
-        sale.setStatus(request.status());
-
         return sale;
     }
 }
