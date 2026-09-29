@@ -10,7 +10,7 @@ public class TokenPayloadMapper {
                 user.getName(),
                 user.getId(),
                 user.getRole(),
-                user.getStatus()
+                user.getActive()
         );
     }
 }
