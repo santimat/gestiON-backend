@@ -1,7 +1,6 @@
 package com.gestion.model;
 
 import com.gestion.enums.Role;
-import com.gestion.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -46,6 +45,5 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Enumerated(EnumType.STRING)
-    private UserStatus status;
+    private Boolean active;
 }

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,9 +26,9 @@ public class Offer {
     private Product product;
 
     @Column(nullable = false)
-    private Double value;
+    private BigDecimal value;
 
-    @Column(name="start_date")
+    @Column(name = "start_date")
     private LocalDateTime startDate;
 
     @Column(name = "end_date")
