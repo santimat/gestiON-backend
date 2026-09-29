@@ -1,7 +1,6 @@
 package com.gestion.mappers;
 
 import com.gestion.dto.request.product.ProductRequest;
-import com.gestion.dto.response.product.ProductResponse;
 import com.gestion.model.Product;
 
 public class ProductMapper {
@@ -19,19 +18,19 @@ public class ProductMapper {
         return product;
     }
 
-    public static ProductResponse toResponse(Product product) {
-        if (product == null) {
-            return null;
-        }
-        return new ProductResponse(
-                product.getId(),
-                product.getName(),
-                product.getDescription(),
-                product.getCostPrice(),
-                product.getSalePrice(),
-                product.getImageName(),
-                product.getCategory(),
-                product.getStatus()
-        );
-    }
+//    public static ProductResponse toResponse(Product product) {
+//        if (product == null) {
+//            return null;
+//        }
+//        return new ProductResponse(
+//                product.getId(),
+//                product.getName(),
+//                product.getDescription(),
+//                product.getCostPrice(),
+//                product.getSalePrice(),
+//                product.getImageName(),
+//                product.getCategory(),
+//                product.getStatus()
+//        );
+//    }
 }
