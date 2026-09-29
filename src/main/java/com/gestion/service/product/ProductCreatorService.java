@@ -24,7 +24,6 @@ public class ProductCreatorService {
 //        Commerce commerceProxy = entityManager.getReference(Commerce.class, commerceId);
 //        newProduct.setCommerce(commerceProxy);
 //
-//        // TODO: trabajar lo de la imagen
 //        return productRepository.save(newProduct);
 //    }
 }
