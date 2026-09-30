@@ -5,7 +5,6 @@ import com.gestion.enums.Role;
 import com.gestion.mappers.CommerceMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.User;
-import com.gestion.repository.JpaCommerceRepository;
 import com.gestion.repository.JpaUserRepository;
 import com.gestion.service.file.FileFinderService;
 import lombok.AllArgsConstructor;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class CommerceFindAllWithOwnerService {
 
-    private final JpaCommerceRepository commerceRepository;
     private final JpaUserRepository userRepository;
     private final FileFinderService fileFinderService;
 
