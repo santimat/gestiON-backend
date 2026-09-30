@@ -4,7 +4,6 @@ import com.gestion.dto.request.commerce.CommerceRequest;
 import com.gestion.mappers.CommerceMapper;
 import com.gestion.model.Commerce;
 import com.gestion.repository.JpaCommerceRepository;
-import com.gestion.service.file.FileUploaderService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,15 +12,14 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class CommerceCreatorService {
     private final JpaCommerceRepository commerceRepository;
-    private final FileUploaderService fileUploaderService;
-    private final CommerceValidatorByCuitService commerceValidatorByCuitService;
-    private final CommerceValidatorByAddressService commerceValidatorByAddressService;
+    private final CommerceValidatorByCuitService validatorByCuitService;
+    private final CommerceValidatorByAddressService validatorByAddressService;
 
     @Transactional
     public Commerce createCommerce(CommerceRequest request) {
 
-        commerceValidatorByCuitService.checkExistingCommerceByCuit(request.cuit());
-        commerceValidatorByAddressService.checkExistingCommerceByAddress(request.address());
+        validatorByCuitService.checkExistingCommerceByCuit(request.cuit());
+        validatorByAddressService.checkExistingCommerceByAddress(request.address());
 
         Commerce commerce = CommerceMapper.toEntity(request);
 
