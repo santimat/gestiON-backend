@@ -9,10 +9,10 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class CommerceFinderByIdService {
-    private final JpaCommerceRepository jpaCommerceRepository;
+    private final JpaCommerceRepository commerceRepository;
 
     public Commerce findById(Long id) {
-        return jpaCommerceRepository.findById(id).
+        return commerceRepository.findById(id).
                 orElseThrow(() -> new ResourceNotFoundException("Commerce with id " + id + "not found"));
     }
 }

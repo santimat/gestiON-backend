@@ -2,23 +2,12 @@ package com.gestion.mappers;
 
 import com.gestion.dto.request.commerce.CommerceRequest;
 import com.gestion.dto.request.commerce.CommerceWithOwnerRequest;
-import com.gestion.dto.response.commerce.CommerceResponse;
 import com.gestion.dto.response.commerce.CommerceWithOwnerResponse;
 import com.gestion.model.Commerce;
 import com.gestion.model.User;
 import jakarta.annotation.Nullable;
 
 public class CommerceMapper {
-    public static CommerceResponse toResponse(Commerce commerce, String logoUrl) {
-        return new CommerceResponse(
-                commerce.getId(),
-                commerce.getBusinessName(),
-                commerce.getAddress(),
-                commerce.getCuit(),
-                logoUrl
-        );
-    }
-
     public static Commerce toEntity(CommerceRequest request) {
         if (request == null) {
             return null;
