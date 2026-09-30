@@ -39,6 +39,7 @@ public class CommerceMapper {
                 commerce.getBusinessName(),
                 commerce.getAddress(),
                 businessLogoUrl,
+                commerce.getCuit(),
                 commerce.isActive(),
                 commerce.getCreatedAt()
         );

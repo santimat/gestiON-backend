@@ -11,6 +11,7 @@ public record CommerceWithOwnerResponse(
         String phoneNumber,
         Long commerceId,
         String businessName,
+        String cuit,
         String address,
         @Nullable
         String businessLogoUrl,

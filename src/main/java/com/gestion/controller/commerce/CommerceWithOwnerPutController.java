@@ -19,6 +19,5 @@ public class CommerceWithOwnerPutController {
     public ResponseEntity<CommerceWithOwnerResponse> updateCommerceWithOwner(@ModelAttribute CommerceWithOwnerRequest request, @PathVariable Long commerceId, @PathVariable Long userId) {
         CommerceWithOwnerResponse response = commerceWithOwnerUpdaterService.updateCommerceWithOwner(request, commerceId, userId);
         return ResponseEntity.ok(response);
-
     }
 }
