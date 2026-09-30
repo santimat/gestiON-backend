@@ -1,5 +1,6 @@
 package com.gestion.dto.request.commerce;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.Length;
@@ -34,6 +35,7 @@ public record CommerceWithOwnerRequest(
         @Length(min = 8, max = 20, message = "CUIT's length must be between 8 and 20")
         String cuit,
 
+        @Nullable
         MultipartFile businessLogo
 
 ) {
