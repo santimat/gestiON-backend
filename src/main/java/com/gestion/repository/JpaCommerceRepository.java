@@ -9,5 +9,4 @@ public interface JpaCommerceRepository extends JpaRepository<Commerce, Long> {
     boolean existsByAddress(String address);
 
     Long countByActive(boolean active);
-
 }

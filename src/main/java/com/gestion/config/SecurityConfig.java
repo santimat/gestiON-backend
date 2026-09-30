@@ -31,7 +31,6 @@ public class SecurityConfig {
                         auth ->
                                 auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                                        .requestMatchers(HttpMethod.POST, "/api/commerces-users").permitAll()
                                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception.authenticationEntryPoint((req, res, authExc) -> {

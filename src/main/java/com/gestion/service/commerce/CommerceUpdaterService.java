@@ -7,7 +7,5 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class CommerceUpdaterService {
-    private final JpaCommerceRepository jpaCommerceRepository;
-
-
+    private final JpaCommerceRepository commerceRepository;
 }
