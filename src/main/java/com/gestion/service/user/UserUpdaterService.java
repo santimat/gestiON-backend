@@ -1,6 +1,6 @@
 package com.gestion.service.user;
 
-import com.gestion.dto.request.user.UserRequest;
+import com.gestion.dto.request.user.UserUpdateRequest;
 import com.gestion.model.User;
 import com.gestion.repository.JpaUserRepository;
 import jakarta.transaction.Transactional;
@@ -16,15 +16,12 @@ public class UserUpdaterService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public User updateUser(UserRequest request, Long userId) {
+    public User updateUser(UserUpdateRequest request, Long userId) {
         User userToUpdate = finderByIdService.findById(userId);
 
         userToUpdate.setName(request.name());
         userToUpdate.setEmail(request.email());
         userToUpdate.setPhoneNumber(request.phoneNumber());
-        // TODO: de momento la contraseña cambia el admin SUDO. lo mejor sería que se envíe un codigo al email correspondiente para mayor seguridad
-        userToUpdate.setPassword(passwordEncoder.encode(request.password()));
-
         return userRepository.save(userToUpdate);
     }
 }

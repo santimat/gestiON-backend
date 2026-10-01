@@ -2,7 +2,9 @@ package com.gestion.mappers;
 
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.commerce.CommerceWithOwnerRequest;
+import com.gestion.dto.request.commerce.CommerceWithOwnerUpdateRequest;
 import com.gestion.dto.request.user.UserRequest;
+import com.gestion.dto.request.user.UserUpdateRequest;
 import com.gestion.dto.response.user.AuthenticatedUserResponse;
 import com.gestion.dto.response.user.UserResponse;
 import com.gestion.enums.Role;
@@ -21,11 +23,27 @@ public class UserMapper {
         );
     }
 
-    public static UserRequest toRequest(CommerceWithOwnerRequest request) {
+    public static UserRequest toRequestFromCWOR(CommerceWithOwnerRequest request) {
         return new UserRequest(
                 request.username(),
                 request.email(),
                 request.password(),
+                request.phoneNumber()
+        );
+    }
+
+    public static UserUpdateRequest toUpdateRequestFromCWOUR(CommerceWithOwnerUpdateRequest request) {
+        return new UserUpdateRequest(
+                request.username(),
+                request.email(),
+                request.phoneNumber()
+        );
+    }
+
+    public static UserUpdateRequest toUpdateRequest(CommerceWithOwnerRequest request) {
+        return new UserUpdateRequest(
+                request.username(),
+                request.email(),
                 request.phoneNumber()
         );
     }
