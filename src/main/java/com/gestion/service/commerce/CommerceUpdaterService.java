@@ -23,8 +23,11 @@ public class CommerceUpdaterService {
         commerceToUpdate.setBusinessName(request.businessName());
         commerceToUpdate.setCuit(request.cuit());
         commerceToUpdate.setAddress(request.address());
-        if (request.logo() != null && request.logo().isEmpty() && request.logo().getName().isEmpty()) {
-            fileDeleterService.deleteFile(commerceToUpdate.getLogoName());
+
+        if (request.logo() != null) {
+            if (commerceToUpdate.getLogoName() != null) {
+                fileDeleterService.deleteFile(commerceToUpdate.getLogoName());
+            }
             String newLogoName = fileUploaderService.uploadFile(request.logo(), "business-logos");
             commerceToUpdate.setLogoName(newLogoName);
         }

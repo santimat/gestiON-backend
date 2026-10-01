@@ -1,6 +1,5 @@
 package com.gestion.service.commerce;
 
-
 import com.gestion.dto.request.commerce.CommerceRequest;
 import com.gestion.dto.request.commerce.CommerceWithOwnerUpdateRequest;
 import com.gestion.dto.request.user.UserUpdateRequest;
