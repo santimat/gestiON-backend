@@ -28,7 +28,7 @@ public class CommercesWithOwnerGetController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "DESC") String sortOrder,
-            @RequestParam(defaultValue = "createdAt") String sortBy) {
+            @RequestParam(defaultValue = "updatedAt") String sortBy) {
         Sort.Direction sortDirection = Sort.Direction.fromString(sortOrder);
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);

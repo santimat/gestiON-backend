@@ -2,8 +2,8 @@ package com.gestion.service.commerce;
 
 
 import com.gestion.dto.request.commerce.CommerceRequest;
-import com.gestion.dto.request.commerce.CommerceWithOwnerRequest;
-import com.gestion.dto.request.user.UserRequest;
+import com.gestion.dto.request.commerce.CommerceWithOwnerUpdateRequest;
+import com.gestion.dto.request.user.UserUpdateRequest;
 import com.gestion.dto.response.commerce.CommerceWithOwnerResponse;
 import com.gestion.mappers.CommerceMapper;
 import com.gestion.mappers.UserMapper;
@@ -23,11 +23,11 @@ public class CommerceWithOwnerUpdaterService {
     private final FileFinderService fileFinderService;
 
     @Transactional
-    public CommerceWithOwnerResponse updateCommerceWithOwner(CommerceWithOwnerRequest request, Long commerceId, Long userId) {
-        CommerceRequest commerceRequest = CommerceMapper.toRequest(request);
+    public CommerceWithOwnerResponse updateCommerceWithOwner(CommerceWithOwnerUpdateRequest request, Long commerceId, Long userId) {
+        CommerceRequest commerceRequest = CommerceMapper.toRequestFromCWOUR(request);
         Commerce updatedCommerce = commerceUpdaterService.updateCommerce(commerceRequest, commerceId);
 
-        UserRequest userRequest = UserMapper.toRequest(request);
+        UserUpdateRequest userRequest = UserMapper.toUpdateRequestFromCWOUR(request);
         User updatedUser = userUpdaterService.updateUser(userRequest, userId);
 
         String businessLogoUrl = fileFinderService.getObjectUrl(updatedCommerce.getLogoName(), "business-logos");

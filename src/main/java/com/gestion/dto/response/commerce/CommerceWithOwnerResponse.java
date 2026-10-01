@@ -16,6 +16,6 @@ public record CommerceWithOwnerResponse(
         @Nullable
         String businessLogoUrl,
         boolean businessActive,
-        LocalDateTime createdAt
+        LocalDateTime updatedAt
 ) {
 }

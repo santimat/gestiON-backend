@@ -2,6 +2,7 @@ package com.gestion.mappers;
 
 import com.gestion.dto.request.commerce.CommerceRequest;
 import com.gestion.dto.request.commerce.CommerceWithOwnerRequest;
+import com.gestion.dto.request.commerce.CommerceWithOwnerUpdateRequest;
 import com.gestion.dto.response.commerce.CommerceWithOwnerResponse;
 import com.gestion.model.Commerce;
 import com.gestion.model.User;
@@ -19,7 +20,16 @@ public class CommerceMapper {
         return commerce;
     }
 
-    public static CommerceRequest toRequest(CommerceWithOwnerRequest request) {
+    public static CommerceRequest toRequestFromCWOR(CommerceWithOwnerRequest request) {
+        return new CommerceRequest(
+                request.businessName(),
+                request.address(),
+                request.cuit(),
+                request.businessLogo()
+        );
+    }
+
+    public static CommerceRequest toRequestFromCWOUR(CommerceWithOwnerUpdateRequest request) {
         return new CommerceRequest(
                 request.businessName(),
                 request.address(),
@@ -37,11 +47,11 @@ public class CommerceMapper {
                 user.getPhoneNumber(),
                 commerce.getId(),
                 commerce.getBusinessName(),
+                commerce.getCuit(),
                 commerce.getAddress(),
                 businessLogoUrl,
-                commerce.getCuit(),
                 commerce.isActive(),
-                commerce.getCreatedAt()
+                commerce.getUpdatedAt()
         );
     }
 }

@@ -25,10 +25,10 @@ public class CommerceWithOwnerCreatorService {
     @Transactional
     public CommerceWithOwnerResponse createCommerceWithOwner(CommerceWithOwnerRequest request
     ) {
-        CommerceRequest commerceRequest = CommerceMapper.toRequest(request);
+        CommerceRequest commerceRequest = CommerceMapper.toRequestFromCWOR(request);
         Commerce commerce = commerceCreatorService.createCommerce(commerceRequest);
 
-        UserRequest userRequest = UserMapper.toRequest(request);
+        UserRequest userRequest = UserMapper.toRequestFromCWOR(request);
         User user = userCreatorService.createUser(userRequest, Role.OWNER, commerce);
 
         String businessLogoUrl = null;
