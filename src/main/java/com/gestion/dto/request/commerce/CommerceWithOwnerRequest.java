@@ -37,6 +37,5 @@ public record CommerceWithOwnerRequest(
 
         @Nullable
         MultipartFile businessLogo
-
 ) {
 }

@@ -11,7 +11,6 @@ public class ProductMapper {
         product.setName(request.name());
         product.setDescription(request.description());
         product.setCostPrice(request.costPrice());
-        product.setSalePrice(request.salePrice());
         product.setCurrentStock(request.currentStock());
         product.setMinStock(request.minStock());
 

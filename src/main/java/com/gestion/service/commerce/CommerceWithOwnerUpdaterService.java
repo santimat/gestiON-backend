@@ -30,7 +30,12 @@ public class CommerceWithOwnerUpdaterService {
         UserUpdateRequest userRequest = UserMapper.toUpdateRequestFromCWOUR(request);
         User updatedUser = userUpdaterService.updateUser(userRequest, userId);
 
-        String businessLogoUrl = fileFinderService.getObjectUrl(updatedCommerce.getLogoName(), "business-logos");
+        String businessLogoUrl = null;
+
+        if (updatedCommerce.getLogoName() != null && !updatedCommerce.getLogoName().isEmpty()) {
+            businessLogoUrl =
+                    fileFinderService.getObjectUrl(updatedCommerce.getLogoName(), "business-logos");
+        }
 
         return CommerceMapper.toCommerceWithOwnerResponse(updatedCommerce, updatedUser, businessLogoUrl);
     }
