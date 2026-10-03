@@ -6,6 +6,7 @@ public record TokenPayload(
         String email,
         String name,
         Long userId,
+        Long commerceId,
         Role role,
         Boolean active
 ) {

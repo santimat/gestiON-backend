@@ -21,6 +21,7 @@ public class UserPrincipal implements UserDetails {
     private String email;
     private String name;
     private Role role;
+    private Long commerceId;
     private Boolean active;
 
     @Override

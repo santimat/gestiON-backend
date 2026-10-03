@@ -31,6 +31,7 @@ public class JwtService {
                 .subject(payload.email())
                 .claim("name", payload.name())
                 .claim("userId", payload.userId())
+                .claim("commerceId", payload.commerceId())
                 .claim("role", payload.role().toString())
                 .claim("active", payload.active())
                 .issuedAt(new Date())

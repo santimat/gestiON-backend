@@ -9,6 +9,7 @@ public class TokenPayloadMapper {
                 user.getEmail(),
                 user.getName(),
                 user.getId(),
+                user.getCommerce().getId(),
                 user.getRole(),
                 user.getActive()
         );
