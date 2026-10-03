@@ -1,9 +1,9 @@
 package com.gestion.dto.response.product;
 
 import com.gestion.dto.response.category.CategoryResponse;
-import com.gestion.enums.ProductStatus;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public record ProductResponse(
         Long id,
@@ -11,8 +11,11 @@ public record ProductResponse(
         String description,
         BigDecimal costPrice,
         BigDecimal salePrice,
+        Integer currentStock,
+        Integer minStock,
         String imageUrl,
-        ProductStatus status,
-        CategoryResponse category
+        CategoryResponse category,
+        boolean active,
+        LocalDateTime updatedAt
 ) {
 }

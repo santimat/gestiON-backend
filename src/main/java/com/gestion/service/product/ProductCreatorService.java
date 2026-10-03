@@ -1,8 +1,16 @@
 package com.gestion.service.product;
 
+import com.gestion.config.UserPrincipal;
+import com.gestion.dto.request.product.ProductRequest;
+import com.gestion.dto.response.product.ProductResponse;
+import com.gestion.mappers.CategoryMapper;
+import com.gestion.mappers.ProductMapper;
+import com.gestion.model.Category;
+import com.gestion.model.Commerce;
+import com.gestion.model.Product;
 import com.gestion.repository.JpaProductRepository;
 import com.gestion.service.category.CategoryFinderByIdService;
-import jakarta.persistence.EntityManager;
+import com.gestion.service.commerce.CommerceFinderByIdService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,19 +19,22 @@ import org.springframework.stereotype.Service;
 public class ProductCreatorService {
     private final JpaProductRepository productRepository;
     private final CategoryFinderByIdService categoryFinderByIdService;
-    private final EntityManager entityManager;
+    private final CommerceFinderByIdService commerceFinderByIdService;
+    private final ProductImageUploaderService productImageUploaderService;
 
-//    public Product createProduct(ProductRequest request, Long commerceId) {
-//
-//        Category category = categoryFinderByIdService.findById(request.categoryId());
-//        Product newProduct = ProductMapper.toEntity(request);
-//        newProduct.setCategory(category);
-//
-//        // para crear el proxy tomamos la referencía de la clase con Commerce.class y luego le pasamos el id del comercio que viene en el request
-//        // Este va a ser una instancia del objeto Commerce que solo vive en memoria y va a contener simplemente el id del comercio.
-//        Commerce commerceProxy = entityManager.getReference(Commerce.class, commerceId);
-//        newProduct.setCommerce(commerceProxy);
-//
-//        return productRepository.save(newProduct);
-//    }
+    public ProductResponse createProduct(ProductRequest request, UserPrincipal authenticatedUser) {
+        Commerce commerce = commerceFinderByIdService.findById(authenticatedUser.getCommerceId());
+        Category category = categoryFinderByIdService.findById(request.categoryId());
+
+        Product product = ProductMapper.toEntity(request, commerce, category);
+        Product newProduct = productRepository.save(product);
+
+        String imageUrl = null;
+
+        if (request.image() != null) {
+            imageUrl = productImageUploaderService.uploadProductImage(request.image(), newProduct);
+        }
+
+        return ProductMapper.toResponse(newProduct, imageUrl, request.salePrice(), CategoryMapper.toResponse(category));
+    }
 }

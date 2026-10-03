@@ -1,6 +1,5 @@
 package com.gestion.model;
 
-import com.gestion.enums.ProductStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,10 +23,10 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 50, nullable = false)
+    @Column(length = 100, nullable = false)
     private String name;
 
-    @Column(length = 200)
+    @Column()
     private String description;
 
     @Column(name = "image_name")
@@ -46,8 +45,7 @@ public class Product {
     @Column(nullable = false, name = "current_stock")
     private Integer currentStock;
 
-    @Enumerated(EnumType.STRING)
-    private ProductStatus status;
+    private boolean active;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "commerce_id")
