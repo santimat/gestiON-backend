@@ -1,7 +1,7 @@
 package com.gestion.dto.response.commerce;
 
 public record CommerceUpdateActiveResponse(
-        Long id,
+        Long commerceId,
         Boolean active
 ) {
 }

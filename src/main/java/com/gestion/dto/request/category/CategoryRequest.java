@@ -5,7 +5,7 @@ import org.hibernate.validator.constraints.Length;
 
 public record CategoryRequest(
         @NotBlank(message = "Name is required")
-        @Length(min = 3, max = 100, message = "Category name's length must be between 3 and 100 characters")
+        @Length(max = 100, message = "Category name's length must be lower than 3 characters")
         String name
 ) {
 }

@@ -1,9 +1,9 @@
-package com.gestion.controller.product;
+package com.gestion.controller.category;
 
 import com.gestion.config.UserPrincipal;
-import com.gestion.dto.request.product.ProductRequest;
-import com.gestion.dto.response.product.ProductResponse;
-import com.gestion.service.product.ProductCreatorService;
+import com.gestion.dto.request.category.CategoryRequest;
+import com.gestion.dto.response.category.CategoryResponse;
+import com.gestion.service.category.CategoryCreatorService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,16 +14,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping("/api/categories")
 @AllArgsConstructor
-public class ProductPostController {
-    private final ProductCreatorService productCreatorService;
+public class CategoryPostController {
+    private final CategoryCreatorService categoryCreatorService;
 
     @PostMapping
     @PreAuthorize("hasRole('OWNER')")
-    public ResponseEntity<ProductResponse> createProduct(ProductRequest request,
-                                                         @AuthenticationPrincipal UserPrincipal authenticatedUser) {
-        ProductResponse response = productCreatorService.createProduct(request, authenticatedUser);
+    public ResponseEntity<CategoryResponse> createCategory(CategoryRequest request,
+                                                           @AuthenticationPrincipal UserPrincipal authenticatedUser) {
+        CategoryResponse response = categoryCreatorService.createCategory(request, authenticatedUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

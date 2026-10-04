@@ -1,9 +1,13 @@
 package com.gestion.service.category;
 
+import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.category.CategoryRequest;
+import com.gestion.dto.response.category.CategoryResponse;
 import com.gestion.mappers.CategoryMapper;
 import com.gestion.model.Category;
+import com.gestion.model.Commerce;
 import com.gestion.repository.JpaCategoryRepository;
+import com.gestion.service.commerce.CommerceFinderByIdService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,8 +15,11 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class CategoryCreatorService {
     private final JpaCategoryRepository categoryRepository;
+    private final CommerceFinderByIdService commerceFinderByIdService;
 
-    public Category createCategory(CategoryRequest request) {
-        return categoryRepository.save(CategoryMapper.toEntity(request));
+    public CategoryResponse createCategory(CategoryRequest request, UserPrincipal authenticatedUser) {
+        Commerce commerce = commerceFinderByIdService.findById(authenticatedUser.getCommerceId());
+        Category newCategory = categoryRepository.save(CategoryMapper.toEntity(request, commerce));
+        return CategoryMapper.toResponse(newCategory);
     }
 }
