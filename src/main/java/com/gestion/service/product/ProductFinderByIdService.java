@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 public class ProductFinderByIdService {
     private final JpaProductRepository jpaProductRepository;
 
-    public Product findBy(Long id){
+    public Product findProductById(Long id) {
         return jpaProductRepository.findById(id).
                 orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + "not found"));
     }

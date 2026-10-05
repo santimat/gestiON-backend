@@ -25,6 +25,10 @@ public class Offer {
     @JoinColumn(name = "product_id")
     private Product product;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "commerce_id")
+    private Commerce commerce;
+
     @Column(nullable = false)
     private BigDecimal value;
 

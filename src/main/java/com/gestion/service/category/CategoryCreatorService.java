@@ -22,6 +22,7 @@ public class CategoryCreatorService {
         if (authenticatedUser == null || authenticatedUser.getCommerceId() == null) {
             throw new AccessDeniedException("Authenticated user or commerce ID is null");
         }
+
         Commerce commerce = commerceFinderByIdService.findById(authenticatedUser.getCommerceId());
         Category newCategory = categoryRepository.save(CategoryMapper.toEntity(request, commerce));
         return CategoryMapper.toResponse(newCategory);

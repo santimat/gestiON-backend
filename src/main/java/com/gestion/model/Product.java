@@ -26,7 +26,7 @@ public class Product {
     @Column(length = 100, nullable = false)
     private String name;
 
-    @Column()
+    @Column
     private String description;
 
     @Column(name = "image_name")
