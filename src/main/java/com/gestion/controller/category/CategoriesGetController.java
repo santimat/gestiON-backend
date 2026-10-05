@@ -4,7 +4,7 @@ package com.gestion.controller.category;
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.category.CategoryResponse;
 import com.gestion.service.category.CategorySearcherService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/categories")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CategoriesGetController {
     private final CategorySearcherService categorySearcherService;
 

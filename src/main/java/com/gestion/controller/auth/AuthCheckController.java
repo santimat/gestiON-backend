@@ -4,7 +4,7 @@ import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.user.AuthenticatedUserResponse;
 import com.gestion.mappers.UserMapper;
 import com.gestion.service.auth.AuthCheckerStatusService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth/me")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthCheckController {
 
     private final AuthCheckerStatusService authCheckerStatusService;

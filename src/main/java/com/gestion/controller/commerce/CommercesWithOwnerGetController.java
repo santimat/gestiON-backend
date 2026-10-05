@@ -2,7 +2,7 @@ package com.gestion.controller.commerce;
 
 import com.gestion.dto.response.commerce.CommerceWithOwnerResponse;
 import com.gestion.service.commerce.CommerceWithOwnerSearcherService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/commerces")
-@AllArgsConstructor
+@RequiredArgsConstructor
 
 public class CommercesWithOwnerGetController {
 
@@ -32,7 +32,7 @@ public class CommercesWithOwnerGetController {
         Sort.Direction sortDirection = Sort.Direction.fromString(sortOrder);
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
-        
+
         return ResponseEntity.ok(commerceWithOwnerSearcherService.findAllWithOwner(pageable));
     }
 }

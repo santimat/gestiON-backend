@@ -4,7 +4,7 @@ import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.product.ProductRequest;
 import com.gestion.dto.response.product.ProductResponse;
 import com.gestion.service.product.ProductCreatorService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/products")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ProductPostController {
     private final ProductCreatorService productCreatorService;
 

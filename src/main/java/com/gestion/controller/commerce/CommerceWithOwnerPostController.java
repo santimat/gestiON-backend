@@ -4,7 +4,7 @@ import com.gestion.dto.request.commerce.CommerceWithOwnerRequest;
 import com.gestion.dto.response.commerce.CommerceWithOwnerResponse;
 import com.gestion.service.commerce.CommerceWithOwnerCreatorService;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/commerces")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CommerceWithOwnerPostController {
     private final CommerceWithOwnerCreatorService commerceWithOwnerCreatorService;
 

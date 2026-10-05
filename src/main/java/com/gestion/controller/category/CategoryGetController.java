@@ -4,7 +4,7 @@ import com.gestion.dto.response.category.CategoryResponse;
 import com.gestion.mappers.CategoryMapper;
 import com.gestion.model.Category;
 import com.gestion.service.category.CategoryFinderByIdService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/categories")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CategoryGetController {
     private final CategoryFinderByIdService categoryFinderByIdService;
 

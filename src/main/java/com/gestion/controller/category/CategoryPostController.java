@@ -5,7 +5,7 @@ import com.gestion.dto.request.category.CategoryRequest;
 import com.gestion.dto.response.category.CategoryResponse;
 import com.gestion.service.category.CategoryCreatorService;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/categories")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CategoryPostController {
     private final CategoryCreatorService categoryCreatorService;
 
