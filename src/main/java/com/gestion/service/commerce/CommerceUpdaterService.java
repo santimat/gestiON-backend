@@ -2,6 +2,7 @@ package com.gestion.service.commerce;
 
 import com.gestion.dto.request.commerce.CommerceRequest;
 import com.gestion.model.Commerce;
+import com.gestion.properties.MinioProperties;
 import com.gestion.repository.JpaCommerceRepository;
 import com.gestion.service.file.FileDeleterService;
 import com.gestion.service.file.FileUploaderService;
@@ -16,6 +17,7 @@ public class CommerceUpdaterService {
     private final JpaCommerceRepository commerceRepository;
     private final FileDeleterService fileDeleterService;
     private final FileUploaderService fileUploaderService;
+    private final MinioProperties minioDirProperties;
 
     @Transactional
     public Commerce updateCommerce(CommerceRequest request, Long commerceId) {
@@ -28,7 +30,7 @@ public class CommerceUpdaterService {
             if (commerceToUpdate.getLogoName() != null) {
                 fileDeleterService.deleteFile(commerceToUpdate.getLogoName());
             }
-            String newLogoName = fileUploaderService.uploadFile(request.logo(), "business-logos");
+            String newLogoName = fileUploaderService.uploadFile(request.logo(), minioDirProperties.dir().businessLogos());
             commerceToUpdate.setLogoName(newLogoName);
         }
         return commerceRepository.save(commerceToUpdate);

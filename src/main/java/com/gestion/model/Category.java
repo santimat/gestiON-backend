@@ -21,4 +21,7 @@ public class Category {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "commerce_id", nullable = false)
     private Commerce commerce;
+
+    @Column(length = 200)
+    private String description;
 }

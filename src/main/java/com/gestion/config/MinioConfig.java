@@ -1,27 +1,22 @@
 package com.gestion.config;
 
+import com.gestion.properties.MinioProperties;
 import io.minio.MinioClient;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@RequiredArgsConstructor
 public class MinioConfig {
 
-    @Value("${minio.url}")
-    private String url;
-
-    @Value("${minio.access-secret}")
-    private String accessSecret;
-
-    @Value("${minio.access-key}")
-    private String accessKey;
+    private final MinioProperties minioProperties;
 
     @Bean
-    public MinioClient minioClient(){
+    public MinioClient minioClient() {
         return MinioClient.builder()
-                .endpoint(url)
-                .credentials(accessKey, accessSecret)
+                .endpoint(minioProperties.url())
+                .credentials(minioProperties.accessKey(), minioProperties.secretKey())
                 .build();
     }
 }

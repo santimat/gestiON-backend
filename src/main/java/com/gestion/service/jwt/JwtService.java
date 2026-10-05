@@ -1,29 +1,25 @@
 package com.gestion.service.jwt;
 
+import com.gestion.properties.JwtProperties;
 import com.gestion.utils.TokenPayload;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.security.Key;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 
 @Service
 public class JwtService {
-    private final String secretWord;
-    private final Long expirationTime;
+    private final JwtProperties jwtProperties;
+    private final SecretKey secretKey;
 
-    public JwtService(@Value("${jwt.secret}") String secretWord, @Value("${jwt.expiration}") Long expirationTime) {
-        this.secretWord = secretWord;
-        this.expirationTime = expirationTime;
-    }
-
-    public Key getSecretKey() {
-        return Keys.hmacShaKeyFor(secretWord.getBytes());
+    public JwtService(JwtProperties jwtProperties) {
+        this.jwtProperties = jwtProperties;
+        this.secretKey = Keys.hmacShaKeyFor(jwtProperties.secret().getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateToken(TokenPayload payload) {
@@ -35,14 +31,14 @@ public class JwtService {
                 .claim("role", payload.role().toString())
                 .claim("active", payload.active())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expirationTime))
-                .signWith(getSecretKey())
+                .expiration(new Date(System.currentTimeMillis() + jwtProperties.expiration()))
+                .signWith(secretKey)
                 .compact();
     }
 
     public Claims getClaimsFromToken(String token) {
         return Jwts.parser()
-                .verifyWith((SecretKey) getSecretKey())
+                .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
@@ -50,7 +46,7 @@ public class JwtService {
 
     public boolean isTokenValid(String token) {
         try {
-            Jwts.parser().verifyWith((SecretKey) getSecretKey()).build().parseSignedClaims(token);
+            Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
             return true;
         } catch (Exception e) {
             return false;

@@ -1,7 +1,7 @@
 package com.gestion.controller.commerce;
 
 import com.gestion.dto.response.commerce.CommerceWithOwnerResponse;
-import com.gestion.service.commerce.CommerceFindAllWithOwnerService;
+import com.gestion.service.commerce.CommerceWithOwnerSearcherService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 public class CommercesWithOwnerGetController {
 
-    private final CommerceFindAllWithOwnerService commerceFindAllWithOwnerService;
+    private final CommerceWithOwnerSearcherService commerceWithOwnerSearcherService;
 
     @GetMapping
     @PreAuthorize("hasRole('SUDO')")
@@ -32,6 +32,7 @@ public class CommercesWithOwnerGetController {
         Sort.Direction sortDirection = Sort.Direction.fromString(sortOrder);
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
-        return ResponseEntity.ok(commerceFindAllWithOwnerService.findAllWithOwner(pageable));
+        
+        return ResponseEntity.ok(commerceWithOwnerSearcherService.findAllWithOwner(pageable));
     }
 }

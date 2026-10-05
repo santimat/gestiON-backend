@@ -1,11 +1,12 @@
 package com.gestion.service.file;
 
 import com.gestion.exception.FileException;
+import com.gestion.properties.MinioProperties;
 import com.gestion.service.tika.MimeTypeDetecterService;
 import com.gestion.service.tika.MimeTypeValidatorService;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,15 +14,12 @@ import java.util.UUID;
 
 
 @Service
+@RequiredArgsConstructor
 public class FileUploaderService {
 
     private final MinioClient minioClient;
-    @Value("${minio.bucket}")
-    private String bucketName;
+    private final MinioProperties minioProperties;
 
-    public FileUploaderService(MinioClient minioClient) {
-        this.minioClient = minioClient;
-    }
 
     public String uploadFile(MultipartFile file, String subDir) {
         // 1. Validar tipo de archivo
@@ -44,7 +42,7 @@ public class FileUploaderService {
                     // constructor para los argumentos
                     PutObjectArgs.builder()
                             // en que bucket queremos guardarlo
-                            .bucket(bucketName)
+                            .bucket(minioProperties.bucket())
                             // el nombre que tendrá
                             .object(subDir + "/" + objectName)
                             // le pasamos los bytes en forma de flujo de datos

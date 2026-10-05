@@ -15,15 +15,16 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class AuthLoginService {
     private final UserFinderByEmailService userFinderByEmailService;
+    private final AuthCheckerStatusService authCheckerStatusService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
     public String login(UserLoginRequest userRequest) {
-        User loginUser = userFinderByEmailService.findByEmail(userRequest.email());
 
-        if (!loginUser.getActive())
-            throw new InactiveResourceException("User with id " + loginUser.getId() +
-                    " is inactive");
+        if (!authCheckerStatusService.isCommerceUserActive(userRequest.email()))
+            throw new InactiveResourceException("Commerce user is not active");
+
+        User loginUser = userFinderByEmailService.findByEmail(userRequest.email());
 
         boolean passwordMatches = passwordEncoder.matches(userRequest.password(), loginUser.getPassword());
         if (!passwordMatches) throw new WrongPasswordException("Wrong password");

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 
-public class CommerceStatsService {
+public class CommerceStatsGetterService {
     private final JpaCommerceRepository commerceRepository;
 
     public CommerceStatsResponse getStats() {

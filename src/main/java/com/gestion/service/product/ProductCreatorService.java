@@ -24,7 +24,7 @@ public class ProductCreatorService {
 
     public ProductResponse createProduct(ProductRequest request, UserPrincipal authenticatedUser) {
         Commerce commerce = commerceFinderByIdService.findById(authenticatedUser.getCommerceId());
-        Category category = categoryFinderByIdService.findById(request.categoryId());
+        Category category = categoryFinderByIdService.findCategoryById(request.categoryId());
 
         Product product = ProductMapper.toEntity(request, commerce, category);
         Product newProduct = productRepository.save(product);

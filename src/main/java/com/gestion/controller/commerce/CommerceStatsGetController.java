@@ -1,7 +1,7 @@
 package com.gestion.controller.commerce;
 
 import com.gestion.dto.response.commerce.CommerceStatsResponse;
-import com.gestion.service.commerce.CommerceStatsService;
+import com.gestion.service.commerce.CommerceStatsGetterService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/commerces/stats")
 @AllArgsConstructor
 public class CommerceStatsGetController {
-    private final CommerceStatsService commerceStatsService;
+    private final CommerceStatsGetterService commerceStatsGetterService;
 
     @GetMapping
     @PreAuthorize("hasRole('SUDO')")
     public ResponseEntity<CommerceStatsResponse> getStats() {
-        return ResponseEntity.ok(commerceStatsService.getStats());
+        return ResponseEntity.ok(commerceStatsGetterService.getStats());
     }
 }

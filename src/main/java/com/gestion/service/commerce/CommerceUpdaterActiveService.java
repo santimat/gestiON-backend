@@ -12,7 +12,6 @@ public class CommerceUpdaterActiveService {
     private final JpaCommerceRepository commerceRepository;
     private final CommerceFinderByIdService commerceFinderByIdService;
 
-    
     public CommerceUpdateActiveResponse toggleActive(Long commerceId) {
         Commerce commerceToUpdate = commerceFinderByIdService.findById(commerceId);
         commerceToUpdate.setActive(!commerceToUpdate.isActive());

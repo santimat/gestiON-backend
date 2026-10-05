@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 public class CategoryFinderByIdService {
     private final JpaCategoryRepository categoryRepository;
 
-    public Category findById(Long id) {
+    public Category findCategoryById(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category with id " + id + " not found"));
     }

@@ -12,6 +12,7 @@ public class CategoryMapper {
         }
         Category category = new Category();
         category.setName(request.name());
+        category.setDescription(request.description());
         category.setCommerce(commerce);
         return category;
     }
@@ -22,7 +23,8 @@ public class CategoryMapper {
         }
         return new CategoryResponse(
                 category.getId(),
-                category.getName()
+                category.getName(),
+                category.getDescription()
         );
     }
 }
