@@ -21,7 +21,7 @@ public class CommerceUpdaterService {
 
     @Transactional
     public Commerce updateCommerce(CommerceRequest request, Long commerceId) {
-        Commerce commerceToUpdate = commerceFinderByIdService.findById(commerceId);
+        Commerce commerceToUpdate = commerceFinderByIdService.findCommerceById(commerceId);
         commerceToUpdate.setBusinessName(request.businessName());
         commerceToUpdate.setCuit(request.cuit());
         commerceToUpdate.setAddress(request.address());
