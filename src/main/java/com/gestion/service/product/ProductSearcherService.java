@@ -31,7 +31,7 @@ public class ProductSearcherService {
                     productImageUrl = fileFinderService.getObjectUrl(product.getImageName(), "products");
                 }
             } catch (MinioException e) {
-                System.out.println(e.getMessage());
+                System.out.println("Error retrieving business logo from MinIO: " + e.getCause());
             }
             BigDecimal salePrice = product.getCostPrice().multiply(BigDecimal.valueOf(1.5));
             CategoryResponse categoryResponse = CategoryMapper.toResponse(product.getCategory());

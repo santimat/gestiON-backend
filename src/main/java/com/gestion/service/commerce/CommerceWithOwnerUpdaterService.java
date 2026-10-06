@@ -11,6 +11,7 @@ import com.gestion.model.User;
 import com.gestion.properties.MinioProperties;
 import com.gestion.service.file.FileFinderService;
 import com.gestion.service.user.UserUpdaterService;
+import io.minio.errors.MinioException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,7 @@ public class CommerceWithOwnerUpdaterService {
     private final CommerceUpdaterService commerceUpdaterService;
     private final UserUpdaterService userUpdaterService;
     private final FileFinderService fileFinderService;
-    private final MinioProperties minioDirProperties;
+    private final MinioProperties minioProperties;
 
 
     @Transactional
@@ -35,9 +36,12 @@ public class CommerceWithOwnerUpdaterService {
         String businessLogoUrl = null;
 
         if (updatedCommerce.getLogoName() != null && !updatedCommerce.getLogoName().isEmpty()) {
-            businessLogoUrl =
-                    fileFinderService.getObjectUrl(updatedCommerce.getLogoName(),
-                            minioDirProperties.dir().businessLogos());
+            try {
+                businessLogoUrl = fileFinderService.getObjectUrl(updatedCommerce.getLogoName(),
+                        minioProperties.dir().businessLogos());
+            } catch (MinioException e) {
+                System.out.println("Error retrieving business logo from MinIO: " + e.getCause());
+            }
         }
 
         return CommerceMapper.toCommerceWithOwnerResponse(updatedCommerce, updatedUser, businessLogoUrl);

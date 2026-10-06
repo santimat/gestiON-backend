@@ -8,6 +8,7 @@ import com.gestion.model.User;
 import com.gestion.properties.MinioProperties;
 import com.gestion.repository.JpaUserRepository;
 import com.gestion.service.file.FileFinderService;
+import io.minio.errors.MinioException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,9 +27,15 @@ public class CommerceWithOwnerSearcherService {
 
         return owners.map(owner -> {
             Commerce commerce = owner.getCommerce();
-            String businessLogoUrl = commerce.getLogoName() != null ?
-                    fileFinderService.getObjectUrl(commerce.getLogoName(),
-                            minioDirProperties.dir().businessLogos()) : null;
+            String businessLogoUrl = null;
+            try {
+                if (commerce.getLogoName() != null) {
+                    businessLogoUrl = fileFinderService.getObjectUrl(commerce.getLogoName(), minioDirProperties.dir().businessLogos());
+                }
+            } catch (MinioException e) {
+                System.out.println("Error retrieving business logo from MinIO: " + e.getCause());
+            }
+
             return CommerceMapper.toCommerceWithOwnerResponse(commerce, owner, businessLogoUrl);
         });
     }

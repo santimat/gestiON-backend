@@ -19,8 +19,6 @@ public class FileFinderService {
         this.minioClient = minioClient;
     }
 
-    // TODO: preguntar como evitar que si el bucket está sin conexión, los recursos se muestren igual, pero sin las
-    //  imagenes
     public String getObjectUrl(String objectName, String subDir) throws MinioException {
         return minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
