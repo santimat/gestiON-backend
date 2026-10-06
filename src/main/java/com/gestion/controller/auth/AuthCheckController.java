@@ -24,7 +24,8 @@ public class AuthCheckController {
         if (authenticatedUser == null)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-        if (!authCheckerStatusService.isCommerceUserActive(authenticatedUser.getEmail())) {
+        // TODO: preguntar si conviene tener una tabla intermedia para la relación usuarios comercios.
+        if (authenticatedUser.getCommerceId() != null && !authCheckerStatusService.isCommerceUserActive(authenticatedUser.getEmail())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.ok(UserMapper.toTokenResponseFromUserPrincipal(authenticatedUser));
