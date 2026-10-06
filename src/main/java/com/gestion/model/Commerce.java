@@ -35,6 +35,8 @@ public class Commerce {
 
     private boolean active;
 
+    private double profitPercetange;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;

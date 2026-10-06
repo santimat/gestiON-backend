@@ -11,6 +11,7 @@ public record ProductResponse(
         String description,
         BigDecimal costPrice,
         BigDecimal salePrice,
+        BigDecimal suggestedPrice,
         Integer currentStock,
         Integer minStock,
         String imageUrl,
