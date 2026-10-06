@@ -13,7 +13,7 @@ public class CommerceUpdaterActiveService {
     private final CommerceFinderByIdService commerceFinderByIdService;
 
     public CommerceUpdateActiveResponse toggleActive(Long commerceId) {
-        Commerce commerceToUpdate = commerceFinderByIdService.findById(commerceId);
+        Commerce commerceToUpdate = commerceFinderByIdService.findCommerceById(commerceId);
         commerceToUpdate.setActive(!commerceToUpdate.isActive());
         Commerce updatedCommerce = commerceRepository.save(commerceToUpdate);
         return new CommerceUpdateActiveResponse(
