@@ -37,7 +37,7 @@ public class ProductCreatorService {
             imageUrl = productImageUploaderService.uploadProductImage(request.image(), newProduct);
         }
 
-        //TODO: preguntar de donde obtener el precio de venta, si es un campo de la entidad Product o si se calcula de alguna manera
+        //TODO: precio costo, precio sugerido (disabled), precio final (editable)
         BigDecimal salePrice = newProduct.getCostPrice().multiply(BigDecimal.valueOf(1.5));
 
         return ProductMapper.toResponse(newProduct, imageUrl, salePrice, CategoryMapper.toResponse(category));

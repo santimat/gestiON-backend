@@ -1,5 +1,6 @@
 package com.gestion.service.commerce;
 
+import com.gestion.exception.FileException;
 import com.gestion.model.Commerce;
 import com.gestion.properties.MinioProperties;
 import com.gestion.repository.JpaCommerceRepository;
@@ -24,6 +25,10 @@ public class CommerceLogoUploaderService {
         commerce.setLogoName(bussinesLogoName);
         commerceRepository.save(commerce);
 
-        return fileFinderService.getObjectUrl(bussinesLogoName, minioDirProperties.dir().businessLogos());
+        try {
+            return fileFinderService.getObjectUrl(bussinesLogoName, minioDirProperties.dir().businessLogos());
+        } catch (Exception e) {
+            throw new FileException("", e.getCause());
+        }
     }
 }

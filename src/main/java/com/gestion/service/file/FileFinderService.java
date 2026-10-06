@@ -1,9 +1,9 @@
 package com.gestion.service.file;
 
-import com.gestion.exception.FileException;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.Http;
 import io.minio.MinioClient;
+import io.minio.errors.MinioException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -21,18 +21,14 @@ public class FileFinderService {
 
     // TODO: preguntar como evitar que si el bucket está sin conexión, los recursos se muestren igual, pero sin las
     //  imagenes
-    public String getObjectUrl(String objectName, String subDir) {
-        try {
-            return minioClient.getPresignedObjectUrl(
-                    GetPresignedObjectUrlArgs.builder()
-                            .method(Http.Method.GET)
-                            .bucket(bucketName)
-                            .object(subDir + "/" + objectName)
-                            .expiry(5, TimeUnit.HOURS)
-                            .build()
-            );
-        } catch (Exception e) {
-            throw new FileException("An error occurred when getting file url: " + e.getMessage());
-        }
+    public String getObjectUrl(String objectName, String subDir) throws MinioException {
+        return minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                        .method(Http.Method.GET)
+                        .bucket(bucketName)
+                        .object(subDir + "/" + objectName)
+                        .expiry(5, TimeUnit.HOURS)
+                        .build()
+        );
     }
 }
