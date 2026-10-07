@@ -19,22 +19,21 @@ public class OrderDetail {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // esto es apropiado que este en order detail y order?
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "commerce_id")
-    private Commerce commerce;
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     private Product product;
 
     @Column(nullable = false)
-    private BigDecimal unitaryPrice;
+    private BigDecimal unitPrice;
 
     @Column(nullable = false)
     private Integer quantity;
 
     @Column(nullable = false)
     private BigDecimal subTotal;
-    //Este subTotal seria del orderdetail (unitaryPrice * quantity)
+
 }
