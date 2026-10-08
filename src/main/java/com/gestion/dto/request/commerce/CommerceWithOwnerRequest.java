@@ -3,6 +3,7 @@ package com.gestion.dto.request.commerce;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,6 +37,10 @@ public record CommerceWithOwnerRequest(
         String cuit,
 
         @Nullable
-        MultipartFile businessLogo
+        MultipartFile businessLogo,
+
+        @Nullable
+        @Positive
+        Double profitMultiplier
 ) {
 }

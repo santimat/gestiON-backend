@@ -2,7 +2,7 @@ package com.gestion.controller.auth;
 
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.user.AuthenticatedUserResponse;
-import com.gestion.mappers.UserMapper;
+import com.gestion.mappers.AuthenticatedUserMapper;
 import com.gestion.service.auth.AuthCheckerStatusService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,9 +24,10 @@ public class AuthCheckController {
         if (authenticatedUser == null)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-        if (!authCheckerStatusService.isCommerceUserActive(authenticatedUser.getEmail())) {
+        // TODO: preguntar si conviene tener una tabla intermedia para la relación usuarios comercios.
+        if (authenticatedUser.getCommerceId() != null && !authCheckerStatusService.isCommerceUserActive(authenticatedUser.getEmail())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.ok(UserMapper.toTokenResponseFromUserPrincipal(authenticatedUser));
+        return ResponseEntity.ok(AuthenticatedUserMapper.toTokenResponseFromUserPrincipal(authenticatedUser));
     }
 }

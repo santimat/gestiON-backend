@@ -21,10 +21,10 @@ public class AuthLoginService {
 
     public String login(UserLoginRequest userRequest) {
 
-        if (!authCheckerStatusService.isCommerceUserActive(userRequest.email()))
-            throw new InactiveResourceException("Commerce user is not active");
-
         User loginUser = userFinderByEmailService.findByEmail(userRequest.email());
+
+        if (loginUser.getCommerce() != null && !authCheckerStatusService.isCommerceUserActive(loginUser.getEmail()))
+            throw new InactiveResourceException("Commerce user is not active");
 
         boolean passwordMatches = passwordEncoder.matches(userRequest.password(), loginUser.getPassword());
         if (!passwordMatches) throw new WrongPasswordException("Wrong password");

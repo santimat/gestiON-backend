@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 
-public record ProductRequest(
+public record ProductUpdateRequest(
         @NotBlank(message = "Product's name is required")
         @Length(max = 100, message = "Product's length must be lower than 100 characters")
         String name,
@@ -22,7 +22,7 @@ public record ProductRequest(
         @Positive(message = "Product's sale price must be a positive number")
         BigDecimal salePrice,
         @Nullable
-        @Positive(message = " Product's profit multiplier must be a positive number")
+        @Positive(message = "Product's profit multiplier must be a positive number")
         Double profitMultiplier,
         @Nullable
         MultipartFile image,

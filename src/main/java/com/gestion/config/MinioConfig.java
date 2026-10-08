@@ -2,12 +2,12 @@ package com.gestion.config;
 
 import com.gestion.properties.MinioProperties;
 import io.minio.MinioClient;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class MinioConfig {
 
     private final MinioProperties minioProperties;

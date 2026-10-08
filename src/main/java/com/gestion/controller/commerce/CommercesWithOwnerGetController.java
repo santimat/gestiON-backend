@@ -32,7 +32,7 @@ public class CommercesWithOwnerGetController {
         Sort.Direction sortDirection = Sort.Direction.fromString(sortOrder);
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
-        
+
         return ResponseEntity.ok(commerceWithOwnerSearcherService.findAllWithOwner(pageable));
     }
 }

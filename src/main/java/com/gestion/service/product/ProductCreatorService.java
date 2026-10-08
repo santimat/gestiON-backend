@@ -14,16 +14,19 @@ import com.gestion.service.commerce.CommerceFinderByIdService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 @AllArgsConstructor
 public class ProductCreatorService {
     private final JpaProductRepository productRepository;
-    private final CategoryFinderByIdService categoryFinderByIdService;
+    private final ProductSuggestedPriceCalculatorService productSuggestedPriceCalculatorService;
     private final CommerceFinderByIdService commerceFinderByIdService;
+    private final CategoryFinderByIdService categoryFinderByIdService;
     private final ProductImageUploaderService productImageUploaderService;
 
     public ProductResponse createProduct(ProductRequest request, UserPrincipal authenticatedUser) {
-        Commerce commerce = commerceFinderByIdService.findById(authenticatedUser.getCommerceId());
+        Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
         Category category = categoryFinderByIdService.findCategoryById(request.categoryId());
 
         Product product = ProductMapper.toEntity(request, commerce, category);
@@ -35,6 +38,7 @@ public class ProductCreatorService {
             imageUrl = productImageUploaderService.uploadProductImage(request.image(), newProduct);
         }
 
-        return ProductMapper.toResponse(newProduct, imageUrl, request.salePrice(), CategoryMapper.toResponse(category));
+        BigDecimal suggestedPrice = productSuggestedPriceCalculatorService.calculateSuggestedPrice(newProduct);
+        return ProductMapper.toResponse(newProduct, imageUrl, suggestedPrice, CategoryMapper.toResponse(category));
     }
 }

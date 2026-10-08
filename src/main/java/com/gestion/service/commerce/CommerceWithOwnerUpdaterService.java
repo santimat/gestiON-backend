@@ -5,12 +5,14 @@ import com.gestion.dto.request.commerce.CommerceWithOwnerUpdateRequest;
 import com.gestion.dto.request.user.UserUpdateRequest;
 import com.gestion.dto.response.commerce.CommerceWithOwnerResponse;
 import com.gestion.mappers.CommerceMapper;
-import com.gestion.mappers.UserMapper;
+import com.gestion.mappers.CommerceWithOwnerMapper;
+import com.gestion.mappers.UserUpdateMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.User;
 import com.gestion.properties.MinioProperties;
 import com.gestion.service.file.FileFinderService;
 import com.gestion.service.user.UserUpdaterService;
+import io.minio.errors.MinioException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +23,7 @@ public class CommerceWithOwnerUpdaterService {
     private final CommerceUpdaterService commerceUpdaterService;
     private final UserUpdaterService userUpdaterService;
     private final FileFinderService fileFinderService;
-    private final MinioProperties minioDirProperties;
+    private final MinioProperties minioProperties;
 
 
     @Transactional
@@ -29,17 +31,20 @@ public class CommerceWithOwnerUpdaterService {
         CommerceRequest commerceRequest = CommerceMapper.toRequestFromCWOUR(request);
         Commerce updatedCommerce = commerceUpdaterService.updateCommerce(commerceRequest, commerceId);
 
-        UserUpdateRequest userRequest = UserMapper.toUpdateRequestFromCWOUR(request);
+        UserUpdateRequest userRequest = UserUpdateMapper.toUpdateRequestFromCWOUR(request);
         User updatedUser = userUpdaterService.updateUser(userRequest, userId);
 
         String businessLogoUrl = null;
 
         if (updatedCommerce.getLogoName() != null && !updatedCommerce.getLogoName().isEmpty()) {
-            businessLogoUrl =
-                    fileFinderService.getObjectUrl(updatedCommerce.getLogoName(),
-                            minioDirProperties.dir().businessLogos());
+            try {
+                businessLogoUrl = fileFinderService.getObjectUrl(updatedCommerce.getLogoName(),
+                        minioProperties.dir().businessLogos());
+            } catch (MinioException e) {
+                System.out.println("Error retrieving business logo from MinIO: " + e.getCause());
+            }
         }
 
-        return CommerceMapper.toCommerceWithOwnerResponse(updatedCommerce, updatedUser, businessLogoUrl);
+        return CommerceWithOwnerMapper.toCommerceWithOwnerResponse(updatedCommerce, updatedUser, businessLogoUrl);
     }
 }

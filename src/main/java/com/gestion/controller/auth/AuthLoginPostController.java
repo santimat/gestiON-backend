@@ -2,7 +2,7 @@ package com.gestion.controller.auth;
 
 import com.gestion.dto.request.user.UserLoginRequest;
 import com.gestion.dto.response.user.AuthenticatedUserResponse;
-import com.gestion.mappers.UserMapper;
+import com.gestion.mappers.AuthenticatedUserMapper;
 import com.gestion.service.auth.AuthLoginService;
 import com.gestion.service.jwt.JwtService;
 import jakarta.servlet.http.Cookie;
@@ -35,6 +35,6 @@ public class AuthLoginPostController {
         cookie.setMaxAge(86400);
         response.addCookie(cookie);
 
-        return ResponseEntity.ok(UserMapper.toTokenResponseFromClaims(jwtService.getClaimsFromToken(jwtToken)));
+        return ResponseEntity.ok(AuthenticatedUserMapper.toTokenResponseFromClaims(jwtService.getClaimsFromToken(jwtToken)));
     }
 }

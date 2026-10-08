@@ -1,7 +1,5 @@
 package com.gestion.dto.response.commerce;
 
-import jakarta.annotation.Nullable;
-
 import java.time.LocalDateTime;
 
 public record CommerceWithOwnerResponse(
@@ -13,9 +11,9 @@ public record CommerceWithOwnerResponse(
         String businessName,
         String cuit,
         String address,
-        @Nullable
         String businessLogoUrl,
         boolean businessActive,
+        Double profitMultiplier,
         LocalDateTime updatedAt
 ) {
 }

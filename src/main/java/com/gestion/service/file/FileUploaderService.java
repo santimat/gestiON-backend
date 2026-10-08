@@ -6,7 +6,7 @@ import com.gestion.service.tika.MimeTypeDetecterService;
 import com.gestion.service.tika.MimeTypeValidatorService;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,7 +14,7 @@ import java.util.UUID;
 
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class FileUploaderService {
 
     private final MinioClient minioClient;

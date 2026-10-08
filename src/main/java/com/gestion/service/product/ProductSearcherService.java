@@ -6,8 +6,10 @@ import com.gestion.dto.response.product.ProductResponse;
 import com.gestion.mappers.CategoryMapper;
 import com.gestion.mappers.ProductMapper;
 import com.gestion.model.Product;
+import com.gestion.properties.MinioProperties;
 import com.gestion.repository.JpaProductRepository;
 import com.gestion.service.file.FileFinderService;
+import io.minio.errors.MinioException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,17 +21,24 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class ProductSearcherService {
     private final JpaProductRepository jpaProductRepository;
+    private final ProductSuggestedPriceCalculatorService productSuggestedPriceCalculatorService;
     private final FileFinderService fileFinderService;
+    private final MinioProperties minioProperties;
 
     public Page<ProductResponse> searchProducts(UserPrincipal authenticatedUser, Pageable pageable) {
         Page<Product> products = jpaProductRepository.findAllByCommerceId(authenticatedUser.getCommerceId(), pageable);
         return products.map(product -> {
-            String productImageUrl = product.getImageName() != null ?
-                    fileFinderService.getObjectUrl(product.getImageName(), "product-images") : null;
-            // TODO: preguntar de donde obtener el precio de venta, si es un campo de la entidad Product o si se calcula de alguna manera
-            BigDecimal salePrice = product.getCostPrice().multiply(BigDecimal.valueOf(1.5));
+            String productImageUrl = null;
+            try {
+                if (product.getImageName() != null) {
+                    productImageUrl = fileFinderService.getObjectUrl(product.getImageName(), minioProperties.dir().productImages());
+                }
+            } catch (MinioException e) {
+                System.out.println("Error retrieving business logo from MinIO: " + e.getCause());
+            }
+            BigDecimal suggestedPrice = productSuggestedPriceCalculatorService.calculateSuggestedPrice(product);
             CategoryResponse categoryResponse = CategoryMapper.toResponse(product.getCategory());
-            return ProductMapper.toResponse(product, productImageUrl, salePrice, categoryResponse);
+            return ProductMapper.toResponse(product, productImageUrl, suggestedPrice, categoryResponse);
         });
     }
 }

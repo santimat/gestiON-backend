@@ -6,6 +6,7 @@ import com.gestion.dto.request.user.UserRequest;
 import com.gestion.dto.response.commerce.CommerceWithOwnerResponse;
 import com.gestion.enums.Role;
 import com.gestion.mappers.CommerceMapper;
+import com.gestion.mappers.CommerceWithOwnerMapper;
 import com.gestion.mappers.UserMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.User;
@@ -25,7 +26,8 @@ public class CommerceWithOwnerCreatorService {
     @Transactional
     public CommerceWithOwnerResponse createCommerceWithOwner(CommerceWithOwnerRequest request
     ) {
-        CommerceRequest commerceRequest = CommerceMapper.toRequestFromCWOR(request);
+        Double profitMultiplier = request.profitMultiplier() != null ? request.profitMultiplier() : 1.0;
+        CommerceRequest commerceRequest = CommerceMapper.toRequestFromCWOR(request, profitMultiplier);
         Commerce commerce = commerceCreatorService.createCommerce(commerceRequest);
 
         UserRequest userRequest = UserMapper.toRequestFromCWOR(request);
@@ -37,6 +39,6 @@ public class CommerceWithOwnerCreatorService {
             businessLogoUrl = commerceLogoUploaderService.uploadLogoAndGetName(request.businessLogo(), commerce);
         }
 
-        return CommerceMapper.toCommerceWithOwnerResponse(commerce, user, businessLogoUrl);
+        return CommerceWithOwnerMapper.toCommerceWithOwnerResponse(commerce, user, businessLogoUrl);
     }
 }

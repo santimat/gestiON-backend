@@ -5,7 +5,7 @@ import com.gestion.dto.request.offer.OfferRequest;
 import com.gestion.dto.response.offer.OfferResponse;
 import com.gestion.service.offer.OfferCreatorService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/offers")
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class OfferPostController {
     private final OfferCreatorService offerCreatorService;
 
