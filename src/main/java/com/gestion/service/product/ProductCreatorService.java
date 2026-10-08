@@ -20,8 +20,9 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class ProductCreatorService {
     private final JpaProductRepository productRepository;
-    private final CategoryFinderByIdService categoryFinderByIdService;
+    private final ProductSuggestedPriceCalculatorService productSuggestedPriceCalculatorService;
     private final CommerceFinderByIdService commerceFinderByIdService;
+    private final CategoryFinderByIdService categoryFinderByIdService;
     private final ProductImageUploaderService productImageUploaderService;
 
     public ProductResponse createProduct(ProductRequest request, UserPrincipal authenticatedUser) {
@@ -37,9 +38,10 @@ public class ProductCreatorService {
             imageUrl = productImageUploaderService.uploadProductImage(request.image(), newProduct);
         }
 
-        //TODO: precio costo, precio sugerido (disabled), precio final (editable)
-        BigDecimal salePrice = newProduct.getCostPrice().multiply(BigDecimal.valueOf(1.5));
-
-        return ProductMapper.toResponse(newProduct, imageUrl, salePrice, CategoryMapper.toResponse(category));
+        Double profitMultiplier = request.profitMultiplier() != null ? request.profitMultiplier() :
+                commerce.getProfitMultiplier();
+        BigDecimal suggestedPrice =
+                productSuggestedPriceCalculatorService.calculateSuggestedPrice(newProduct.getCostPrice(), profitMultiplier);
+        return ProductMapper.toResponse(newProduct, imageUrl, suggestedPrice, CategoryMapper.toResponse(category));
     }
 }

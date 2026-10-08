@@ -3,10 +3,7 @@ package com.gestion.mappers;
 import com.gestion.dto.request.commerce.CommerceRequest;
 import com.gestion.dto.request.commerce.CommerceWithOwnerRequest;
 import com.gestion.dto.request.commerce.CommerceWithOwnerUpdateRequest;
-import com.gestion.dto.response.commerce.CommerceWithOwnerResponse;
 import com.gestion.model.Commerce;
-import com.gestion.model.User;
-import jakarta.annotation.Nullable;
 
 public class CommerceMapper {
     public static Commerce toEntity(CommerceRequest request) {
@@ -20,12 +17,13 @@ public class CommerceMapper {
         return commerce;
     }
 
-    public static CommerceRequest toRequestFromCWOR(CommerceWithOwnerRequest request) {
+    public static CommerceRequest toRequestFromCWOR(CommerceWithOwnerRequest request, Double profitMultiplier) {
         return new CommerceRequest(
                 request.businessName(),
                 request.address(),
                 request.cuit(),
-                request.businessLogo()
+                request.businessLogo(),
+                profitMultiplier
         );
     }
 
@@ -34,24 +32,8 @@ public class CommerceMapper {
                 request.businessName(),
                 request.address(),
                 request.cuit(),
-                request.businessLogo()
-        );
-    }
-
-    public static CommerceWithOwnerResponse toCommerceWithOwnerResponse(Commerce commerce, User user,
-                                                                        @Nullable String businessLogoUrl) {
-        return new CommerceWithOwnerResponse(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getPhoneNumber(),
-                commerce.getId(),
-                commerce.getBusinessName(),
-                commerce.getCuit(),
-                commerce.getAddress(),
-                businessLogoUrl,
-                commerce.isActive(),
-                commerce.getUpdatedAt()
+                request.businessLogo(),
+                request.profitMultiplier()
         );
     }
 }

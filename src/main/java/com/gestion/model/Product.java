@@ -32,8 +32,11 @@ public class Product {
     @Column(name = "image_name")
     private String imageName;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "cost_price")
     private BigDecimal costPrice;
+
+    @Column(nullable = false, name = "sale_price")
+    private BigDecimal salePrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
@@ -45,7 +48,11 @@ public class Product {
     @Column(nullable = false, name = "current_stock")
     private Integer currentStock;
 
+    @Column(nullable = false)
     private boolean active;
+
+    @Column(name = "profit_multiplier")
+    private Double profitMultiplier;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "commerce_id")

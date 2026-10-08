@@ -28,7 +28,7 @@ public class CommerceLogoUploaderService {
         try {
             return fileFinderService.getObjectUrl(bussinesLogoName, minioDirProperties.dir().businessLogos());
         } catch (Exception e) {
-            throw new FileException("", e.getCause());
+            throw new FileException("Error while getting business logo url" + e.getCause());
         }
     }
 }

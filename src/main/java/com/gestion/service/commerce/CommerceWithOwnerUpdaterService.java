@@ -5,7 +5,8 @@ import com.gestion.dto.request.commerce.CommerceWithOwnerUpdateRequest;
 import com.gestion.dto.request.user.UserUpdateRequest;
 import com.gestion.dto.response.commerce.CommerceWithOwnerResponse;
 import com.gestion.mappers.CommerceMapper;
-import com.gestion.mappers.UserMapper;
+import com.gestion.mappers.CommerceWithOwnerMapper;
+import com.gestion.mappers.UserUpdateMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.User;
 import com.gestion.properties.MinioProperties;
@@ -30,7 +31,7 @@ public class CommerceWithOwnerUpdaterService {
         CommerceRequest commerceRequest = CommerceMapper.toRequestFromCWOUR(request);
         Commerce updatedCommerce = commerceUpdaterService.updateCommerce(commerceRequest, commerceId);
 
-        UserUpdateRequest userRequest = UserMapper.toUpdateRequestFromCWOUR(request);
+        UserUpdateRequest userRequest = UserUpdateMapper.toUpdateRequestFromCWOUR(request);
         User updatedUser = userUpdaterService.updateUser(userRequest, userId);
 
         String businessLogoUrl = null;
@@ -44,6 +45,6 @@ public class CommerceWithOwnerUpdaterService {
             }
         }
 
-        return CommerceMapper.toCommerceWithOwnerResponse(updatedCommerce, updatedUser, businessLogoUrl);
+        return CommerceWithOwnerMapper.toCommerceWithOwnerResponse(updatedCommerce, updatedUser, businessLogoUrl);
     }
 }

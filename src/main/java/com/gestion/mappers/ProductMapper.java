@@ -17,6 +17,8 @@ public class ProductMapper {
         product.setName(request.name());
         product.setDescription(request.description());
         product.setCostPrice(request.costPrice());
+        product.setSalePrice(request.salePrice());
+        product.setProfitMultiplier(request.profitMultiplier());
         product.setCurrentStock(request.currentStock());
         product.setMinStock(request.minStock());
         product.setCommerce(commerce);
@@ -24,7 +26,10 @@ public class ProductMapper {
         return product;
     }
 
-    public static ProductResponse toResponse(Product product, String imageUrl, BigDecimal salePrice, CategoryResponse categoryResponse) {
+    public static ProductResponse toResponse(Product product,
+                                             String imageUrl,
+                                             BigDecimal suggestedPrice,
+                                             CategoryResponse categoryResponse) {
         if (product == null) {
             return null;
         }
@@ -33,7 +38,8 @@ public class ProductMapper {
                 product.getName(),
                 product.getDescription(),
                 product.getCostPrice(),
-                salePrice,
+                product.getSalePrice(),
+                suggestedPrice,
                 product.getCurrentStock(),
                 product.getMinStock(),
                 imageUrl != null ? imageUrl : product.getImageName(),

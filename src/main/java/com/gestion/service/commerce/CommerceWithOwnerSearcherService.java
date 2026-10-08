@@ -2,7 +2,7 @@ package com.gestion.service.commerce;
 
 import com.gestion.dto.response.commerce.CommerceWithOwnerResponse;
 import com.gestion.enums.Role;
-import com.gestion.mappers.CommerceMapper;
+import com.gestion.mappers.CommerceWithOwnerMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.User;
 import com.gestion.properties.MinioProperties;
@@ -36,7 +36,7 @@ public class CommerceWithOwnerSearcherService {
                 System.out.println("Error retrieving business logo from MinIO: " + e.getCause());
             }
 
-            return CommerceMapper.toCommerceWithOwnerResponse(commerce, owner, businessLogoUrl);
+            return CommerceWithOwnerMapper.toCommerceWithOwnerResponse(commerce, owner, businessLogoUrl);
         });
     }
 }

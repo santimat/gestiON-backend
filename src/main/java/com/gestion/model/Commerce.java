@@ -33,9 +33,11 @@ public class Commerce {
     @Column(unique = true)
     private String logoName;
 
+    @Column(nullable = false)
     private boolean active;
 
-    private double profitPercetange;
+    @Column(name = "profit_multiplier", nullable = false)
+    private Double profitMultiplier;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp

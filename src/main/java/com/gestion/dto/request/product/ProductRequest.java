@@ -18,6 +18,12 @@ public record ProductRequest(
         @NotNull(message = "Product's cost price is required")
         @Positive(message = "Product's cost price must be a positive number")
         BigDecimal costPrice,
+        @NotNull(message = "Product's sale price is required")
+        @Positive(message = "Product's sale price must be a positive number")
+        BigDecimal salePrice,
+        @Nullable
+        @Positive(message = " Product's profit multiplier must be a positive number")
+        Double profitMultiplier,
         @Nullable
         MultipartFile image,
         @NotNull(message = "Category ID is required")

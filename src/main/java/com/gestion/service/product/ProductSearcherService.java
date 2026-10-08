@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class ProductSearcherService {
     private final JpaProductRepository jpaProductRepository;
+    private final ProductSuggestedPriceCalculatorService productSuggestedPriceCalculatorService;
     private final FileFinderService fileFinderService;
 
     public Page<ProductResponse> searchProducts(UserPrincipal authenticatedUser, Pageable pageable) {
@@ -33,9 +34,11 @@ public class ProductSearcherService {
             } catch (MinioException e) {
                 System.out.println("Error retrieving business logo from MinIO: " + e.getCause());
             }
-            BigDecimal salePrice = product.getCostPrice().multiply(BigDecimal.valueOf(1.5));
+            Double profitMultiplier = product.getProfitMultiplier() != null ? product.getProfitMultiplier() :
+                    product.getCommerce().getProfitMultiplier();
+            BigDecimal suggestedPrice = productSuggestedPriceCalculatorService.calculateSuggestedPrice(product.getCostPrice(), profitMultiplier);
             CategoryResponse categoryResponse = CategoryMapper.toResponse(product.getCategory());
-            return ProductMapper.toResponse(product, productImageUrl, salePrice, categoryResponse);
+            return ProductMapper.toResponse(product, productImageUrl, suggestedPrice, categoryResponse);
         });
     }
 }
