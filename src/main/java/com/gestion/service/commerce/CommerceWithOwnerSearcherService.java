@@ -9,13 +9,13 @@ import com.gestion.properties.MinioProperties;
 import com.gestion.repository.JpaUserRepository;
 import com.gestion.service.file.FileFinderService;
 import io.minio.errors.MinioException;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class CommerceWithOwnerSearcherService {
 
     private final JpaUserRepository userRepository;

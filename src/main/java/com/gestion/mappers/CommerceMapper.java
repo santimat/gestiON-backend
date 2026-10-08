@@ -14,6 +14,7 @@ public class CommerceMapper {
         commerce.setBusinessName(request.businessName());
         commerce.setAddress(request.address());
         commerce.setCuit(request.cuit());
+        commerce.setProfitMultiplier(request.profitMultiplier() != null ? request.profitMultiplier() : 1.0);
         return commerce;
     }
 

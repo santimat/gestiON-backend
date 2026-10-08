@@ -26,6 +26,10 @@ public class CommerceUpdaterService {
         commerceToUpdate.setCuit(request.cuit());
         commerceToUpdate.setAddress(request.address());
 
+        if (request.profitMultiplier() != null) {
+            commerceToUpdate.setProfitMultiplier(request.profitMultiplier());
+        }
+
         if (request.logo() != null) {
             if (commerceToUpdate.getLogoName() != null) {
                 fileDeleterService.deleteFile(commerceToUpdate.getLogoName());

@@ -40,6 +40,7 @@ public class ProductMapper {
                 product.getCostPrice(),
                 product.getSalePrice(),
                 suggestedPrice,
+                product.getProfitMultiplier(),
                 product.getCurrentStock(),
                 product.getMinStock(),
                 imageUrl != null ? imageUrl : product.getImageName(),

@@ -11,13 +11,13 @@ import com.gestion.repository.JpaOfferRepository;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import com.gestion.service.product.ProductFinderByIdService;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class OfferCreatorService {
     private final JpaOfferRepository offerRepository;
     private final CommerceFinderByIdService commerceFinderByIdService;

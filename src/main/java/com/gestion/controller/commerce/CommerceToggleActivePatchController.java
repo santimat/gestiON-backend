@@ -2,7 +2,7 @@ package com.gestion.controller.commerce;
 
 import com.gestion.dto.response.commerce.CommerceUpdateActiveResponse;
 import com.gestion.service.commerce.CommerceUpdaterActiveService;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/commerces")
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class CommerceToggleActivePatchController {
     private final CommerceUpdaterActiveService commerceUpdaterActiveService;
 

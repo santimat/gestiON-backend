@@ -38,10 +38,7 @@ public class ProductCreatorService {
             imageUrl = productImageUploaderService.uploadProductImage(request.image(), newProduct);
         }
 
-        Double profitMultiplier = request.profitMultiplier() != null ? request.profitMultiplier() :
-                commerce.getProfitMultiplier();
-        BigDecimal suggestedPrice =
-                productSuggestedPriceCalculatorService.calculateSuggestedPrice(newProduct.getCostPrice(), profitMultiplier);
+        BigDecimal suggestedPrice = productSuggestedPriceCalculatorService.calculateSuggestedPrice(newProduct);
         return ProductMapper.toResponse(newProduct, imageUrl, suggestedPrice, CategoryMapper.toResponse(category));
     }
 }

@@ -1,9 +1,9 @@
 package com.gestion.service.offer;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class OfferSearcherService {
 }
