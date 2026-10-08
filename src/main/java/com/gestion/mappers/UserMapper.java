@@ -37,6 +37,4 @@ public class UserMapper {
         user.setPhoneNumber(request.phoneNumber());
         return user;
     }
-
-
 }

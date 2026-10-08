@@ -42,9 +42,4 @@ public class Order {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    // Para que el bucle sea limpio y la relación bidireccional no falle en la base de datos
-    public void addDetail(OrderDetail detail) {
-        this.details.add(detail);
-        detail.setOrder(this);
-    }
 }

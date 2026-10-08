@@ -1,54 +1,57 @@
 package com.gestion.service.order;
 
 import com.gestion.dto.request.order.OrderRequest;
-import com.gestion.dto.request.orderDetail.OrderDetailRequest;
+import com.gestion.dto.response.order.OrderResponse;
+import com.gestion.dto.response.orderDetail.OrderDetailResponse;
+import com.gestion.mappers.OrderDetailMapper;
 import com.gestion.mappers.OrderMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.Order;
 import com.gestion.model.OrderDetail;
 import com.gestion.model.Product;
+import com.gestion.repository.JpaOrderDetailRepository;
 import com.gestion.repository.JpaOrderRepository;
-import jakarta.persistence.EntityManager;
+import com.gestion.service.commerce.CommerceFinderByIdService;
+import com.gestion.service.product.ProductFinderByIdService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
 public class OrderCreatorService {
     private final JpaOrderRepository jpaOrderRepository;
-    private final EntityManager entityManager;
+    private final JpaOrderDetailRepository jpaOrderDetailRepository;
+    private final CommerceFinderByIdService commerceFinderByIdService;
+    private final ProductFinderByIdService productFinderByIdService;
 
-    public Order createOrder(OrderRequest request, Long commerceId) {
+    public OrderResponse createOrder(OrderRequest request, Long commerceId) {
+
+        Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
         Order order = OrderMapper.toEntity(request);
-
-        Commerce commerceProxy = entityManager.getReference(Commerce.class, commerceId);
-        order.setCommerce(commerceProxy);
+        order.setCommerce(commerce);
 
         BigDecimal totalAccumulated = BigDecimal.ZERO;
 
-        for (OrderDetailRequest detailReq : request.details()) {
-            Product productProxy = entityManager.getReference(Product.class, detailReq.productId());
+        List<OrderDetail> details = request.details().stream().map((detail -> {
+            Product product = productFinderByIdService.findProductById(detail.productId());
 
-            BigDecimal subTotal = detailReq.unitPrice()
-                    .multiply(BigDecimal.valueOf(detailReq.quantity()));
+            BigDecimal subTotal = detail.unitPrice()
+                    .multiply(BigDecimal.valueOf(detail.quantity()));
 
-            OrderDetail detail = new OrderDetail();
-            detail.setProduct(productProxy);
-            detail.setUnitPrice(detailReq.unitPrice());
-            detail.setQuantity(detailReq.quantity());
-            detail.setSubTotal(subTotal);
+            totalAccumulated.add(subTotal);
 
-            order.addDetail(detail);
-
-            totalAccumulated = totalAccumulated.add(subTotal);
-        }
+            return OrderDetailMapper.toEntity(detail, product);
+        })).toList();
 
         order.setTotal(totalAccumulated);
 
-        return jpaOrderRepository.save(order);
-
+        Order newOrder = jpaOrderRepository.save(order);
+        List<OrderDetail> savedOrderDetails = jpaOrderDetailRepository.saveAllAndFlush(details);
+        List<OrderDetailResponse> orderDetailResponses = savedOrderDetails.stream().map(OrderDetailMapper::toDetailResponse).toList();
+        return OrderMapper.toResponse(order, orderDetailResponses);
     }
 
 }
