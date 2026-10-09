@@ -33,12 +33,14 @@ Docs and comments are mostly Spanish; commit messages are English.
   One class per service use case, named `Entity` + action + `Service`
   (e.g. `ProductCreatorService`, `CategoryFinderByIdService`). Follow both patterns for new code.
 - DTOs are records: requests in `dto/request`, responses in `dto/response`, accessed as `request.field()`
-  (no getters). Requests rely on `spring-boot-starter-validation` annotations; the first field error is
-  what `GlobalExceptionHandler` returns.
+  (no getters). Requests rely on `spring-boot-starter-validation` annotations; `GlobalExceptionHandler`
+  returns every field error in `fields[]` under `code=VALIDATION_ERROR`.
 - Injection via constructor with Lombok (`@AllArgsConstructor`; a few older controllers still use
   `@RequiredArgsConstructor`). Never field injection.
-- Business errors: throw custom exceptions from `exception/`; each one must get a handler in
-  `exception/handler/GlobalExceptionHandler`, otherwise it surfaces as a 500.
+- Business errors: throw exceptions extending `exception/BusinessException` with an `ErrorCode` from
+  `enums/ErrorCode` (key + HTTP status + default message). The single `BusinessException` handler in
+  `exception/handler/GlobalExceptionHandler` maps them; any other exception surfaces as
+  `code=INTERNAL_ERROR` (500) without leaking internals.
 - `EntityManager.getReference(...)` proxies are used to wire relations by id without a lookup — the live
   example is `service/sale/SaleCreatorService.java` (README's claim that it is used in
   `ProductCreatorService` is stale). Only safe when the id already comes from a validated JWT.
