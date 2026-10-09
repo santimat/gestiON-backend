@@ -17,7 +17,7 @@ public class OrderDetailMapper {
         );
     }
 
-    //TODO: order detail to entity
+
     public static OrderDetail toEntity(OrderDetailRequest request, Product product) {
         OrderDetail orderDetail = new OrderDetail();
         orderDetail.setProduct(product);
