@@ -1,8 +1,10 @@
 package com.gestion.service.auth;
 
 import com.gestion.dto.request.user.UserLoginRequest;
+import com.gestion.enums.ErrorCode;
 import com.gestion.exception.InactiveResourceException;
-import com.gestion.exception.WrongPasswordException;
+import com.gestion.exception.InvalidCredentialsException;
+import com.gestion.exception.ResourceNotFoundException;
 import com.gestion.mappers.TokenPayloadMapper;
 import com.gestion.model.User;
 import com.gestion.service.jwt.JwtService;
@@ -21,13 +23,19 @@ public class AuthLoginService {
 
     public String login(UserLoginRequest userRequest) {
 
-        User loginUser = userFinderByEmailService.findByEmail(userRequest.email());
-
-        if (loginUser.getCommerce() != null && !authCheckerStatusService.isCommerceUserActive(loginUser.getEmail()))
-            throw new InactiveResourceException("Commerce user is not active");
+        User loginUser;
+        try {
+            loginUser = userFinderByEmailService.findByEmail(userRequest.email());
+        } catch (ResourceNotFoundException e) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
 
         boolean passwordMatches = passwordEncoder.matches(userRequest.password(), loginUser.getPassword());
-        if (!passwordMatches) throw new WrongPasswordException("Wrong password");
+        if (!passwordMatches)
+            throw new InvalidCredentialsException("Invalid email or password");
+
+        if (loginUser.getCommerce() != null && !authCheckerStatusService.isCommerceUserActive(loginUser.getEmail()))
+            throw new InactiveResourceException(ErrorCode.ACCOUNT_DISABLED, "The account is disabled");
 
         return jwtService.generateToken(TokenPayloadMapper.toTokenPayload(loginUser));
     }

@@ -1,5 +1,6 @@
 package com.gestion.service.product;
 
+import com.gestion.enums.ErrorCode;
 import com.gestion.exception.ResourceNotFoundException;
 import com.gestion.model.Product;
 import com.gestion.repository.JpaProductRepository;
@@ -13,6 +14,6 @@ public class ProductFinderByIdAndCommerceIdService {
 
     public Product findProductByIdAndCommerceId(Long id, Long commerceId) {
         return jpaProductRepository.findByIdAndCommerceId(id, commerceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND, "Product with id " + id + " not found"));
     }
 }

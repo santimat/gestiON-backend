@@ -1,5 +1,6 @@
 package com.gestion.service.client;
 
+import com.gestion.enums.ErrorCode;
 import com.gestion.exception.ResourceNotFoundException;
 import com.gestion.model.Client;
 import com.gestion.repository.JpaClientRepository;
@@ -13,6 +14,6 @@ public class ClientFinderByDniService {
 
     public Client findByDni(String dni) {
         return clientRepository.findByDni(dni)
-                .orElseThrow(() -> new ResourceNotFoundException("Client with DNI: " + dni + "not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CLIENT_NOT_FOUND, "Client with DNI " + dni + " not found"));
     }
 }

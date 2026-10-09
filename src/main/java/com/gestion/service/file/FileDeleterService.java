@@ -1,5 +1,6 @@
 package com.gestion.service.file;
 
+import com.gestion.enums.ErrorCode;
 import com.gestion.exception.FileException;
 import com.gestion.properties.MinioProperties;
 import io.minio.MinioClient;
@@ -26,7 +27,7 @@ public class FileDeleterService {
                             .build()
             );
         } catch (Exception e) {
-            throw new FileException("An error occurred when deleting file" + e.getMessage());
+            throw new FileException(ErrorCode.FILE_DELETE_FAILED, "An error occurred while deleting the file", e);
         }
     }
 }

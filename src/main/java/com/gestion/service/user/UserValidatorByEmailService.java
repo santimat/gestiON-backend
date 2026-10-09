@@ -1,5 +1,6 @@
 package com.gestion.service.user;
 
+import com.gestion.enums.ErrorCode;
 import com.gestion.exception.DuplicateResourceException;
 import com.gestion.repository.JpaUserRepository;
 import lombok.AllArgsConstructor;
@@ -12,6 +13,6 @@ public class UserValidatorByEmailService {
 
     public void checkExistingUserByEmail(String email) {
         if (userRepository.existsByEmail(email))
-            throw new DuplicateResourceException("User with email " + email + " already exists");
+            throw new DuplicateResourceException(ErrorCode.EMAIL_ALREADY_EXISTS, "User with email " + email + " already exists");
     }
 }
