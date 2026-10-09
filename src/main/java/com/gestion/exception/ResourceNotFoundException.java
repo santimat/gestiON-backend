@@ -1,8 +1,10 @@
 package com.gestion.exception;
 
-public class ResourceNotFoundException extends RuntimeException {
+import com.gestion.enums.ErrorCode;
 
-    public ResourceNotFoundException(String message) {
-        super(message);
+public class ResourceNotFoundException extends BusinessException {
+
+    public ResourceNotFoundException(ErrorCode code, String message) {
+        super(code, message);
     }
 }

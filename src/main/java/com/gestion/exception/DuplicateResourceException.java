@@ -1,7 +1,10 @@
 package com.gestion.exception;
 
-public class DuplicateResourceException extends RuntimeException {
-    public DuplicateResourceException(String message) {
-        super(message);
+import com.gestion.enums.ErrorCode;
+
+public class DuplicateResourceException extends BusinessException {
+
+    public DuplicateResourceException(ErrorCode code, String message) {
+        super(code, message);
     }
 }
