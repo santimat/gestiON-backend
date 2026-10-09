@@ -1,5 +1,6 @@
 package com.gestion.service.product;
 
+import com.gestion.model.Commerce;
 import com.gestion.model.Product;
 import org.springframework.stereotype.Service;
 
@@ -9,11 +10,11 @@ import java.math.RoundingMode;
 @Service
 public class ProductSuggestedPriceCalculatorService {
 
-    public BigDecimal calculateSuggestedPrice(Product product) {
+    public BigDecimal calculateSuggestedPrice(Product product, Commerce commerce) {
         Double profitMultiplier = product.getProfitMultiplier();
 
-        if (profitMultiplier == null && product.getCommerce() != null) {
-            profitMultiplier = product.getCommerce().getProfitMultiplier();
+        if (profitMultiplier == null && commerce != null) {
+            profitMultiplier = commerce.getProfitMultiplier();
         }
 
         if (profitMultiplier == null) {

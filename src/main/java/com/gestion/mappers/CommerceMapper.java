@@ -3,7 +3,9 @@ package com.gestion.mappers;
 import com.gestion.dto.request.commerce.CommerceRequest;
 import com.gestion.dto.request.commerce.CommerceWithOwnerRequest;
 import com.gestion.dto.request.commerce.CommerceWithOwnerUpdateRequest;
+import com.gestion.dto.response.commerce.CurrentCommerceResponse;
 import com.gestion.model.Commerce;
+import jakarta.annotation.Nullable;
 
 public class CommerceMapper {
     public static Commerce toEntity(CommerceRequest request) {
@@ -35,6 +37,16 @@ public class CommerceMapper {
                 request.cuit(),
                 request.businessLogo(),
                 request.profitMultiplier()
+        );
+    }
+
+    public static CurrentCommerceResponse toCurrentResponse(Commerce commerce, @Nullable String businessLogoUrl) {
+        return new CurrentCommerceResponse(
+                commerce.getId(),
+                commerce.getBusinessName(),
+                businessLogoUrl,
+                commerce.isActive(),
+                commerce.getProfitMultiplier()
         );
     }
 }

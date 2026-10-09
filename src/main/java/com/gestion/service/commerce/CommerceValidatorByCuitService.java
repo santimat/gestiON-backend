@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class CommerceValidatorByCuitService {
-    private JpaCommerceRepository commerceRepository;
+    private final JpaCommerceRepository commerceRepository;
 
     public void checkExistingCommerceByCuit(String cuit) {
         if (commerceRepository.existsByCuit(cuit))

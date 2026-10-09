@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class CommerceValidatorByAddressService {
-    private JpaCommerceRepository commerceRepository;
+    private final JpaCommerceRepository commerceRepository;
 
     public void checkExistingCommerceByAddress(String address) {
         if (commerceRepository.existsByAddress(address))

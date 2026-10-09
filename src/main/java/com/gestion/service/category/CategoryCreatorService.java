@@ -8,6 +8,7 @@ import com.gestion.model.Category;
 import com.gestion.model.Commerce;
 import com.gestion.repository.JpaCategoryRepository;
 import com.gestion.service.commerce.CommerceFinderByIdService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ public class CategoryCreatorService {
     private final JpaCategoryRepository categoryRepository;
     private final CommerceFinderByIdService commerceFinderByIdService;
 
+    @Transactional
     public CategoryResponse createCategory(CategoryRequest request, UserPrincipal authenticatedUser) {
         if (authenticatedUser == null || authenticatedUser.getCommerceId() == null) {
             throw new AccessDeniedException("Authenticated user or commerce ID is null");

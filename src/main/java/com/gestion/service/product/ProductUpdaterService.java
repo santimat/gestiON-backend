@@ -6,10 +6,12 @@ import com.gestion.dto.response.product.ProductResponse;
 import com.gestion.mappers.CategoryMapper;
 import com.gestion.mappers.ProductMapper;
 import com.gestion.model.Category;
+import com.gestion.model.Commerce;
 import com.gestion.model.Product;
 import com.gestion.properties.MinioProperties;
 import com.gestion.repository.JpaProductRepository;
 import com.gestion.service.category.CategoryFinderByIdService;
+import com.gestion.service.commerce.CommerceFinderByIdService;
 import com.gestion.service.file.FileFinderService;
 import io.minio.errors.MinioException;
 import jakarta.transaction.Transactional;
@@ -24,6 +26,7 @@ public class ProductUpdaterService {
 
     private final ProductFinderByIdAndCommerceIdService productFinderByIdAndCommerceIdService;
     private final CategoryFinderByIdService categoryFinderByIdService;
+    private final CommerceFinderByIdService commerceFinderByIdService;
     private final ProductSuggestedPriceCalculatorService productSuggestedPriceCalculatorService;
     private final JpaProductRepository productRepository;
     private final ProductImageUploaderService productImageUploaderService;
@@ -34,6 +37,7 @@ public class ProductUpdaterService {
     public ProductResponse updateProduct(Long productId, ProductUpdateRequest request, UserPrincipal authenticatedUser) {
         Product product = productFinderByIdAndCommerceIdService
                 .findProductByIdAndCommerceId(productId, authenticatedUser.getCommerceId());
+        Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
         Category category = categoryFinderByIdService.findCategoryById(request.categoryId());
 
         product.setName(request.name());
@@ -60,7 +64,7 @@ public class ProductUpdaterService {
             System.out.println("Error retrieving product image from MinIO: " + e.getCause());
         }
 
-        BigDecimal suggestedPrice = productSuggestedPriceCalculatorService.calculateSuggestedPrice(updatedProduct);
+        BigDecimal suggestedPrice = productSuggestedPriceCalculatorService.calculateSuggestedPrice(updatedProduct, commerce);
         return ProductMapper.toResponse(updatedProduct, productImageUrl, suggestedPrice,
                 CategoryMapper.toResponse(category));
     }

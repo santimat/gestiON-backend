@@ -11,6 +11,7 @@ import com.gestion.model.Product;
 import com.gestion.repository.JpaProductRepository;
 import com.gestion.service.category.CategoryFinderByIdService;
 import com.gestion.service.commerce.CommerceFinderByIdService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ public class ProductCreatorService {
     private final CategoryFinderByIdService categoryFinderByIdService;
     private final ProductImageUploaderService productImageUploaderService;
 
+    @Transactional
     public ProductResponse createProduct(ProductRequest request, UserPrincipal authenticatedUser) {
         Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
         Category category = categoryFinderByIdService.findCategoryById(request.categoryId());
@@ -38,7 +40,7 @@ public class ProductCreatorService {
             imageUrl = productImageUploaderService.uploadProductImage(request.image(), newProduct);
         }
 
-        BigDecimal suggestedPrice = productSuggestedPriceCalculatorService.calculateSuggestedPrice(newProduct);
+        BigDecimal suggestedPrice = productSuggestedPriceCalculatorService.calculateSuggestedPrice(newProduct, commerce);
         return ProductMapper.toResponse(newProduct, imageUrl, suggestedPrice, CategoryMapper.toResponse(category));
     }
 }

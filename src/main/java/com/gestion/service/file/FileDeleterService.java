@@ -1,27 +1,27 @@
 package com.gestion.service.file;
 
 import com.gestion.exception.FileException;
+import com.gestion.properties.MinioProperties;
 import io.minio.MinioClient;
 import io.minio.RemoveObjectArgs;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class FileDeleterService {
 
     private final MinioClient minioClient;
-    @Value("${minio.bucket}")
-    private String bucketName;
+    private final MinioProperties minioProperties;
 
-    public FileDeleterService(MinioClient minioClient) {
+    public FileDeleterService(MinioClient minioClient, MinioProperties minioProperties) {
         this.minioClient = minioClient;
+        this.minioProperties = minioProperties;
     }
 
     public void deleteFile(String objectName) {
         try {
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
-                            .bucket(bucketName)
+                            .bucket(minioProperties.bucket())
                             .object(objectName)
                             .build()
             );

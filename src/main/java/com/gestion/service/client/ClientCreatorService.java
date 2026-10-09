@@ -5,6 +5,7 @@ import com.gestion.exception.DuplicateResourceException;
 import com.gestion.mappers.ClientMapper;
 import com.gestion.model.Client;
 import com.gestion.repository.JpaClientRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class ClientCreatorService {
     private final JpaClientRepository clientRepository;
 
+    @Transactional
     public Client createClient(ClientRequest request) {
         if (clientRepository.existsByDni(request.dni())) {
             throw new DuplicateResourceException("Client with DNI: " + request.dni() + "already exists");

@@ -1,6 +1,7 @@
 package com.gestion.service.commerce;
 
 import com.gestion.dto.response.commerce.CommerceProfitMultiplierResponse;
+import com.gestion.mappers.CommerceProfitMultiplierMapper;
 import com.gestion.model.Commerce;
 import com.gestion.repository.JpaCommerceRepository;
 import jakarta.transaction.Transactional;
@@ -18,6 +19,6 @@ public class CommerceProfitMultiplierUpdaterService {
         Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
         commerce.setProfitMultiplier(profitMultiplier);
         Commerce updatedCommerce = commerceRepository.save(commerce);
-        return new CommerceProfitMultiplierResponse(updatedCommerce.getId(), updatedCommerce.getProfitMultiplier());
+        return CommerceProfitMultiplierMapper.toResponse(updatedCommerce);
     }
 }
