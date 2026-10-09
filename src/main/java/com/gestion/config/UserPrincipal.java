@@ -18,10 +18,10 @@ import java.util.List;
 public class UserPrincipal implements UserDetails {
 
     private Long id;
+    private Long commerceId;
     private String email;
     private String name;
     private Role role;
-    private Long commerceId;
     private Boolean active;
 
     @Override

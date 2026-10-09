@@ -10,6 +10,7 @@ public class AuthenticatedUserMapper {
     public static AuthenticatedUserResponse toTokenResponseFromUserPrincipal(UserPrincipal authenticatedUser) {
         return new AuthenticatedUserResponse(
                 authenticatedUser.getId(),
+                authenticatedUser.getCommerceId(),
                 authenticatedUser.getName(),
                 authenticatedUser.getEmail(),
                 authenticatedUser.getRole(),
@@ -20,6 +21,7 @@ public class AuthenticatedUserMapper {
     public static AuthenticatedUserResponse toAuthenticatedResponse(User user) {
         return new AuthenticatedUserResponse(
                 user.getId(),
+                user.getCommerce().getId(),
                 user.getName(),
                 user.getEmail(),
                 user.getRole(),
@@ -31,6 +33,7 @@ public class AuthenticatedUserMapper {
         Role userRole = Role.valueOf(userClaims.get("role", String.class));
         return new AuthenticatedUserResponse(
                 userClaims.get("userId", Long.class),
+                userClaims.get("commerceId", Long.class),
                 userClaims.get("name", String.class),
                 userClaims.getSubject(),
                 userRole,
