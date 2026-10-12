@@ -5,7 +5,6 @@ import com.gestion.mappers.CommerceMapper;
 import com.gestion.model.Commerce;
 import com.gestion.properties.MinioProperties;
 import com.gestion.service.file.FileFinderService;
-import io.minio.errors.MinioException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,16 +18,9 @@ public class CommerceCurrentFinderService {
     public CurrentCommerceResponse findCurrentCommerce(Long commerceId) {
         Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
 
-        String businessLogoUrl = null;
-
-        if (commerce.getLogoName() != null) {
-            try {
-                businessLogoUrl = fileFinderService.getObjectUrl(commerce.getLogoName(),
+        String businessLogoUrl =
+                fileFinderService.getObjectUrl(commerce.getLogoName(),
                         minioDirProperties.dir().businessLogos());
-            } catch (MinioException e) {
-                System.out.println("Error retrieving business logo from MinIO: " + e.getCause());
-            }
-        }
 
         return CommerceMapper.toCurrentResponse(commerce, businessLogoUrl);
     }

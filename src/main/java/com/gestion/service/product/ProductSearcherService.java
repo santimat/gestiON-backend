@@ -11,7 +11,6 @@ import com.gestion.properties.MinioProperties;
 import com.gestion.repository.JpaProductRepository;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import com.gestion.service.file.FileFinderService;
-import io.minio.errors.MinioException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,14 +31,9 @@ public class ProductSearcherService {
         Page<Product> products = jpaProductRepository.findAllByCommerceId(authenticatedUser.getCommerceId(), pageable);
         Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
         return products.map(product -> {
-            String productImageUrl = null;
-            try {
-                if (product.getImageName() != null) {
-                    productImageUrl = fileFinderService.getObjectUrl(product.getImageName(), minioProperties.dir().productImages());
-                }
-            } catch (MinioException e) {
-                System.out.println("Error retrieving business logo from MinIO: " + e.getCause());
-            }
+            String productImageUrl = fileFinderService.getObjectUrl(product.getImageName(),
+                    minioProperties.dir().productImages());
+
             BigDecimal suggestedPrice = productSuggestedPriceCalculatorService.calculateSuggestedPrice(product, commerce);
             CategoryResponse categoryResponse = CategoryMapper.toResponse(product.getCategory());
             return ProductMapper.toResponse(product, productImageUrl, suggestedPrice, categoryResponse);

@@ -32,6 +32,7 @@ public class ProductCreatorService {
         Category category = categoryFinderByIdService.findCategoryById(request.categoryId());
 
         Product product = ProductMapper.toEntity(request, commerce, category);
+        product.setActive(true);
         Product newProduct = productRepository.save(product);
 
         String imageUrl = null;

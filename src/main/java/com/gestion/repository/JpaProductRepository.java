@@ -10,6 +10,6 @@ import java.util.Optional;
 public interface JpaProductRepository extends JpaRepository<Product, Long> {
 
     Page<Product> findAllByCommerceId(Long commerceId, Pageable pageable);
-
     Optional<Product> findByIdAndCommerceId(Long id, Long commerceId);
+
 }

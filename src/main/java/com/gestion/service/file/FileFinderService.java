@@ -1,10 +1,9 @@
 package com.gestion.service.file;
 
+import com.gestion.properties.MinioProperties;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.Http;
 import io.minio.MinioClient;
-import io.minio.errors.MinioException;
-import com.gestion.properties.MinioProperties;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
@@ -19,14 +18,19 @@ public class FileFinderService {
         this.minioProperties = minioProperties;
     }
 
-    public String getObjectUrl(String objectName, String subDir) throws MinioException {
-        return minioClient.getPresignedObjectUrl(
-                GetPresignedObjectUrlArgs.builder()
-                        .method(Http.Method.GET)
-                        .bucket(minioProperties.bucket())
-                        .object(subDir + "/" + objectName)
-                        .expiry(5, TimeUnit.HOURS)
-                        .build()
-        );
+    public String getObjectUrl(String objectName, String subDir) {
+        try {
+            return minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Http.Method.GET)
+                            .bucket(minioProperties.bucket())
+                            .object(subDir + "/" + objectName)
+                            .expiry(5, TimeUnit.HOURS)
+                            .build()
+            );
+        } catch (Exception e) {
+            System.out.println("Error retrieving object URL from MinIO: " + e.getCause());
+            return null;
+        }
     }
 }

@@ -1,7 +1,7 @@
 package com.gestion.controller.commerce;
 
 import com.gestion.dto.response.commerce.CommerceUpdateActiveResponse;
-import com.gestion.service.commerce.CommerceUpdaterActiveService;
+import com.gestion.service.commerce.CommerceActiveUpdaterService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,12 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/commerces")
 @AllArgsConstructor
 public class CommerceToggleActivePatchController {
-    private final CommerceUpdaterActiveService commerceUpdaterActiveService;
+    private final CommerceActiveUpdaterService commerceUpdaterActiveService;
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/{id}/toggle-active")
     @PreAuthorize("hasRole('SUDO')")
     public ResponseEntity<CommerceUpdateActiveResponse> updateActive(@PathVariable Long id) {
         return ResponseEntity.ok(commerceUpdaterActiveService.toggleActive(id));
     }
-
 }

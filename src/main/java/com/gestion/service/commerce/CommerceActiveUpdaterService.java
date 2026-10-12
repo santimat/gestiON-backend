@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
-public class CommerceUpdaterActiveService {
+public class CommerceActiveUpdaterService {
     private final JpaCommerceRepository commerceRepository;
     private final CommerceFinderByIdService commerceFinderByIdService;
 

@@ -13,7 +13,6 @@ import com.gestion.repository.JpaProductRepository;
 import com.gestion.service.category.CategoryFinderByIdService;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import com.gestion.service.file.FileFinderService;
-import io.minio.errors.MinioException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -54,15 +53,8 @@ public class ProductUpdaterService {
             productImageUploaderService.uploadProductImage(request.image(), updatedProduct);
         }
 
-        String productImageUrl = null;
-        try {
-            if (updatedProduct.getImageName() != null) {
-                productImageUrl = fileFinderService.getObjectUrl(updatedProduct.getImageName(),
-                        minioProperties.dir().productImages());
-            }
-        } catch (MinioException e) {
-            System.out.println("Error retrieving product image from MinIO: " + e.getCause());
-        }
+        String productImageUrl = fileFinderService.getObjectUrl(updatedProduct.getImageName(),
+                minioProperties.dir().productImages());
 
         BigDecimal suggestedPrice = productSuggestedPriceCalculatorService.calculateSuggestedPrice(updatedProduct, commerce);
         return ProductMapper.toResponse(updatedProduct, productImageUrl, suggestedPrice,
