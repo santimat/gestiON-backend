@@ -19,4 +19,6 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
     // join fetch trae los commerce de los usuarios evitando el n+1
     @Query("SELECT u FROM User as u JOIN FETCH u.commerce WHERE u.role = :userRole")
     Page<User> findAllByRoleWithCommerce(@Param("userRole") Role userRole, Pageable pageable);
+
+    Page<User> findAllByRole(Role role, Pageable pageable);
 }
