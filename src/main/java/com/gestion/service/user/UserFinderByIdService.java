@@ -1,5 +1,6 @@
 package com.gestion.service.user;
 
+import com.gestion.enums.ErrorCode;
 import com.gestion.exception.ResourceNotFoundException;
 import com.gestion.model.User;
 import com.gestion.repository.JpaUserRepository;
@@ -13,6 +14,6 @@ public class UserFinderByIdService {
 
     public User findById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND, "User with id " + id + " not found"));
     }
 }

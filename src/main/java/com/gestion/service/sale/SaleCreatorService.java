@@ -7,6 +7,7 @@ import com.gestion.model.Sale;
 import com.gestion.model.User;
 import com.gestion.repository.JpaSaleRepository;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ public class SaleCreatorService {
     private final JpaSaleRepository jpaSaleRepository;
     private final EntityManager entityManager;
 
+    @Transactional
     public Sale createSale(SaleRequest request, Long userId, Long commerceId) {
         Sale sale = SaleMapper.toEntity(request);
         User userProxy = entityManager.getReference(User.class, userId);

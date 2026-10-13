@@ -3,15 +3,17 @@ package com.gestion.service.commerce;
 import com.gestion.dto.response.commerce.CommerceUpdateActiveResponse;
 import com.gestion.model.Commerce;
 import com.gestion.repository.JpaCommerceRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
-public class CommerceUpdaterActiveService {
+public class CommerceActiveUpdaterService {
     private final JpaCommerceRepository commerceRepository;
     private final CommerceFinderByIdService commerceFinderByIdService;
 
+    @Transactional
     public CommerceUpdateActiveResponse toggleActive(Long commerceId) {
         Commerce commerceToUpdate = commerceFinderByIdService.findCommerceById(commerceId);
         commerceToUpdate.setActive(!commerceToUpdate.isActive());

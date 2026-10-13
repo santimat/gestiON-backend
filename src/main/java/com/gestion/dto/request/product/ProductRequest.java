@@ -22,7 +22,7 @@ public record ProductRequest(
         @Positive(message = "Product's sale price must be a positive number")
         BigDecimal salePrice,
         @Nullable
-        @Positive(message = " Product's profit multiplier must be a positive number")
+        @Positive(message = "Product's profit multiplier must be a positive number")
         Double profitMultiplier,
         @Nullable
         MultipartFile image,

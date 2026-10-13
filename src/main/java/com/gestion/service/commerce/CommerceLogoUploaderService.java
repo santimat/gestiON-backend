@@ -1,5 +1,6 @@
 package com.gestion.service.commerce;
 
+import com.gestion.enums.ErrorCode;
 import com.gestion.exception.FileException;
 import com.gestion.model.Commerce;
 import com.gestion.properties.MinioProperties;
@@ -28,7 +29,7 @@ public class CommerceLogoUploaderService {
         try {
             return fileFinderService.getObjectUrl(bussinesLogoName, minioDirProperties.dir().businessLogos());
         } catch (Exception e) {
-            throw new FileException("Error while getting business logo url" + e.getCause());
+            throw new FileException(ErrorCode.FILE_PROCESSING_FAILED, "Error while getting business logo url", e);
         }
     }
 }

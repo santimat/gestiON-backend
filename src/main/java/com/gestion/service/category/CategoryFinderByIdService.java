@@ -1,5 +1,6 @@
 package com.gestion.service.category;
 
+import com.gestion.enums.ErrorCode;
 import com.gestion.exception.ResourceNotFoundException;
 import com.gestion.model.Category;
 import com.gestion.repository.JpaCategoryRepository;
@@ -13,6 +14,6 @@ public class CategoryFinderByIdService {
 
     public Category findCategoryById(Long id) {
         return categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category with id " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND, "Category with id " + id + " not found"));
     }
 }

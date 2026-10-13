@@ -1,5 +1,6 @@
 package com.gestion.service.file;
 
+import com.gestion.enums.ErrorCode;
 import com.gestion.exception.FileException;
 import com.gestion.properties.MinioProperties;
 import com.gestion.service.tika.MimeTypeDetecterService;
@@ -24,11 +25,11 @@ public class FileUploaderService {
     public String uploadFile(MultipartFile file, String subDir) {
         // 1. Validar tipo de archivo
         if (!MimeTypeValidatorService.isValidMimeType(file))
-            throw new FileException("File's MimeType is invalid");
+            throw new FileException(ErrorCode.INVALID_FILE_TYPE, "File's MimeType is invalid");
 
         // 2. validar tamaño del archivo
         if (file.getSize() > 10 * 1024 * 1024) // 10 MB
-            throw new FileException("File size exceeds the maximum limit of 10 MB");
+            throw new FileException(ErrorCode.FILE_TOO_LARGE, "File size exceeds the maximum limit of 10 MB");
 
         // 3. Crear nombre único para el archivo
         String objectName = UUID.randomUUID() + "-" + file.getOriginalFilename();
@@ -51,7 +52,7 @@ public class FileUploaderService {
                             .build()
             );
         } catch (Exception e) {
-            throw new FileException("An error occurred while saving the file" + e.getMessage());
+            throw new FileException(ErrorCode.FILE_UPLOAD_FAILED, "An error occurred while saving the file", e);
         }
 
         return objectName;

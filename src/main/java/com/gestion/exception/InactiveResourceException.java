@@ -1,7 +1,10 @@
 package com.gestion.exception;
 
-public class InactiveResourceException extends RuntimeException {
-    public InactiveResourceException(String message) {
-        super(message);
+import com.gestion.enums.ErrorCode;
+
+public class InactiveResourceException extends BusinessException {
+
+    public InactiveResourceException(ErrorCode code, String message) {
+        super(code, message);
     }
 }

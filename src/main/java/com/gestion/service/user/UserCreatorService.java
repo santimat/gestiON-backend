@@ -1,6 +1,7 @@
 package com.gestion.service.user;
 
 import com.gestion.dto.request.user.UserRequest;
+import com.gestion.enums.ErrorCode;
 import com.gestion.enums.Role;
 import com.gestion.exception.DuplicateResourceException;
 import com.gestion.mappers.UserMapper;
@@ -21,7 +22,7 @@ public class UserCreatorService {
     @Transactional
     public User createUser(UserRequest request, Role userRole, Commerce commerce) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new DuplicateResourceException("User with email " + request.email() + " already exists");
+            throw new DuplicateResourceException(ErrorCode.EMAIL_ALREADY_EXISTS, "User with email " + request.email() + " already exists");
         }
 
         User user = UserMapper.toEntity(request);
