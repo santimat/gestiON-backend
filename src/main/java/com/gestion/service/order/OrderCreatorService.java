@@ -37,11 +37,12 @@ public class OrderCreatorService {
 
         List<OrderDetail> details = request.details().stream().map((detail -> {
             Product product = productFinderByIdService.findProductById(detail.productId());
+            product.setCurrentStock(product.getCurrentStock() + detail.quantity());
 
-            BigDecimal subTotal = detail.unitPrice()
+            BigDecimal subTotal = product.getCostPrice()
                     .multiply(BigDecimal.valueOf(detail.quantity()));
 
-            totalAccumulated.add(subTotal);
+            totalAccumulated = totalAccumulated.add(subTotal);
 
             return OrderDetailMapper.toEntity(detail, product);
         })).toList();

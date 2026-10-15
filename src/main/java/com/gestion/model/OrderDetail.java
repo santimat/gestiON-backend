@@ -9,7 +9,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 @Entity
-@Table
+@Table(name = "order_details")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

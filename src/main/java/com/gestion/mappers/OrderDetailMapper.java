@@ -9,20 +9,18 @@ public class OrderDetailMapper {
     public static OrderDetailResponse toDetailResponse(OrderDetail detail) {
 
         return new OrderDetailResponse(
-                detail.getId(),
-                detail.getProduct(),
-                detail.getUnitPrice(),
-                detail.getQuantity(),
-                detail.getSubTotal()
+                detail.getId()
+
+
         );
     }
 
-
     public static OrderDetail toEntity(OrderDetailRequest request, Product product) {
         OrderDetail orderDetail = new OrderDetail();
+        orderDetail.setOrder();
         orderDetail.setProduct(product);
         orderDetail.setQuantity(request.quantity());
-        orderDetail.setUnitPrice(request.unitPrice());
+        orderDetail.setUnitPrice(product.getSalePrice());
 
         return orderDetail;
     }
