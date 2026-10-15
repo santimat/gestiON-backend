@@ -42,14 +42,18 @@ public class OrderCreatorService {
             BigDecimal subTotal = product.getCostPrice()
                     .multiply(BigDecimal.valueOf(detail.quantity()));
 
-            totalAccumulated = totalAccumulated.add(subTotal);
+            totalAccumulated.add(subTotal); // TODO: revisar esto
 
-            return OrderDetailMapper.toEntity(detail, product);
+            return OrderDetailMapper.toEntity(detail, product, order);
         })).toList();
 
         order.setTotal(totalAccumulated);
 
         Order newOrder = jpaOrderRepository.save(order);
+        for (OrderDetail detail : details) {
+            detail.setOrder(newOrder);
+        }
+
         List<OrderDetail> savedOrderDetails = jpaOrderDetailRepository.saveAllAndFlush(details);
         List<OrderDetailResponse> orderDetailResponses = savedOrderDetails.stream().map(OrderDetailMapper::toDetailResponse).toList();
         return OrderMapper.toResponse(order, orderDetailResponses);
