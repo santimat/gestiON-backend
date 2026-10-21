@@ -10,10 +10,6 @@ public record CashierRequest(
         @Size(min = 2, max = 50, message = "Name's length must be between 2 and 50")
         String name,
 
-        @NotBlank(message = "Last name is required")
-        @Size(min = 2, max = 50, message = "Last name's length must be between 2 and 50")
-        String lastName,
-
         @NotBlank(message = "Email is required")
         @Email
         String email,
