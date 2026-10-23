@@ -16,12 +16,17 @@ public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(unique = true, nullable = false, length = 50)
+
+    @Column(nullable = false, length = 50)
     private String name;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "commerce_id", nullable = false)
     private Commerce commerce;
 
     @Column(length = 200)
     private String description;
+
+    @Column(nullable = false)
+    private boolean active;
 }

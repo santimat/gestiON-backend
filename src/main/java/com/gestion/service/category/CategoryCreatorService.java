@@ -18,12 +18,16 @@ import org.springframework.stereotype.Service;
 public class CategoryCreatorService {
     private final JpaCategoryRepository categoryRepository;
     private final CommerceFinderByIdService commerceFinderByIdService;
+    private final CategoryValidatorByNameService categoryValidatorByNameService;
 
     @Transactional
     public CategoryResponse createCategory(CategoryRequest request, UserPrincipal authenticatedUser) {
         if (authenticatedUser == null || authenticatedUser.getCommerceId() == null) {
             throw new AccessDeniedException("Authenticated user or commerce ID is null");
         }
+
+        request = new CategoryRequest(request.name().strip(), request.description());
+        categoryValidatorByNameService.checkExistingCategoryByName(authenticatedUser.getCommerceId(), request);
 
         Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
         Category newCategory = categoryRepository.save(CategoryMapper.toEntity(request, commerce));

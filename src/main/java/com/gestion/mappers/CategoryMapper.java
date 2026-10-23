@@ -14,6 +14,7 @@ public class CategoryMapper {
         category.setName(request.name());
         category.setDescription(request.description());
         category.setCommerce(commerce);
+        category.setActive(true);
         return category;
     }
 
@@ -23,8 +24,10 @@ public class CategoryMapper {
         }
         return new CategoryResponse(
                 category.getId(),
+                category.getCommerce() != null ? category.getCommerce().getId() : null,
                 category.getName(),
-                category.getDescription()
+                category.getDescription(),
+                category.isActive()
         );
     }
 }

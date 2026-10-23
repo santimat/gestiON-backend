@@ -24,7 +24,7 @@ public class CategoriesGetController {
     private final CategorySearcherService categorySearcherService;
 
     @GetMapping
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasRole('OWNER') or hasRole('CASHIER')")
     public ResponseEntity<Page<CategoryResponse>> getAllCategories(
             @AuthenticationPrincipal UserPrincipal authenticatedUser,
             @RequestParam(defaultValue = "0") int page,

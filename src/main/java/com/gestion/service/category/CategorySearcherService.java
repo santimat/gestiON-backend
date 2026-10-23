@@ -9,12 +9,14 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
 public class CategorySearcherService {
     private final JpaCategoryRepository jpaCategoryRepository;
 
+    @Transactional(readOnly = true)
     public Page<CategoryResponse> searchCategories(UserPrincipal authenticatedUser, Pageable pageable) {
         Page<Category> categories = jpaCategoryRepository.findAllByCommerceId(authenticatedUser.getCommerceId(), pageable);
         return categories.map(CategoryMapper::toResponse);

@@ -21,7 +21,7 @@ public class CategoryGetController {
     private final CategoryFinderByIdAndCommerceIdService categoryFinderByIdAndCommerceIdService;
 
     @GetMapping("/{categoryId}")
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasRole('OWNER') or hasRole('CASHIER')")
     public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable Long categoryId,
                                                             @AuthenticationPrincipal UserPrincipal authenticatedUser) {
         Category category = categoryFinderByIdAndCommerceIdService

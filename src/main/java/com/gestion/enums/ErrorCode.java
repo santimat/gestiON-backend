@@ -20,6 +20,7 @@ public enum ErrorCode {
 
     EMAIL_ALREADY_EXISTS(409, "Email is already registered"),
     CLIENT_DNI_ALREADY_EXISTS(409, "Client DNI is already registered"),
+    CATEGORY_NAME_ALREADY_EXISTS(409, "Category name already exists in this commerce"),
     COMMERCE_ADDRESS_ALREADY_EXISTS(409, "Commerce address is already registered"),
     COMMERCE_CUIT_ALREADY_EXISTS(409, "Commerce CUIT is already registered"),
 

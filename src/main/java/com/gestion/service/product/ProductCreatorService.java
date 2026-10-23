@@ -9,7 +9,7 @@ import com.gestion.model.Category;
 import com.gestion.model.Commerce;
 import com.gestion.model.Product;
 import com.gestion.repository.JpaProductRepository;
-import com.gestion.service.category.CategoryFinderByIdService;
+import com.gestion.service.category.CategoryFinderByIdAndCommerceIdService;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -23,13 +23,14 @@ public class ProductCreatorService {
     private final JpaProductRepository productRepository;
     private final ProductSuggestedPriceCalculatorService productSuggestedPriceCalculatorService;
     private final CommerceFinderByIdService commerceFinderByIdService;
-    private final CategoryFinderByIdService categoryFinderByIdService;
+    private final CategoryFinderByIdAndCommerceIdService categoryFinderByIdAndCommerceIdService;
     private final ProductImageUploaderService productImageUploaderService;
 
     @Transactional
     public ProductResponse createProduct(ProductRequest request, UserPrincipal authenticatedUser) {
         Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
-        Category category = categoryFinderByIdService.findCategoryById(request.categoryId());
+        Category category = categoryFinderByIdAndCommerceIdService
+                .findCategoryByIdAndCommerceId(request.categoryId(), authenticatedUser.getCommerceId());
 
         Product product = ProductMapper.toEntity(request, commerce, category);
         product.setActive(true);
