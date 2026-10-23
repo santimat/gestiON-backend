@@ -27,7 +27,8 @@ public class CategoryMapper {
                 category.getCommerce() != null ? category.getCommerce().getId() : null,
                 category.getName(),
                 category.getDescription(),
-                category.isActive()
+                category.isActive(),
+                category.getCreatedAt()
         );
     }
 }
