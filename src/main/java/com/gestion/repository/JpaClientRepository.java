@@ -15,5 +15,11 @@ public interface JpaClientRepository extends JpaRepository<Client, Long> {
 
     Page<Client> findByCommerceId(Long commerceId, Pageable pageable);
 
-    Client findById();
+    Optional<Client> findByIdAndCommerceId(Long clientId, Long commerceId);
+
+    boolean existsByDniAndCommerceId(String dni, Long commerceId);
+
+    boolean existsByDniAndCommerceIdAndIdNot(String dni, Long commerceId, Long id); // para el update
+
+    Optional<Client> findByDniAndCommerceId(String dni, Long commerceId);
 }

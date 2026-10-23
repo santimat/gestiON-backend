@@ -9,18 +9,24 @@ import lombok.Setter;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "clients")
+@Table(
+        name = "clients",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_clients_commerce_dni",
+                columnNames = {"commerce_id", "dni"}
+        )
+)
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class
-Client {
+public class Client {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long commerceId;  // agregue esto para traer los clientes del comercio que consulta nada mas
+    @Column(name = "commerce_id", nullable = false)
+    private Long commerceId;
 
     @Column
     private String name;
@@ -33,7 +39,7 @@ Client {
     @Column(name = "phone_number")
     private String phoneNumber;
 
-    @Column(unique = true)
+    @Column
     private String dni;
 
     @Column(name = "created_at")

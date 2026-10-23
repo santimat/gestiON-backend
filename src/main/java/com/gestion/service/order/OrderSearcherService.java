@@ -9,6 +9,7 @@ import com.gestion.model.Order;
 import com.gestion.model.OrderDetail;
 import com.gestion.repository.JpaOrderDetailRepository;
 import com.gestion.repository.JpaOrderRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +26,7 @@ public class OrderSearcherService {
     private final JpaOrderRepository jpaOrderRepository;
     private final JpaOrderDetailRepository jpaOrderDetailRepository;
 
+    @Transactional(readOnly = true)
     public Page<OrderResponse> searchOrders(UserPrincipal authenticatedUser, Pageable pageable) {
 
         Page<Order> orders = jpaOrderRepository.findAllByCommerceId(authenticatedUser.getCommerceId());

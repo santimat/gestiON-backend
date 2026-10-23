@@ -14,8 +14,8 @@ import org.springframework.stereotype.Service;
 public class ClientFinderByDniService {
     private final JpaClientRepository clientRepository;
 
-    public ClientResponse findByDni(String dni) {
-        Client client = clientRepository.findByDni(dni)
+    public ClientResponse findByDni(String dni, Long commerceId) {
+        Client client = clientRepository.findByDniAndCommerceId(dni, commerceId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CLIENT_NOT_FOUND, "Client with DNI " + dni + " not found"));
         return ClientMapper.toResponse(client);
     }

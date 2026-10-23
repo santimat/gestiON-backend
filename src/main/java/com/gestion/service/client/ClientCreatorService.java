@@ -9,6 +9,8 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 @Service
 @AllArgsConstructor
 public class ClientCreatorService {
@@ -16,11 +18,13 @@ public class ClientCreatorService {
     private final ClientValidatorByDniService validator;
 
     @Transactional
-    public ClientResponse createClient(ClientRequest request) {
-        validator.checkExistingClientByDni(request);
+    public ClientResponse createClient(Long commerceId, ClientRequest request) {
+        validator.checkExistingClientByDni(request, commerceId);
 
         Client newClient = ClientMapper.toEntity(request);
-        clientRepository.save(newClient);
-        return ClientMapper.toResponse(newClient);
+        newClient.setCommerceId(commerceId);
+        newClient.setCreatedAt(LocalDate.now());
+        Client saved = clientRepository.save(newClient);
+        return ClientMapper.toResponse(saved);
     }
 }

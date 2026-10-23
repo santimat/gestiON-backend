@@ -13,6 +13,7 @@ import com.gestion.repository.JpaOrderDetailRepository;
 import com.gestion.repository.JpaOrderRepository;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import com.gestion.service.product.ProductFinderByIdService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,7 @@ public class OrderCreatorService {
     private final CommerceFinderByIdService commerceFinderByIdService;
     private final ProductFinderByIdService productFinderByIdService;
 
+    @Transactional
     public OrderResponse createOrder(OrderRequest request, Long commerceId) {
 
         Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
