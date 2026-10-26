@@ -128,3 +128,20 @@ Reglas:
   `active` ni `commerce`.
 - Responde `200` con el `UserResponse` del cajero actualizado.
 
+### Activar/desactivar cajero
+
+`PATCH /api/cashiers/{id}/toggle-active` (`CashierToggleActivePatchController`). Igual que para categorías
+(`CategoryToggleActivePatchController`): invierte el valor de `active` del cajero buscado por
+`id + commerceId (JWT) + role = CASHIER` y responde `200` con `CashierUpdateActiveResponse`:
+
+```json
+{
+  "id": 5,
+  "active": false
+}
+```
+
+Si el id no corresponde a un cajero del propio comercio responde `404 USER_NOT_FOUND`. No modifica
+`role`, `email` ni ningún otro dato del usuario. Un cajero con `active = false` no puede iniciar sesión
+(`ACCOUNT_DISABLED` a nivel login por el estado del comercio/cuenta).
+
