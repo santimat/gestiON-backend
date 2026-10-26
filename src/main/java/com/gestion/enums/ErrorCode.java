@@ -16,13 +16,11 @@ public enum ErrorCode {
     PRODUCT_NOT_FOUND(404, "Product not found"),
     COMMERCE_NOT_FOUND(404, "Commerce not found"),
     SALE_NOT_FOUND(404, "Sale not found"),
-    SELL_POINT_NOT_FOUND(404, "Sell point not found"),
     ENDPOINT_NOT_FOUND(404, "Endpoint not found"),
 
     EMAIL_ALREADY_EXISTS(409, "Email is already registered"),
     CLIENT_DNI_ALREADY_EXISTS(409, "Client DNI is already registered"),
     CATEGORY_NAME_ALREADY_EXISTS(409, "Category name already exists in this commerce"),
-    SELL_POINT_NAME_ALREADY_EXISTS(409, "Sell point name already exists in this commerce"),
     COMMERCE_ADDRESS_ALREADY_EXISTS(409, "Commerce address is already registered"),
     COMMERCE_CUIT_ALREADY_EXISTS(409, "Commerce CUIT is already registered"),
 

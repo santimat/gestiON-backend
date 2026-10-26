@@ -70,11 +70,9 @@ responden con este mismo formato.
 | `PRODUCT_NOT_FOUND` | 404 | Producto inexistente |
 | `COMMERCE_NOT_FOUND` | 404 | Comercio inexistente |
 | `SALE_NOT_FOUND` | 404 | Venta inexistente |
-| `SELL_POINT_NOT_FOUND` | 404 | Punto de venta inexistente (id no matchea o pertenece a otro comercio) |
 | `ENDPOINT_NOT_FOUND` | 404 | Ruta inexistente |
 | `EMAIL_ALREADY_EXISTS` | 409 | Email de usuario ya registrado |
 | `CLIENT_DNI_ALREADY_EXISTS` | 409 | DNI de cliente ya registrado |
-| `SELL_POINT_NAME_ALREADY_EXISTS` | 409 | Nombre de punto de venta ya registrado en el comercio |
 | `COMMERCE_ADDRESS_ALREADY_EXISTS` | 409 | Dirección de comercio ya registrada |
 | `COMMERCE_CUIT_ALREADY_EXISTS` | 409 | CUIT de comercio ya registrado |
 | `DATA_INTEGRITY_VIOLATION` | 409 | Violación de restricción de la base de datos |
@@ -146,24 +144,4 @@ Reglas:
 Si el id no corresponde a un cajero del propio comercio responde `404 USER_NOT_FOUND`. No modifica
 `role`, `email` ni ningún otro dato del usuario. Un cajero con `active = false` no puede iniciar sesión
 (`ACCOUNT_DISABLED` a nivel login por el estado del comercio/cuenta).
-
-## Gestión de puntos de venta (SellPoint)
-
-Los puntos de venta `SellPoint` pertenecen al comercio del OWNER autenticado (`ManyToOne` a `Commerce`)
-y vinculan cajeros mediante una relación **muchos a muchos** (`sell_point_cashier`). La restricción de
-**que solo se puedan vincular users con `role = CASHIER`** se aplica en los services: toda vinculación
-resuelve el usuario con `CashierFinderByIdAndCommerceIdService` (búsqueda por `id + commerceId (JWT) +
-role = CASHIER`), que devuelve `404 USER_NOT_FOUND` si el usuario no es un cajero del propio comercio.
-La relación no tiene `cascade`, por lo que ninguna operación persiste `User`s accidentalemente.
-
-Además, al vincular se exige que el cajero esté activo: un cajero con `active = false` responde
-`403 ACCOUNT_DISABLED`.
-
-| Endpoint | Rol | Qué hace |
-|---|---|---|
-| `POST /api/sellpoints` | OWNER | Crea un punto de venta (`name`); responde `201` con `SellPointResponse` |
-| `GET /api/sellpoints` | OWNER | Lista paginada de puntos de venta del propio comercio |
-| `PATCH /api/sellpoints/{id}/toggle-active` | OWNER | Invierte `active`; responde `(id, active)` |
-| `POST /api/sellpoints/{id}/cashiers` | OWNER | Vincula un cajero (body `{ "cashierId": 5 }`) |
-| `DELETE /api/sellpoints/{id}/cashiers/{cashierId}` | OWNER | Desvincula el cajero; responde `204` |
 

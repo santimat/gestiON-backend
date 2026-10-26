@@ -1,4 +1,4 @@
-package com.gestion.model;
+    package com.gestion.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
