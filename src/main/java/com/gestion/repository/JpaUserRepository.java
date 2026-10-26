@@ -14,7 +14,11 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
+    boolean existsByEmailAndIdNot(String email, Long id);
+
     Optional<User> findByEmail(String email);
+
+    Optional<User> findByIdAndCommerceIdAndRole(Long id, Long commerceId, Role role);
 
     // join fetch trae los commerce de los usuarios evitando el n+1
     @Query("SELECT u FROM User as u JOIN FETCH u.commerce WHERE u.role = :userRole")

@@ -89,3 +89,42 @@ responden con este mismo formato.
 | `FILE_PROCESSING_FAILED` | 500 | Error al procesar/detectar el archivo |
 | `INTERNAL_ERROR` | 500 | Error inesperado no controlado |
 
+## Gestión de cajeros
+
+Los cajeros son usuarios (`User`) con `role = CASHIER` dentro del comercio del OWNER autenticado. No son
+una entidad aparte: comparten la tabla `users`. Su gestión está protegida con
+`@PreAuthorize("hasRole('OWNER')")` y se scoping contra el `commerceId` que viene en el JWT
+(`UserPrincipal`): un OWNER solo puede afectar usuarios de su propio comercio.
+
+### Crear cajero
+
+`POST /api/cashiers` con `CashierRequest` (`name`, `email`, `password`, `phoneNumber`). Valida que el
+email no exista y responde `201` con el `UserResponse` del nuevo cajero.
+
+### Actualizar cajero
+
+`PUT /api/cashiers/{id}` con `CashierUpdateRequest`:
+
+```json
+{
+  "name": "Nombre actualizado",
+  "email": "cajero@comercio.com",
+  "password": "",
+  "phoneNumber": "2601234567"
+}
+```
+
+Reglas:
+
+- Se busca por `id + commerceId (JWT) + role = CASHIER` (`CashierFinderByIdAndCommerceIdService`): si no
+  matchea un cajero del propio comercio responde `404 USER_NOT_FOUND`. Nunca matchea al OWNER ni usuarios
+  de otro comercio.
+- `password` es opcional: si llega vacío, con espacios o se omite, **se mantiene la contraseña actual**;
+  si llega un valor, se guarda codificado con `PasswordEncoder`.
+- El email se valida globalmente excluyendo al propio registro (`existsByEmailAndIdNot` en
+  `CashierValidatorByEmailService`): si otro usuario ya lo usa responde `409 EMAIL_ALREADY_EXISTS`;
+  conservar el email actual del cajero es válido.
+- Solo actualiza `name`, `email` y `phoneNumber` (con validación del request). No modifica `role`,
+  `active` ni `commerce`.
+- Responde `200` con el `UserResponse` del cajero actualizado.
+
