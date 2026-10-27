@@ -12,7 +12,7 @@ public class UserMapper {
                 user.getName(),
                 user.getEmail(),
                 user.getRole(),
-                user.getActive(),
+                user.isActive(),
                 user.getPhoneNumber(),
                 user.getCreatedAt()
         );

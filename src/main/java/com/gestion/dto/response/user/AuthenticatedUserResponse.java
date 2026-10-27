@@ -8,5 +8,5 @@ public record AuthenticatedUserResponse(
         String name,
         String email,
         Role role,
-        Boolean active) {
+        boolean active) {
 }

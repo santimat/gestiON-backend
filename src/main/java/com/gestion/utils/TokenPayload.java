@@ -8,6 +8,6 @@ public record TokenPayload(
         Long userId,
         Long commerceId,
         Role role,
-        Boolean active
+        boolean active
 ) {
 }

@@ -22,7 +22,7 @@ public class UserPrincipal implements UserDetails {
     private String email;
     private String name;
     private Role role;
-    private Boolean active;
+    private boolean active;
 
     @Override
     @NonNull

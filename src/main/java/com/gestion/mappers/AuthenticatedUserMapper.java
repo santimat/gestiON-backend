@@ -14,7 +14,7 @@ public class AuthenticatedUserMapper {
                 authenticatedUser.getName(),
                 authenticatedUser.getEmail(),
                 authenticatedUser.getRole(),
-                authenticatedUser.getActive()
+                authenticatedUser.isActive()
         );
     }
 
@@ -25,7 +25,7 @@ public class AuthenticatedUserMapper {
                 user.getName(),
                 user.getEmail(),
                 user.getRole(),
-                user.getActive()
+                user.isActive()
         );
     }
 

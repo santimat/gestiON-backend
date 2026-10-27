@@ -12,7 +12,7 @@ public class TokenPayloadMapper {
                 user.getId(),
                 commerceId,
                 user.getRole(),
-                user.getActive()
+                user.isActive()
         );
     }
 }
