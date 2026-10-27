@@ -6,13 +6,15 @@ import com.gestion.utils.TokenPayload;
 public class TokenPayloadMapper {
     public static TokenPayload toTokenPayload(User user) {
         Long commerceId = user.getCommerce() != null ? user.getCommerce().getId() : null;
+        Long sellPointId = user.getSellPoint() != null ? user.getSellPoint().getId() : null;
         return new TokenPayload(
                 user.getEmail(),
                 user.getName(),
                 user.getId(),
                 commerceId,
                 user.getRole(),
-                user.isActive()
+                user.isActive(),
+                sellPointId
         );
     }
 }

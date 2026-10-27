@@ -31,10 +31,7 @@ public class SellPoint {
     @JoinColumn(name = "commerce_id", nullable = false)
     private Commerce commerce;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "sell_point_users",
-            joinColumns = @JoinColumn(name = "sell_point_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id"))
+    @OneToMany(mappedBy = "sellPoint")
     private Set<User> users = new HashSet<>();
 
     @Column(nullable = false)

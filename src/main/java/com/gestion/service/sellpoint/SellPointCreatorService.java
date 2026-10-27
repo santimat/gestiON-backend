@@ -19,7 +19,7 @@ public class SellPointCreatorService {
     private final JpaSellPointRepository sellPointRepository;
     private final CommerceFinderByIdService commerceFinderByIdService;
     private final SellPointValidatorByNameService sellPointValidatorByNameService;
-    private final SellPointCashiersLoaderService sellPointCashiersLoaderService;
+    private final SellPointCashiersAssignerService sellPointCashiersAssignerService;
 
     @Transactional
     public SellPointResponse createSellPoint(SellPointRequest request, UserPrincipal authenticatedUser) {
@@ -31,11 +31,11 @@ public class SellPointCreatorService {
         sellPointValidatorByNameService.checkExistingSellPointByName(authenticatedUser.getCommerceId(), parsedRequest);
 
         Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
-        SellPoint newSellPoint = SellPointMapper.toEntity(parsedRequest, commerce);
-        newSellPoint.getUsers().addAll(sellPointCashiersLoaderService
-                .loadCashiers(parsedRequest.cashierIds(), authenticatedUser.getCommerceId()));
+        SellPoint savedSellPoint = sellPointRepository.save(SellPointMapper.toEntity(parsedRequest, commerce));
 
-        SellPoint savedSellPoint = sellPointRepository.save(newSellPoint);
+        sellPointCashiersAssignerService.assignCashiers(request.cashierIds(),
+                authenticatedUser.getCommerceId(), savedSellPoint);
+
         return SellPointMapper.toResponse(savedSellPoint);
     }
 }

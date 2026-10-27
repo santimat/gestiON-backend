@@ -1,16 +1,44 @@
 package com.gestion.mappers;
 
 import com.gestion.dto.request.sale.SaleRequest;
+import com.gestion.dto.response.sale.SaleDetailResponse;
+import com.gestion.dto.response.sale.SaleResponse;
 import com.gestion.model.Sale;
+import com.gestion.model.SaleDetail;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class SaleMapper {
+
     public static Sale toEntity(SaleRequest request) {
         Sale sale = new Sale();
 
         sale.setPaymentMethod(request.paymentMethod());
-        sale.setSubtotal(request.subtotal());
-        sale.setDiscount(request.discount());
         sale.setObservations(request.observations());
+        // el descuento a nivel venta queda para otra iteración
+        sale.setDiscount(0.0);
         return sale;
+    }
+
+    public static SaleResponse toResponse(Sale sale, List<SaleDetail> details) {
+        List<SaleDetailResponse> detailResponses = details.stream()
+                .map(SaleDetailMapper::toResponse)
+                .collect(Collectors.toList());
+
+        return new SaleResponse(
+                sale.getId(),
+                sale.getClient() != null ? sale.getClient().getId() : null,
+                sale.getSellPoint() != null ? sale.getSellPoint().getId() : null,
+                sale.getUser().getName(),
+                sale.getPaymentMethod(),
+                sale.getSubtotal(),
+                sale.getDiscount(),
+                sale.getTotal(),
+                sale.getCreatedAt(),
+                sale.getObservations(),
+                sale.getStatus(),
+                detailResponses
+        );
     }
 }

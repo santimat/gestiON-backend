@@ -6,14 +6,17 @@ import com.gestion.model.Client;
 import com.gestion.repository.JpaClientRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
 public class ClientFinderByDniService {
     private final JpaClientRepository clientRepository;
 
-    public Client findByDni(String dni) {
-        return clientRepository.findByDni(dni)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CLIENT_NOT_FOUND, "Client with DNI " + dni + " not found"));
+    @Transactional(readOnly = true)
+    public Client findByDni(String dni, Long commerceId) {
+        return clientRepository.findByDniAndCommerceId(dni, commerceId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CLIENT_NOT_FOUND,
+                        "Client with DNI " + dni + " not found"));
     }
 }

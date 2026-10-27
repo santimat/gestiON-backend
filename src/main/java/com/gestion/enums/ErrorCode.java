@@ -26,6 +26,9 @@ public enum ErrorCode {
     COMMERCE_ADDRESS_ALREADY_EXISTS(409, "Commerce address is already registered"),
     COMMERCE_CUIT_ALREADY_EXISTS(409, "Commerce CUIT is already registered"),
 
+    INSUFFICIENT_STOCK(409, "Not enough stock for the requested quantity"),
+    PRODUCT_INACTIVE(409, "Product is not available for sale"),
+
     INVALID_FILE_TYPE(400, "File type is not allowed"),
     FILE_TOO_LARGE(413, "File size exceeds the maximum limit"),
     FILE_UPLOAD_FAILED(500, "File could not be uploaded"),

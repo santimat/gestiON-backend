@@ -30,10 +30,5 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
 
     Page<User> findAllByRole(Role role, Pageable pageable);
 
-    // listado paginado de cajeros asignados a un sell point, siempre restringido al commerce del JWT
-    @Query("SELECT DISTINCT u FROM User u JOIN u.sellPoints sp " +
-            "WHERE sp.id = :sellPointId AND sp.commerce.id = :commerceId")
-    Page<User> findAllBySellPointIdAndCommerceId(@Param("sellPointId") Long sellPointId,
-                                                 @Param("commerceId") Long commerceId,
-                                                 Pageable pageable);
+    Page<User> findAllBySellPointIdAndCommerceId(Long sellPointId, Long commerceId, Pageable pageable);
 }

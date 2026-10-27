@@ -9,6 +9,7 @@ public class ClientMapper {
     public static ClientResponse toResponse(Client client) {
         return new ClientResponse(
                 client.getId(),
+                client.getCommerce().getId(),
                 client.getName(),
                 client.getLastName(),
                 client.getAddress(),
@@ -17,7 +18,7 @@ public class ClientMapper {
         );
     }
 
-    public static Client toEntity(ClientRequest request) {
+    public static Client toEntity(ClientRequest request, com.gestion.model.Commerce commerce) {
         if (request == null) {
             return null;
         }
@@ -27,6 +28,7 @@ public class ClientMapper {
         client.setAddress(request.address());
         client.setPhoneNumber(request.phoneNumber());
         client.setDni(request.dni());
+        client.setCommerce(commerce);
         return client;
     }
 }

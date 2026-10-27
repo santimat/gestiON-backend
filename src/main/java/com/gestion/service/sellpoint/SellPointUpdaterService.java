@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 public class SellPointUpdaterService {
     private final SellPointFinderByIdAndCommerceIdService sellPointFinderByIdAndCommerceIdService;
     private final SellPointValidatorByNameService sellPointValidatorByNameService;
-    private final SellPointCashiersLoaderService sellPointCashiersLoaderService;
+    private final SellPointCashiersAssignerService sellPointCashiersAssignerService;
     private final JpaSellPointRepository sellPointRepository;
 
     @Transactional
@@ -26,9 +26,8 @@ public class SellPointUpdaterService {
         sellPointValidatorByNameService.checkExistingSellPointByName(commerceId, sellPointId, parsedRequest);
 
         sellPointToUpdate.setName(parsedRequest.name());
-        sellPointToUpdate.getUsers().clear();
-        sellPointToUpdate.getUsers().addAll(sellPointCashiersLoaderService
-                .loadCashiers(parsedRequest.cashierIds(), commerceId));
+        sellPointToUpdate.getUsers().forEach(user -> user.setSellPoint(null));
+        sellPointCashiersAssignerService.assignCashiers(parsedRequest.cashierIds(), commerceId, sellPointToUpdate);
 
         SellPoint updatedSellPoint = sellPointRepository.save(sellPointToUpdate);
         return SellPointMapper.toResponse(updatedSellPoint);

@@ -28,6 +28,10 @@ public class Client {
     @Column(name = "phone_number")
     private String phoneNumber;
 
-    @Column(unique = true)
+    @Column
     private String dni;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "commerce_id", nullable = false)
+    private Commerce commerce;
 }

@@ -7,7 +7,9 @@ import java.util.Optional;
 
 public interface JpaClientRepository extends JpaRepository<Client, Long> {
 
-    boolean existsByDni(String dni);
+    boolean existsByDniAndCommerceId(String dni, Long commerceId);
 
-    Optional<Client> findByDni(String dni);
+    Optional<Client> findByDniAndCommerceId(String dni, Long commerceId);
+
+    Optional<Client> findByIdAndCommerceId(Long id, Long commerceId);
 }

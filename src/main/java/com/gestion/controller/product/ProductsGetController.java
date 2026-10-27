@@ -23,7 +23,7 @@ public class ProductsGetController {
     private final ProductSearcherService productSearcherService;
 
     @GetMapping
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasRole('OWNER') or hasRole('CASHIER')")
     public ResponseEntity<Page<ProductResponse>> searchProducts(
             @AuthenticationPrincipal UserPrincipal authenticatedUser,
             @RequestParam(defaultValue = "0") int page,

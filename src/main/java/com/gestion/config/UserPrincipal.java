@@ -23,6 +23,7 @@ public class UserPrincipal implements UserDetails {
     private String name;
     private Role role;
     private boolean active;
+    private Long sellPointId;
 
     @Override
     @NonNull

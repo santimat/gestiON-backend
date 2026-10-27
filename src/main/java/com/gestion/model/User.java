@@ -10,8 +10,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -54,6 +52,7 @@ public class User {
 
     private boolean active;
 
-    @ManyToMany(mappedBy = "users")
-    private Set<SellPoint> sellPoints = new HashSet<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sell_point_id")
+    private SellPoint sellPoint;
 }

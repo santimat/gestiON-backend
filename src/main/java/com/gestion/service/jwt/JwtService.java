@@ -30,6 +30,7 @@ public class JwtService {
                 .claim("commerceId", payload.commerceId())
                 .claim("role", payload.role().toString())
                 .claim("active", payload.active())
+                .claim("sellPointId", payload.sellPointId())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtProperties.expiration()))
                 .signWith(secretKey)
