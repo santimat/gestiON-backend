@@ -19,6 +19,7 @@ public class SellPointCreatorService {
     private final JpaSellPointRepository sellPointRepository;
     private final CommerceFinderByIdService commerceFinderByIdService;
     private final SellPointValidatorByNameService sellPointValidatorByNameService;
+    private final SellPointCashiersLoaderService sellPointCashiersLoaderService;
 
     @Transactional
     public SellPointResponse createSellPoint(SellPointRequest request, UserPrincipal authenticatedUser) {
@@ -26,11 +27,14 @@ public class SellPointCreatorService {
             throw new AccessDeniedException("Authenticated user or commerce ID is null");
         }
 
-        request = new SellPointRequest(request.name().strip());
+        request = new SellPointRequest(request.name().strip(), request.cashierIds());
         sellPointValidatorByNameService.checkExistingSellPointByName(authenticatedUser.getCommerceId(), request);
 
         Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
-        SellPoint newSellPoint = sellPointRepository.save(SellPointMapper.toEntity(request, commerce));
-        return SellPointMapper.toResponse(newSellPoint);
+        SellPoint newSellPoint = SellPointMapper.toEntity(request, commerce);
+        newSellPoint.getUsers().addAll(sellPointCashiersLoaderService
+                .loadCashiers(request.cashierIds(), authenticatedUser.getCommerceId()));
+        SellPoint savedSellPoint = sellPointRepository.save(newSellPoint);
+        return SellPointMapper.toResponse(savedSellPoint);
     }
 }
