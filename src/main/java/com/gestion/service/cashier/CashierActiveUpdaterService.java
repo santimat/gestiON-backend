@@ -17,11 +17,11 @@ public class CashierActiveUpdaterService {
     public CashierUpdateActiveResponse toggleActive(Long cashierId, Long commerceId) {
         User cashierToUpdate = cashierFinderByIdAndCommerceIdService
                 .findCashierByIdAndCommerceId(cashierId, commerceId);
-        cashierToUpdate.setActive(!Boolean.TRUE.equals(cashierToUpdate.getActive()));
+        cashierToUpdate.setActive(!cashierToUpdate.isActive());
         User updatedCashier = userRepository.save(cashierToUpdate);
         return new CashierUpdateActiveResponse(
                 updatedCashier.getId(),
-                updatedCashier.getActive()
+                updatedCashier.isActive()
         );
     }
 }
