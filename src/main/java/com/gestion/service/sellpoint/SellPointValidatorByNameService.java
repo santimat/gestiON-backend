@@ -1,6 +1,7 @@
 package com.gestion.service.sellpoint;
 
 import com.gestion.dto.request.sellpoint.SellPointRequest;
+import com.gestion.dto.request.sellpoint.SellPointUpdateRequest;
 import com.gestion.enums.ErrorCode;
 import com.gestion.exception.DuplicateResourceException;
 import com.gestion.repository.JpaSellPointRepository;
@@ -14,6 +15,13 @@ public class SellPointValidatorByNameService {
 
     public void checkExistingSellPointByName(Long commerceId, SellPointRequest request) {
         if (sellPointRepository.existsByCommerceIdAndNameIgnoreCase(commerceId, request.name().strip())) {
+            throw new DuplicateResourceException(ErrorCode.SELL_POINT_NAME_ALREADY_EXISTS,
+                    "Sell point with name '" + request.name() + "' already exists in this commerce");
+        }
+    }
+
+    public void checkExistingSellPointByName(Long commerceId, Long sellPointIdToExclude, SellPointUpdateRequest request) {
+        if (sellPointRepository.existsByCommerceIdAndNameIgnoreCaseAndIdNot(commerceId, request.name().strip(), sellPointIdToExclude)) {
             throw new DuplicateResourceException(ErrorCode.SELL_POINT_NAME_ALREADY_EXISTS,
                     "Sell point with name '" + request.name() + "' already exists in this commerce");
         }

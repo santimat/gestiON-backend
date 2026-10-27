@@ -14,4 +14,6 @@ public interface JpaSellPointRepository extends JpaRepository<SellPoint, Long> {
     Optional<SellPoint> findByIdAndCommerceId(Long id, Long commerceId);
 
     boolean existsByCommerceIdAndNameIgnoreCase(Long commerceId, String name);
+
+    boolean existsByCommerceIdAndNameIgnoreCaseAndIdNot(Long commerceId, String name, Long id);
 }
