@@ -6,6 +6,7 @@ import com.gestion.dto.response.sale.SaleResponse;
 import com.gestion.model.Sale;
 import com.gestion.model.SaleDetail;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,8 +17,8 @@ public class SaleMapper {
 
         sale.setPaymentMethod(request.paymentMethod());
         sale.setObservations(request.observations());
-        // el descuento a nivel venta queda para otra iteración
-        sale.setDiscount(0.0);
+        sale.setDiscountType(request.discountType());
+        sale.setDiscount(request.discount() != null ? request.discount() : BigDecimal.ZERO);
         return sale;
     }
 
@@ -33,8 +34,10 @@ public class SaleMapper {
                 sale.getUser().getName(),
                 sale.getPaymentMethod(),
                 sale.getSubtotal(),
+                sale.getDiscountType(),
                 sale.getDiscount(),
                 sale.getTotal(),
+                sale.getTotalAfterDiscount(),
                 sale.getCreatedAt(),
                 sale.getObservations(),
                 sale.getStatus(),

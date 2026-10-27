@@ -4,6 +4,8 @@ import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.sale.SaleDetailRequest;
 import com.gestion.dto.request.sale.SaleRequest;
 import com.gestion.dto.response.sale.SaleResponse;
+import com.gestion.enums.ErrorCode;
+import com.gestion.exception.InvalidDiscountException;
 import com.gestion.mappers.SaleMapper;
 import com.gestion.model.*;
 import com.gestion.repository.JpaSaleDetailRepository;
@@ -16,6 +18,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -69,7 +72,11 @@ public class SaleCreatorService {
         sale.setUser(entityManager.getReference(com.gestion.model.User.class, authenticatedUser.getId()));
         sale.setCommerce(entityManager.getReference(Commerce.class, authenticatedUser.getCommerceId()));
         sale.setSubtotal(subtotal);
-        sale.setTotal(subtotal);
+
+        BigDecimal totalAfterDiscount = applyDiscount(subtotal, sale);
+
+        sale.setTotal(totalAfterDiscount);
+        sale.setTotalAfterDiscount(totalAfterDiscount);
         sale.setStatus(saleStatusResolverService.resolveStatus(request));
 
         if (authenticatedUser.getSellPointId() != null) {
@@ -91,5 +98,52 @@ public class SaleCreatorService {
             jpaSaleDetailRepository.save(detail);
         }
         return SaleMapper.toResponse(savedSale, details);
+    }
+
+    /**
+     * Valida y aplica el descuento de la venta sobre el subtotal.
+     * Reglas: el tipo y el monto van juntos (o ambos presentes, o ambos ausentes);
+     * PERCENTAGE admite valores entre 1 y 100 (exclusivo 100); FIXED_AMOUNT no puede
+     * superar el subtotal. Devuelve el total con el descuento ya aplicado.
+     */
+    private BigDecimal applyDiscount(BigDecimal subtotal, Sale sale) {
+        BigDecimal discount = sale.getDiscount();
+
+        if (sale.getDiscountType() == null) {
+            if (discount != null && discount.compareTo(BigDecimal.ZERO) > 0) {
+                throw new InvalidDiscountException(ErrorCode.DISCOUNT_WITHOUT_TYPE,
+                        "A discount amount was provided without a discount type");
+            }
+            return subtotal;
+        }
+
+        if (discount == null || discount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidDiscountException(ErrorCode.TYPE_WITHOUT_DISCOUNT,
+                    "A discount type was provided without a discount amount");
+        }
+
+        BigDecimal totalAfterDiscount;
+        switch (sale.getDiscountType()) {
+            case PERCENTAGE -> {
+                if (discount.compareTo(BigDecimal.valueOf(100)) >= 0) {
+                    throw new InvalidDiscountException(ErrorCode.INVALID_DISCOUNT,
+                            "Percentage discount must be lower than 100");
+                }
+                BigDecimal hundred = BigDecimal.valueOf(100);
+                totalAfterDiscount = subtotal.subtract(
+                        subtotal.multiply(discount).divide(hundred, 2, RoundingMode.HALF_UP));
+            }
+            case FIXED_AMOUNT -> {
+                if (discount.compareTo(subtotal) > 0) {
+                    throw new InvalidDiscountException(ErrorCode.DISCOUNT_EXCEEDS_SUBTOTAL,
+                            "Fixed amount discount cannot be greater than the sale subtotal");
+                }
+                totalAfterDiscount = subtotal.subtract(discount);
+            }
+            default -> throw new InvalidDiscountException(ErrorCode.INVALID_DISCOUNT,
+                    "Unsupported discount type");
+        }
+
+        return totalAfterDiscount.setScale(2, RoundingMode.HALF_UP);
     }
 }

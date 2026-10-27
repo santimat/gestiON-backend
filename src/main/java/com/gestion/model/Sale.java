@@ -1,5 +1,6 @@
 package com.gestion.model;
 
+import com.gestion.enums.DiscountType;
 import com.gestion.enums.PaymentMethod;
 import com.gestion.enums.SaleStatus;
 import jakarta.persistence.*;
@@ -47,11 +48,18 @@ public class Sale {
     @Column(nullable = false)
     private BigDecimal subtotal;
 
-    @Column(nullable = false)
-    private Double discount;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "discount_type", nullable = false)
+    private DiscountType discountType;
+
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal discount;
 
     @Column(nullable = false)
     private BigDecimal total;
+
+    @Column(precision = 12, scale = 2, name = "total_after_discount")
+    private BigDecimal totalAfterDiscount;
 
     @CreationTimestamp
     @Column(name = "created_at")

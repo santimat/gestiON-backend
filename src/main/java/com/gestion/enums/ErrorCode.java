@@ -37,6 +37,11 @@ public enum ErrorCode {
 
     VALIDATION_ERROR(400, "Request validation failed"),
 
+    INVALID_DISCOUNT(400, "Discount is not valid"),
+    DISCOUNT_WITHOUT_TYPE(400, "Discount amount requires a discount type"),
+    TYPE_WITHOUT_DISCOUNT(400, "Discount type requires a discount amount"),
+    DISCOUNT_EXCEEDS_SUBTOTAL(400, "Fixed amount discount cannot be greater than the sale subtotal"),
+
     INVALID_REQUEST_BODY(400, "Request body is malformed"),
     INVALID_PARAMETER(400, "A request parameter is invalid"),
     MISSING_PARAMETER(400, "A required request parameter is missing"),
