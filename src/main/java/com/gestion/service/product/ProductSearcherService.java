@@ -27,9 +27,15 @@ public class ProductSearcherService {
     private final MinioProperties minioProperties;
     private final CommerceFinderByIdService commerceFinderByIdService;
 
-    public Page<ProductResponse> searchProducts(UserPrincipal authenticatedUser, Pageable pageable) {
-        Page<Product> products = jpaProductRepository.findAllByCommerceId(authenticatedUser.getCommerceId(), pageable);
+    public Page<ProductResponse> searchProducts(UserPrincipal authenticatedUser, Long categoryId, String searchText, Pageable pageable) {
+        if (searchText != null && searchText.isBlank()) {
+            searchText = null;
+        }
+
+        Page<Product> products = jpaProductRepository
+                .findAllWithFilters(authenticatedUser.getCommerceId(), categoryId, searchText, pageable);
         Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
+
         return products.map(product -> {
             String productImageUrl = fileFinderService.getObjectUrl(product.getImageName(),
                     minioProperties.dir().productImages());

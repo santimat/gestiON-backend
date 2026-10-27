@@ -26,6 +26,8 @@ public class ProductsGetController {
     @PreAuthorize("hasRole('OWNER') or hasRole('CASHIER')")
     public ResponseEntity<Page<ProductResponse>> searchProducts(
             @AuthenticationPrincipal UserPrincipal authenticatedUser,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String searchText,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "updatedAt") String sortBy,
@@ -33,6 +35,7 @@ public class ProductsGetController {
         Sort.Direction sortDirection = Sort.Direction.fromString(sortDir);
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
-        return ResponseEntity.ok(productSearcherService.searchProducts(authenticatedUser, pageable));
+        return ResponseEntity.ok(productSearcherService
+                .searchProducts(authenticatedUser, categoryId, searchText, pageable));
     }
 }
