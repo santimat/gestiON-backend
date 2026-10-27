@@ -7,6 +7,6 @@ public record SellPointResponse(
         Long commerceId,
         String name,
         boolean active,
-        LocalDateTime createdAt
+        LocalDateTime updatedAt
 ) {
 }

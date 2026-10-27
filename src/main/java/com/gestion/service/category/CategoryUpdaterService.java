@@ -19,11 +19,11 @@ public class CategoryUpdaterService {
         Category categoryToUpdate = categoryFinderByIdAndCommerceIdService
                 .findCategoryByIdAndCommerceId(categoryId, commerceId);
 
-        request = new CategoryRequest(request.name().strip(), request.description());
-        categoryValidatorByNameService.checkExistingCategoryByName(commerceId, categoryId, request);
+        CategoryRequest parsedRequest = new CategoryRequest(request.name().strip(), request.description());
+        categoryValidatorByNameService.checkExistingCategoryByName(commerceId, categoryId, parsedRequest);
 
-        categoryToUpdate.setName(request.name());
-        categoryToUpdate.setDescription(request.description());
+        categoryToUpdate.setName(parsedRequest.name());
+        categoryToUpdate.setDescription(parsedRequest.description());
         return CategoryMapper.toResponse(categoryToUpdate);
     }
 }

@@ -28,7 +28,7 @@ public class CategoryMapper {
                 category.getName(),
                 category.getDescription(),
                 category.isActive(),
-                category.getCreatedAt()
+                category.getUpdatedAt()
         );
     }
 }

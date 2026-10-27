@@ -26,11 +26,11 @@ public class CategoryCreatorService {
             throw new AccessDeniedException("Authenticated user or commerce ID is null");
         }
 
-        request = new CategoryRequest(request.name().strip(), request.description());
-        categoryValidatorByNameService.checkExistingCategoryByName(authenticatedUser.getCommerceId(), request);
+        CategoryRequest parsedRequest = new CategoryRequest(request.name().strip(), request.description());
+        categoryValidatorByNameService.checkExistingCategoryByName(authenticatedUser.getCommerceId(), parsedRequest);
 
         Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
-        Category newCategory = categoryRepository.save(CategoryMapper.toEntity(request, commerce));
+        Category newCategory = categoryRepository.save(CategoryMapper.toEntity(parsedRequest, commerce));
         return CategoryMapper.toResponse(newCategory);
     }
 }

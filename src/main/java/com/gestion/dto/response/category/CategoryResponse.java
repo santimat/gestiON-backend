@@ -8,6 +8,6 @@ public record CategoryResponse(
         String name,
         String description,
         boolean active,
-        LocalDateTime createdAt
+        LocalDateTime updatedAt
 ) {
 }

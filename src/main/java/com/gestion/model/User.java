@@ -10,6 +10,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -51,4 +53,7 @@ public class User {
     private LocalDateTime updatedAt;
 
     private boolean active;
+
+    @ManyToMany(mappedBy = "users")
+    private Set<SellPoint> sellPoints = new HashSet<>();
 }

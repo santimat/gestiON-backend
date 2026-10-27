@@ -27,13 +27,14 @@ public class SellPointCreatorService {
             throw new AccessDeniedException("Authenticated user or commerce ID is null");
         }
 
-        request = new SellPointRequest(request.name().strip(), request.cashierIds());
-        sellPointValidatorByNameService.checkExistingSellPointByName(authenticatedUser.getCommerceId(), request);
+        SellPointRequest parsedRequest = new SellPointRequest(request.name().strip(), request.cashierIds());
+        sellPointValidatorByNameService.checkExistingSellPointByName(authenticatedUser.getCommerceId(), parsedRequest);
 
         Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
-        SellPoint newSellPoint = SellPointMapper.toEntity(request, commerce);
+        SellPoint newSellPoint = SellPointMapper.toEntity(parsedRequest, commerce);
         newSellPoint.getUsers().addAll(sellPointCashiersLoaderService
-                .loadCashiers(request.cashierIds(), authenticatedUser.getCommerceId()));
+                .loadCashiers(parsedRequest.cashierIds(), authenticatedUser.getCommerceId()));
+
         SellPoint savedSellPoint = sellPointRepository.save(newSellPoint);
         return SellPointMapper.toResponse(savedSellPoint);
     }

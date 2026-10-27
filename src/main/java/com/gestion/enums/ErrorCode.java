@@ -15,6 +15,7 @@ public enum ErrorCode {
     CATEGORY_NOT_FOUND(404, "Category not found"),
     PRODUCT_NOT_FOUND(404, "Product not found"),
     COMMERCE_NOT_FOUND(404, "Commerce not found"),
+    SELL_POINT_NOT_FOUND(404, "Sell point not found"),
     SALE_NOT_FOUND(404, "Sale not found"),
     ENDPOINT_NOT_FOUND(404, "Endpoint not found"),
 

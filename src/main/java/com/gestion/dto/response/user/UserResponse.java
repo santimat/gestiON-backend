@@ -11,6 +11,6 @@ public record UserResponse(
         Role role,
         boolean active,
         String phoneNumber,
-        LocalDateTime createdAt
+        LocalDateTime updatedAt
 ) {
 }

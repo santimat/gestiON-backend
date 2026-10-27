@@ -24,7 +24,7 @@ public class SellPointMapper {
                 sellPoint.getCommerce().getId(),
                 sellPoint.getName(),
                 sellPoint.isActive(),
-                sellPoint.getCreatedAt()
+                sellPoint.getUpdatedAt()
         );
     }
 }

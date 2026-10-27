@@ -28,7 +28,7 @@ public class SellPointsGetController {
             @AuthenticationPrincipal UserPrincipal authenticatedUser,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "updatedAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
         Sort.Direction sortDirection = Sort.Direction.fromString(sortDir);
         Sort sortConfig = Sort.by(sortDirection, sortBy);
