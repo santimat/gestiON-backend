@@ -3,6 +3,7 @@ package com.gestion.mappers;
 import com.gestion.dto.request.sale.SaleRequest;
 import com.gestion.dto.response.sale.SaleDetailResponse;
 import com.gestion.dto.response.sale.SaleResponse;
+import com.gestion.dto.response.sale.SaleSummaryResponse;
 import com.gestion.model.Sale;
 import com.gestion.model.SaleDetail;
 
@@ -41,6 +42,20 @@ public class SaleMapper {
                 sale.getObservations(),
                 sale.getStatus(),
                 detailResponses
+        );
+    }
+
+    /** Versión resumida para el listado del front: "Consumidor final" si la venta no tiene cliente. */
+    public static SaleSummaryResponse toSummaryResponse(Sale sale, Integer itemCount) {
+        String clientName = sale.getClient() != null
+                ? sale.getClient().getName() + " " + sale.getClient().getLastName()
+                : "Consumidor final";
+        return new SaleSummaryResponse(
+                sale.getId(),
+                itemCount,
+                sale.getStatus(),
+                clientName,
+                sale.getTotal()
         );
     }
 }
