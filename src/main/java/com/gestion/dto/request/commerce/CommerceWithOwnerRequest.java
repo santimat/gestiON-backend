@@ -24,9 +24,9 @@ public record CommerceWithOwnerRequest(
         @Length(min = 10, max = 20, message = "Phone Number's length must be between 10 and 20 characters")
         String phoneNumber,
 
-        @NotBlank(message = "Business Name is required")
-        @Length(min = 3, max = 100, message = "Business Name's length must be between 3 and 100 characters")
-        String businessName,
+        @NotBlank(message = "Name is required")
+        @Length(min = 3, max = 100, message = "Name's length must be between 3 and 100 characters")
+        String name,
 
         @NotBlank
         @Length(min = 3, max = 100, message = "Address' length must be between 3 and 100 characters")

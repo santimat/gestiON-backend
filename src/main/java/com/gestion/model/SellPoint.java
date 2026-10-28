@@ -24,15 +24,15 @@ public class SellPoint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
-    private String name;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "commerce_id", nullable = false)
     private Commerce commerce;
 
     @OneToMany(mappedBy = "sellPoint")
     private Set<User> users = new HashSet<>();
+
+    @Column(nullable = false, length = 100)
+    private String name;
 
     @Column(nullable = false)
     private boolean active;

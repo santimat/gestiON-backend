@@ -28,7 +28,7 @@ public class ClientsGetController {
             @AuthenticationPrincipal UserPrincipal authenticatedUser,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "updatedAt") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
         Sort.Direction sortDirection = Sort.Direction.fromString(sortDir);
         Sort sortConfig = Sort.by(sortDirection, sortBy);

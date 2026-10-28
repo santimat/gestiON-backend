@@ -9,8 +9,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 public record CommerceRequest(
         @NotBlank
-        @Length(min = 2, max = 100, message = "The business name must be between 2 and 100 characters")
-        String businessName,
+        @Length(min = 2, max = 100, message = "The name must be between 2 and 100 characters")
+        String name,
         @NotBlank
         @Length(min = 2, max = 100, message = "The address must be between 2 and 100 characters")
         String address,

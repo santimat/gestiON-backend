@@ -14,7 +14,7 @@ public class CommerceWithOwnerMapper {
                 user.getEmail(),
                 user.getPhoneNumber(),
                 commerce.getId(),
-                commerce.getBusinessName(),
+                commerce.getName(),
                 commerce.getCuit(),
                 commerce.getAddress(),
                 businessLogoUrl,

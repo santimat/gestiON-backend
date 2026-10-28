@@ -21,8 +21,8 @@ public class Commerce {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, name = "business_name")
-    private String businessName;
+    @Column(nullable = false)
+    private String name;
 
     @Column(nullable = false, unique = true, length = 100)
     private String address;

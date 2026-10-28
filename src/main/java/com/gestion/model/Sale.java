@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table
+@Table(name = "sales")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -43,10 +43,9 @@ public class Sale {
     private SellPoint sellPoint;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method")
     private PaymentMethod paymentMethod;
 
-    @Column(nullable = false)
-    private BigDecimal subtotal;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "discount_type")
@@ -55,12 +54,20 @@ public class Sale {
     @Column(precision = 12, scale = 2)
     private BigDecimal discount;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal subtotal;
+
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal total;
 
     @Column(precision = 12, scale = 2, name = "total_after_discount")
     private BigDecimal totalAfterDiscount;
 
+    private String observations;
+
+    @Enumerated(EnumType.STRING)
+    private SaleStatus status;
+    
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -69,8 +76,5 @@ public class Sale {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    private String observations;
 
-    @Enumerated(EnumType.STRING)
-    private SaleStatus status;
 }

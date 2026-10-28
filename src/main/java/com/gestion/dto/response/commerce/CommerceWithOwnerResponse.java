@@ -8,7 +8,7 @@ public record CommerceWithOwnerResponse(
         String email,
         String phoneNumber,
         Long commerceId,
-        String businessName,
+        String name,
         String cuit,
         String address,
         String businessLogoUrl,

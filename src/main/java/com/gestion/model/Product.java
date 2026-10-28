@@ -1,4 +1,4 @@
-    package com.gestion.model;
+package com.gestion.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -23,24 +23,27 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "commerce_id")
+    private Commerce commerce;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
     @Column(length = 100, nullable = false)
     private String name;
 
-    @Column
     private String description;
 
     @Column(name = "image_name")
     private String imageName;
 
-    @Column(nullable = false, name = "cost_price")
+    @Column(nullable = false, name = "cost_price", precision = 12, scale = 2)
     private BigDecimal costPrice;
 
-    @Column(nullable = false, name = "sale_price")
+    @Column(nullable = false, name = "sale_price", precision = 12, scale = 2)
     private BigDecimal salePrice;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private Category category;
 
     @Column(nullable = false, name = "min_stock")
     private Integer minStock;
@@ -53,10 +56,6 @@ public class Product {
 
     @Column(name = "profit_multiplier")
     private Double profitMultiplier;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "commerce_id")
-    private Commerce commerce;
 
     @CreationTimestamp
     @Column(name = "created_at")

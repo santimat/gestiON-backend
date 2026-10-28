@@ -21,15 +21,11 @@ public class Offer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id")
-    private Product product;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "commerce_id")
     private Commerce commerce;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal value;
 
     @Column(name = "start_date")

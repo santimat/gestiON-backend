@@ -13,7 +13,7 @@ public class CommerceMapper {
             return null;
         }
         Commerce commerce = new Commerce();
-        commerce.setBusinessName(request.businessName());
+        commerce.setName(request.name());
         commerce.setAddress(request.address());
         commerce.setCuit(request.cuit());
         commerce.setProfitMultiplier(request.profitMultiplier() != null ? request.profitMultiplier() : 1.0);
@@ -22,7 +22,7 @@ public class CommerceMapper {
 
     public static CommerceRequest toRequestFromCWOR(CommerceWithOwnerRequest request, Double profitMultiplier) {
         return new CommerceRequest(
-                request.businessName(),
+                request.name(),
                 request.address(),
                 request.cuit(),
                 request.businessLogo(),
@@ -32,7 +32,7 @@ public class CommerceMapper {
 
     public static CommerceRequest toRequestFromCWOUR(CommerceWithOwnerUpdateRequest request) {
         return new CommerceRequest(
-                request.businessName(),
+                request.name(),
                 request.address(),
                 request.cuit(),
                 request.businessLogo(),
@@ -43,7 +43,7 @@ public class CommerceMapper {
     public static CurrentCommerceResponse toCurrentResponse(Commerce commerce, @Nullable String businessLogoUrl) {
         return new CurrentCommerceResponse(
                 commerce.getId(),
-                commerce.getBusinessName(),
+                commerce.getName(),
                 businessLogoUrl,
                 commerce.isActive(),
                 commerce.getProfitMultiplier()

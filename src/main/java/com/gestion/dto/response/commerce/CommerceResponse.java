@@ -2,7 +2,7 @@ package com.gestion.dto.response.commerce;
 
 public record CommerceResponse(
         Long id,
-        String businessName,
+        String name,
         String address,
         String cuit,
         String logoUrl

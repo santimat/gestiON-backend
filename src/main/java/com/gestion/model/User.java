@@ -22,6 +22,15 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "commerce_id")
+    private Commerce commerce;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sell_point_id")
+    private SellPoint sellPoint;
+
     @Column(length = 50, nullable = false)
     private String name;
 
@@ -29,18 +38,17 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "commerce_id")
-    private Commerce commerce;
-
     @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "phone_number")
+    @Column(name = "phone_number", length = 16)
     private String phoneNumber;
+
+    @Column(nullable = false)
+    private boolean active;
 
     @CreationTimestamp
     @Column(name = "created_at")
@@ -50,9 +58,5 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    private boolean active;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sell_point_id")
-    private SellPoint sellPoint;
 }
