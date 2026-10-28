@@ -49,10 +49,10 @@ public class Sale {
     private BigDecimal subtotal;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "discount_type", nullable = false)
+    @Column(name = "discount_type")
     private DiscountType discountType;
 
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(precision = 12, scale = 2)
     private BigDecimal discount;
 
     @Column(nullable = false)
