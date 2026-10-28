@@ -18,7 +18,6 @@ public record SaleResponse(
         DiscountType discountType,
         BigDecimal discount,
         BigDecimal total,
-        BigDecimal totalAfterDiscount,
         LocalDateTime createdAt,
         String observations,
         SaleStatus status,

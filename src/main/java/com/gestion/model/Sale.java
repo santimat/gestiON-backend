@@ -57,17 +57,14 @@ public class Sale {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal subtotal;
 
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(nullable = false, precision = 12, scale = 2, name = "total_after_discount")
     private BigDecimal total;
-
-    @Column(precision = 12, scale = 2, name = "total_after_discount")
-    private BigDecimal totalAfterDiscount;
 
     private String observations;
 
     @Enumerated(EnumType.STRING)
     private SaleStatus status;
-    
+
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;

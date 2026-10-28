@@ -57,7 +57,6 @@ public class SaleCreatorService {
                 subtotal, sale.getDiscountType(), sale.getDiscount());
 
         sale.setTotal(totalAfterDiscount);
-        sale.setTotalAfterDiscount(totalAfterDiscount);
         sale.setStatus(saleStatusResolverService.resolveStatus(request));
 
         sale.setSellPoint(saleSellPointResolverService.resolveSellPoint(authenticatedUser.getSellPointId()));

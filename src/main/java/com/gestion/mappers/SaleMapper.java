@@ -37,7 +37,6 @@ public class SaleMapper {
                 sale.getDiscountType(),
                 sale.getDiscount(),
                 sale.getTotal(),
-                sale.getTotalAfterDiscount(),
                 sale.getCreatedAt(),
                 sale.getObservations(),
                 sale.getStatus(),
