@@ -57,7 +57,7 @@ public class Sale {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal subtotal;
 
-    @Column(nullable = false, precision = 12, scale = 2, name = "total_after_discount")
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal total;
 
     private String observations;

@@ -22,13 +22,21 @@ public class CategoryMapper {
         if (category == null) {
             return null;
         }
+        return toResponse(category, 0);
+    }
+
+    public static CategoryResponse toResponse(Category category, long productCount) {
+        if (category == null) {
+            return null;
+        }
         return new CategoryResponse(
                 category.getId(),
                 category.getCommerce() != null ? category.getCommerce().getId() : null,
                 category.getName(),
                 category.getDescription(),
                 category.isActive(),
-                category.getUpdatedAt()
+                category.getUpdatedAt(),
+                productCount
         );
     }
 }

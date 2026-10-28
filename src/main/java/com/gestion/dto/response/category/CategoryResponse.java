@@ -8,6 +8,7 @@ public record CategoryResponse(
         String name,
         String description,
         boolean active,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        long productCount
 ) {
 }
