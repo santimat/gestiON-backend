@@ -27,6 +27,7 @@ public class AdminInitializer implements ApplicationRunner {
         if (userRepository.existsByEmail(adminProperties.email())) return;
 
         User admin = new User();
+        admin.setName(adminProperties.name());
         admin.setEmail(adminProperties.email());
         admin.setPassword(passwordEncoder.encode(adminProperties.password()));
         admin.setRole(Role.SUDO);

@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 
 public record OfferResponse(
         Long id,
-        Long productId,
         BigDecimal value,
         LocalDateTime startDate,
         LocalDateTime endDate
