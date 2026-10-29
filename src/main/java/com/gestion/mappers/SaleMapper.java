@@ -28,9 +28,14 @@ public class SaleMapper {
                 .map(SaleDetailMapper::toResponse)
                 .collect(Collectors.toList());
 
+        String clientName = sale.getClient() != null
+                ? sale.getClient().getName() + " " + sale.getClient().getLastName()
+                : "Consumidor final";
+
         return new SaleResponse(
                 sale.getId(),
                 sale.getClient() != null ? sale.getClient().getId() : null,
+                clientName,
                 sale.getSellPoint() != null ? sale.getSellPoint().getId() : null,
                 sale.getUser().getName(),
                 sale.getPaymentMethod(),
@@ -55,6 +60,8 @@ public class SaleMapper {
                 itemCount,
                 sale.getStatus(),
                 clientName,
+                sale.getPaymentMethod(),
+                sale.getCreatedAt(),
                 sale.getTotal()
         );
     }

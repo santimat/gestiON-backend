@@ -11,6 +11,7 @@ import java.util.List;
 public record SaleResponse(
         Long id,
         Long clientId,
+        String clientName,
         Long sellPointId,
         String userName,
         PaymentMethod paymentMethod,

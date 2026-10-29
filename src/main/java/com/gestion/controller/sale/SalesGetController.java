@@ -2,6 +2,7 @@ package com.gestion.controller.sale;
 
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.sale.SaleSummaryResponse;
+import com.gestion.enums.PaymentMethod;
 import com.gestion.enums.SaleStatus;
 import com.gestion.service.sale.SaleSearcherService;
 import lombok.AllArgsConstructor;
@@ -29,6 +30,7 @@ public class SalesGetController {
             @AuthenticationPrincipal UserPrincipal authenticatedUser,
             @RequestParam(required = false) Long clientId,
             @RequestParam(required = false) SaleStatus status,
+            @RequestParam(required = false) PaymentMethod paymentMethod,
             @RequestParam(required = false) String searchText,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -37,6 +39,6 @@ public class SalesGetController {
         Sort sortConfig = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
         return ResponseEntity.ok(saleSearcherService
-                .searchSales(authenticatedUser, clientId, status, searchText, pageable));
+                .searchSales(authenticatedUser, clientId, status, paymentMethod, searchText, pageable));
     }
 }
