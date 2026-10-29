@@ -20,7 +20,8 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
               AND (:status IS NULL OR s.status = :status)
               AND (:paymentMethod IS NULL OR s.paymentMethod = :paymentMethod)
               AND (:searchText IS NULL
-                   OR LOWER(s.observations) LIKE LOWER(CONCAT('%', :searchText, '%')))
+                   OR LOWER(s.observations) LIKE LOWER(CONCAT('%', :searchText, '%'))
+                   OR LOWER(s.client.name) LIKE LOWER(CONCAT('%', :searchText, '%')))
             """)
     Page<Sale> findAllWithFilters(@Param("commerceId") Long commerceId,
                                   @Param("clientId") Long clientId,
