@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -31,7 +32,7 @@ public class SaleSearcherService {
         Page<Sale> sales = jpaSaleRepository.findAllWithFilters(
                 authenticatedUser.getCommerceId(), clientId, status, paymentMethod, normalizedSearchText, pageable);
 
-        List<Long> saleIds = sales.getContent().stream().map(Sale::getId).toList();
+        List<Long> saleIds = sales.getContent().stream().map(Sale::getId).filter(Objects::nonNull).toList();
         Map<Long, Long> itemCountsBySaleId = saleItemQuantitiesMapperService.mapSaleItemQuantities(saleIds);
 
         return sales.map(sale -> SaleMapper.toSummaryResponse(sale,
