@@ -1,6 +1,7 @@
 package com.gestion.dto.project;
 
-public interface CategoryProductCount {
-    Long getCategoryId();
-    Long getProductCount();
+public record CategoryProductCount(
+        Long categoryId,
+        Long productCount
+) {
 }
