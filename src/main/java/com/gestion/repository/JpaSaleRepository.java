@@ -15,13 +15,14 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
 
     @Query("""
             SELECT s FROM Sale s
+            LEFT JOIN FETCH s.client c
             WHERE s.commerce.id = :commerceId
               AND (:clientId IS NULL OR s.client.id = :clientId)
               AND (:status IS NULL OR s.status = :status)
               AND (:paymentMethod IS NULL OR s.paymentMethod = :paymentMethod)
               AND (:searchText IS NULL
                    OR LOWER(s.observations) LIKE LOWER(CONCAT('%', :searchText, '%'))
-                   OR LOWER(s.client.name) LIKE LOWER(CONCAT('%', :searchText, '%')))
+                   OR LOWER(c.name) LIKE LOWER(CONCAT('%', :searchText, '%')))
             """)
     Page<Sale> findAllWithFilters(@Param("commerceId") Long commerceId,
                                   @Param("clientId") Long clientId,
