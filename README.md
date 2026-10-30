@@ -80,6 +80,7 @@ responden con este mismo formato.
 | `COMMERCE_CUIT_ALREADY_EXISTS` | 409 | CUIT de comercio ya registrado |
 | `INSUFFICIENT_STOCK` | 409 | Stock insuficiente para la cantidad pedida |
 | `PRODUCT_INACTIVE` | 409 | Producto inactivo, no disponible para la venta |
+| `SALE_NOT_PENDING` | 409 | `mark-paid` sobre una venta que no está `PENDING` |
 | `DATA_INTEGRITY_VIOLATION` | 409 | Violación de restricción de la base de datos |
 | `VALIDATION_ERROR` | 400 | Fallo de validación del body (incluye `fields[]`) |
 | `INVALID_DISCOUNT` | 400 | Descuento inválido (tipo no soportado) |
@@ -179,6 +180,15 @@ cada cajero (usuario `CASHIER`) pertenece a **un** punto. La relación vive en `
 
 ## Ventas (Sale)
 
+### Endpoints
+
+| Endpoint | Descripción |
+|---|---|
+| `POST /api/sales` | Registra una venta (ver reglas abajo). `201` con `SaleResponse` |
+| `GET /api/sales` | Lista paginada de ventas del comercio del JWT (`SaleSummaryResponse`). Filtros opcionales: `clientId`, `status`, `paymentMethod`, `searchText` (matchea contra observaciones y nombre del cliente), paginación `page`/`size` y orden `sortBy`/`sortDir` (`createdAt` desc por defecto) |
+| `GET /api/sales/{id}` | Detalle completo con todas las líneas (`SaleResponse` + `details`). Scoped al comercio del JWT (`404 SALE_NOT_FOUND` si no matchea) |
+| `PATCH /api/sales/{id}/mark-paid` | Marca una venta `PENDING` como `PAY` (ver abajo). `200` con `{ id, status }`; si no está `PENDING` responde `409 SALE_NOT_PENDING` |
+
 ### Crear venta
 
 `POST /api/sales` con `SaleRequest`:
@@ -217,8 +227,21 @@ Reglas de negocio (todo server-side, el front no decide montos):
   en caso contrario).
 - Status: `PaymentMethod` con `CREDIT_ACCOUNT` (fiado) produce venta `PENDING`; los demás métodos
   producen `PAY`.
-- Respuesta `201` con `SaleResponse` (subtotal, descuento, total, status, sellPointId, clientId y
-  details). La fecha de la venta es `createdAt` (fecha de transacción, no se expone `updatedAt`).
+- Respuesta `201` con `SaleResponse` (subtotal, descuento, total, status, sellPointId, clientId,
+  clientName — "Consumidor final" si no tiene — y details). La fecha de la venta es `createdAt`
+  (fecha de transacción, no se expone `updatedAt`).
+
+### Marcar como pagada
+
+`PATCH /api/sales/{id}/mark-paid` (`SaleMarkPaidPatchController`, roles `CASHIER` u `OWNER`):
+
+- Busca la venta por `id + commerceId (JWT)` (`SaleFinderByIdAndCommerceIdService`): si no matchea,
+  `404 SALE_NOT_FOUND`.
+- Solo admite la transición `PENDING → PAY`; cualquier otro estado responde `409 SALE_NOT_PENDING`
+  (no es idempotente — marcar una venta ya `PAY` es error).
+- Único efecto: cambia `status`. No toca fechas, montos ni stock (no hace falta revalidar stock).
+- Responde `200` con `SaleUpdateStatusResponse { id, status }`; el front refresca el modal con
+  `GET /api/sales/{id}`.
 
 ### Arquitectura de `service/sale/`
 
@@ -236,6 +259,9 @@ Reglas de negocio (todo server-side, el front no decide montos):
 | `SaleSellPointResolverService` | Punto de venta desde el JWT o `null` |
 | `SaleStockUpdaterService` | Descontar stock |
 | `SaleDetailCreatorService` | Persistir los details |
+| `SaleSearcherService` | Listado paginado con filtros (armado de `SaleSummaryResponse` + conteo de ítems por venta) |
+| `SaleFinderByIdAndCommerceIdService` | Lookup por `id + commerceId` con `@EntityGraph` (cliente, punto y usuario eager); `404 SALE_NOT_FOUND` |
+| `SaleMarkPaidService` | Transición `PENDING → PAY` |
 
 ## Clientes
 

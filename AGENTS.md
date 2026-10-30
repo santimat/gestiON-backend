@@ -44,6 +44,14 @@ Docs and comments are mostly Spanish; commit messages are English.
 - `EntityManager.getReference(...)` proxies are used to wire relations by id without a lookup — the live
   example is `service/sale/SaleCreatorService.java` (README's claim that it is used in
   `ProductCreatorService` is stale). Only safe when the id already comes from a validated JWT.
+- Cross-tenant scoping: entity-by-id lookups that serve an endpoint go through a
+  `XFinderByIdAndCommerceIdService` using a `findByIdAndCommerceId` query (derived or JPQL) and answer
+  **404** (never 403) when the row belongs to another commerce. Live examples:
+  `service/sale/SaleFinderByIdAndCommerceIdService`, `service/sellpoint/SellPointFinderByIdAndCommerceIdService`.
+  Do not reuse unscoped finders (e.g. `SaleFinderByIdService`) in controllers.
+- When a finder feeds a response that maps several relations, use `@EntityGraph(attributePaths = ...)`
+  on the repository method to eager-load them (see `JpaSaleRepository.findByIdAndCommerceId`): lazy
+  proxies would blow up outside the transaction/session.
 
 ## Security
 
