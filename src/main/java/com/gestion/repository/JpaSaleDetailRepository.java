@@ -1,5 +1,6 @@
 package com.gestion.repository;
 
+import com.gestion.dto.project.SaleItemCount;
 import com.gestion.model.SaleDetail;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,9 +22,4 @@ public interface JpaSaleDetailRepository extends JpaRepository<SaleDetail, Long>
             """)
     List<SaleItemCount> countItemsBySaleIds(@Param("saleIds") List<Long> saleIds);
 
-    interface SaleItemCount {
-        Long getSaleId();
-
-        Long getItemCount();
-    }
 }
