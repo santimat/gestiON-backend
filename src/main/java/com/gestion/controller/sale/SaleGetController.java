@@ -27,7 +27,7 @@ public class SaleGetController {
     public ResponseEntity<SaleResponse> getSale(
             @PathVariable Long id,
             @AuthenticationPrincipal UserPrincipal authenticatedUser) {
-        Sale sale = saleFinderByIdAndCommerceIdService.findBy(id, authenticatedUser.getCommerceId());
+        Sale sale = saleFinderByIdAndCommerceIdService.findSaleByIdAndCommerceId(id, authenticatedUser.getCommerceId());
         return ResponseEntity.ok(SaleMapper.toResponse(
                 sale,
                 jpaSaleDetailRepository.findAllBySaleId(sale.getId())));

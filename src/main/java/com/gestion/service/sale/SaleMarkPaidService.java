@@ -16,7 +16,8 @@ public class SaleMarkPaidService {
 
     @Transactional
     public SaleUpdateStatusResponse markPaid(Long id, UserPrincipal authenticatedUser) {
-        Sale sale = saleFinderByIdAndCommerceIdService.findBy(id, authenticatedUser.getCommerceId());
+        Sale sale = saleFinderByIdAndCommerceIdService.findSaleByIdAndCommerceId(id, authenticatedUser.getCommerceId());
+        
         if (sale.getStatus() != SaleStatus.PENDING) {
             throw new SaleNotPendingException(
                     "Sale with id " + id + " is not pending");

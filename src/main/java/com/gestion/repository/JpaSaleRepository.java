@@ -5,6 +5,7 @@ import com.gestion.enums.SaleStatus;
 import com.gestion.model.Sale;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -31,6 +32,7 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
                                   @Param("searchText") String searchText,
                                   Pageable pageable);
 
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"client", "sellPoint", "user"})
+    // @EntityGraph para cargar las relaciones junto con la entidad Sale, evitando el problema de N+1
+    @EntityGraph(attributePaths = {"client", "sellPoint", "user"})
     Optional<Sale> findByIdAndCommerceId(Long id, Long commerceId);
 }

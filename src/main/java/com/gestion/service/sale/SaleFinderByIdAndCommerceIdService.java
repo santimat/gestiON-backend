@@ -14,7 +14,7 @@ public class SaleFinderByIdAndCommerceIdService {
     private final JpaSaleRepository jpaSaleRepository;
 
     @Transactional(readOnly = true)
-    public Sale findBy(Long id, Long commerceId) {
+    public Sale findSaleByIdAndCommerceId(Long id, Long commerceId) {
         return jpaSaleRepository.findByIdAndCommerceId(id, commerceId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ErrorCode.SALE_NOT_FOUND,
