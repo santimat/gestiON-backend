@@ -12,6 +12,6 @@ public class SaleStatusResolverService {
     public SaleStatus resolveStatus(SaleRequest request) {
         return request.paymentMethod() == PaymentMethod.CREDIT_ACCOUNT
                 ? SaleStatus.PENDING
-                : SaleStatus.PAY;
+                : SaleStatus.PAYED;
     }
 }

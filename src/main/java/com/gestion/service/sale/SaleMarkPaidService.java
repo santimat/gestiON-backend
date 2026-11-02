@@ -23,7 +23,7 @@ public class SaleMarkPaidService {
                     "Sale with id " + id + " is not pending");
         }
 
-        sale.setStatus(SaleStatus.PAY);
+        sale.setStatus(SaleStatus.PAYED);
         return new SaleUpdateStatusResponse(sale.getId(), sale.getStatus());
     }
 }
