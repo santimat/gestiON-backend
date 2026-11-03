@@ -36,7 +36,7 @@ public class SaleMapper {
                 sale.getId(),
                 sale.getClient() != null ? sale.getClient().getId() : null,
                 clientName,
-                sale.getSellPoint() != null ? sale.getSellPoint().getId() : null,
+                sale.getSellPoint() != null ? sale.getSellPoint().getName() : null,
                 sale.getUser().getName(),
                 sale.getPaymentMethod(),
                 sale.getSubtotal(),
@@ -63,6 +63,7 @@ public class SaleMapper {
                 sale.getCreatedAt(),
                 sale.getSubtotal(),
                 sale.getDiscount(),
+                sale.getDiscountType(),
                 sale.getTotal()
         );
     }

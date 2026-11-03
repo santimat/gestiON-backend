@@ -12,7 +12,7 @@ public record SaleResponse(
         Long id,
         Long clientId,
         String clientName,
-        Long sellPointId,
+        String sellPointName,
         String userName,
         PaymentMethod paymentMethod,
         BigDecimal subtotal,

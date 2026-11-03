@@ -1,5 +1,6 @@
 package com.gestion.dto.response.sale;
 
+import com.gestion.enums.DiscountType;
 import com.gestion.enums.PaymentMethod;
 import com.gestion.enums.SaleStatus;
 
@@ -15,6 +16,7 @@ public record SaleSummaryResponse(
         LocalDateTime createdAt,
         BigDecimal subtotal,
         BigDecimal discount,
+        DiscountType discountType,
         BigDecimal total
 ) {
 }
