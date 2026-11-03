@@ -1,4 +1,4 @@
-package com.gestion.service.category;
+package com.gestion.service.product;
 
 import com.gestion.dto.project.CategoryProductCount;
 import com.gestion.repository.JpaProductRepository;
@@ -11,10 +11,10 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class CategoryProductCountMapperService {
+public class ProductCounterByCategoryIds {
     private final JpaProductRepository jpaProductRepository;
 
-    public Map<Long, Long> mapProductCountsByCategoryIds(Long commerceId, List<Long> categoryIds) {
+    public Map<Long, Long> countProductsByCategoryIds(Long commerceId, List<Long> categoryIds) {
         if (categoryIds.isEmpty()) {
             return Map.of();
         }
@@ -24,5 +24,4 @@ public class CategoryProductCountMapperService {
                         CategoryProductCount::categoryId,
                         CategoryProductCount::productCount));
     }
-
 }

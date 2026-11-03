@@ -13,6 +13,8 @@ public record SaleSummaryResponse(
         String clientName,
         PaymentMethod paymentMethod,
         LocalDateTime createdAt,
+        BigDecimal subtotal,
+        BigDecimal discount,
         BigDecimal total
 ) {
 }

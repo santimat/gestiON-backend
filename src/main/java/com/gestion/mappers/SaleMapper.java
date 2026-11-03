@@ -50,7 +50,6 @@ public class SaleMapper {
         );
     }
 
-    /** Versión resumida para el listado del front: "Consumidor final" si la venta no tiene cliente. */
     public static SaleSummaryResponse toSummaryResponse(Sale sale, Integer itemCount) {
         String clientName = sale.getClient() != null
                 ? sale.getClient().getName() + " " + sale.getClient().getLastName()
@@ -62,6 +61,8 @@ public class SaleMapper {
                 clientName,
                 sale.getPaymentMethod(),
                 sale.getCreatedAt(),
+                sale.getSubtotal(),
+                sale.getDiscount(),
                 sale.getTotal()
         );
     }

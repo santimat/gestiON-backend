@@ -1,8 +1,10 @@
-package com.gestion.service.sale;
+package com.gestion.service.saleDetails;
 
 import com.gestion.model.Product;
 import com.gestion.model.SaleDetail;
 import com.gestion.service.product.ProductFinderByIdAndCommerceIdService;
+import com.gestion.service.sale.SaleProductValidatorService;
+import com.gestion.service.sale.SaleStockValidatorService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -2,7 +2,7 @@ package com.gestion.controller.sale;
 
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.sale.SaleRequest;
-import com.gestion.dto.response.sale.SaleResponse;
+import com.gestion.dto.response.sale.SaleSummaryResponse;
 import com.gestion.service.sale.SaleCreatorService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -18,14 +18,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/sales")
 @AllArgsConstructor
-public class SalesPostController {
+public class SalePostController {
     private final SaleCreatorService saleCreatorService;
 
     @PostMapping
     @PreAuthorize("hasRole('CASHIER') or hasRole('OWNER')")
-    public ResponseEntity<SaleResponse> createSale(@RequestBody @Valid SaleRequest request,
-                                                   @AuthenticationPrincipal UserPrincipal authenticatedUser) {
-        SaleResponse response = saleCreatorService.createSale(request, authenticatedUser);
+    public ResponseEntity<SaleSummaryResponse> createSale(@RequestBody @Valid SaleRequest request,
+                                                          @AuthenticationPrincipal UserPrincipal authenticatedUser) {
+        SaleSummaryResponse response = saleCreatorService.createSale(request, authenticatedUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

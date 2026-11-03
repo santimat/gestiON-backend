@@ -2,12 +2,16 @@ package com.gestion.service.sale;
 
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.sale.SaleRequest;
-import com.gestion.dto.response.sale.SaleResponse;
+import com.gestion.dto.response.sale.SaleSummaryResponse;
 import com.gestion.mappers.SaleMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.Sale;
 import com.gestion.model.SaleDetail;
 import com.gestion.repository.JpaSaleRepository;
+import com.gestion.service.saleDetails.SaleDetailCreatorService;
+import com.gestion.service.saleDetails.SaleDetailsMergerService;
+import com.gestion.service.saleDetails.SaleDetailsValidationResult;
+import com.gestion.service.saleDetails.SaleDetailsValidatorService;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -33,7 +37,7 @@ public class SaleCreatorService {
     private final EntityManager entityManager;
 
     @Transactional
-    public SaleResponse createSale(SaleRequest request, UserPrincipal authenticatedUser) {
+    public SaleSummaryResponse createSale(SaleRequest request, UserPrincipal authenticatedUser) {
         if (authenticatedUser.getCommerceId() == null) {
             throw new AccessDeniedException("Authenticated user does not have a commerce associated");
         }
@@ -68,6 +72,9 @@ public class SaleCreatorService {
 
         Sale savedSale = jpaSaleRepository.save(sale);
         saleDetailCreatorService.createDetails(savedSale, details);
-        return SaleMapper.toResponse(savedSale, details);
+
+        // el summary expone unidades vendidas (SUM quantity), igual que el listado
+        int itemCount = details.stream().mapToInt(SaleDetail::getQuantity).sum();
+        return SaleMapper.toSummaryResponse(savedSale, itemCount);
     }
 }

@@ -227,9 +227,11 @@ Reglas de negocio (todo server-side, el front no decide montos):
   en caso contrario).
 - Status: `PaymentMethod` con `CREDIT_ACCOUNT` (fiado) produce venta `PENDING`; los demás métodos
   producen `PAY`.
-- Respuesta `201` con `SaleResponse` (subtotal, descuento, total, status, sellPointId, clientId,
-  clientName — "Consumidor final" si no tiene — y details). La fecha de la venta es `createdAt`
-  (fecha de transacción, no se expone `updatedAt`).
+- Respuesta `201` con `SaleSummaryResponse` — el mismo shape del listado (`id`, `itemCount` = suma de
+  unidades, `status`, `clientName`, `paymentMethod`, `createdAt`, `subtotal`, `discount`, `total`),
+  pensado para insertar la fila en la tabla del front. La vista con líneas de productos es
+  `GET /api/sales/{id}`. La fecha de la venta es `createdAt` (fecha de transacción, no se expone
+  `updatedAt`).
 
 ### Marcar como pagada
 

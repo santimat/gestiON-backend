@@ -1,4 +1,4 @@
-package com.gestion.service.sale;
+package com.gestion.service.saleDetails;
 
 import com.gestion.dto.request.sale.SaleDetailRequest;
 import org.springframework.stereotype.Service;
