@@ -27,13 +27,14 @@ public class ProductSearcherService {
     private final MinioProperties minioProperties;
     private final CommerceFinderByIdService commerceFinderByIdService;
 
-    public Page<ProductResponse> searchProducts(UserPrincipal authenticatedUser, Long categoryId, String searchText, Pageable pageable) {
+    public Page<ProductResponse> searchProducts(UserPrincipal authenticatedUser, Long categoryId, String searchText,
+                                                Boolean active, Pageable pageable) {
         if (searchText != null && searchText.isBlank()) {
             searchText = null;
         }
 
         Page<Product> products = jpaProductRepository
-                .findAllWithFilters(authenticatedUser.getCommerceId(), categoryId, searchText, pageable);
+                .findAllWithFilters(authenticatedUser.getCommerceId(), categoryId, searchText,active, pageable);
         Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
 
         return products.map(product -> {

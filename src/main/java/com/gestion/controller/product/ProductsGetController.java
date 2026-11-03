@@ -28,6 +28,7 @@ public class ProductsGetController {
             @AuthenticationPrincipal UserPrincipal authenticatedUser,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String searchText,
+            @RequestParam(required = false) Boolean active,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "updatedAt") String sortBy,
@@ -36,6 +37,6 @@ public class ProductsGetController {
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
         return ResponseEntity.ok(productSearcherService
-                .searchProducts(authenticatedUser, categoryId, searchText, pageable));
+                .searchProducts(authenticatedUser, categoryId, searchText, active, pageable));
     }
 }

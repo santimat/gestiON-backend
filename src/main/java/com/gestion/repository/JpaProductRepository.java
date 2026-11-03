@@ -21,11 +21,14 @@ public interface JpaProductRepository extends JpaRepository<Product, Long> {
               AND (:categoryId IS NULL OR p.category.id = :categoryId)
               AND (:searchText IS NULL
                    OR LOWER(p.name) LIKE LOWER(CONCAT('%', :searchText, '%'))
-                   OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchText, '%')))
+                   OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchText, '%'))
+                   OR LOWER(p.category.name) LIKE LOWER(CONCAT('%', :searchText, '%')))
+              AND (:active IS NULL OR p.active = :active)
             """)
     Page<Product> findAllWithFilters(@Param("commerceId") Long commerceId,
                                      @Param("categoryId") Long categoryId,
                                      @Param("searchText") String searchText,
+                                     @Param("active") Boolean active,
                                      Pageable pageable);
 
     @Query("""
