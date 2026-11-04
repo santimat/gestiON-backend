@@ -32,7 +32,7 @@ public class Offer {
     private BigDecimal value;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "discount_type")
+    @Column(name = "discount_type", nullable = false)
     private DiscountType discountType;
 
     @Column(name = "start_date")
