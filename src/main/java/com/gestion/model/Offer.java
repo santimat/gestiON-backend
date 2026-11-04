@@ -1,5 +1,6 @@
 package com.gestion.model;
 
+import com.gestion.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,6 +9,8 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "offers")
@@ -32,4 +35,11 @@ public class Offer {
 
     @Column(name = "end_date")
     private LocalDateTime endDate;
+
+    // tabla auxiliar para guardar metodos de pago que tienen oferta
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "offer_payment_methods", joinColumns = @JoinColumn(name = "offer_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method")
+    private Set<PaymentMethod> paymentMethods = new HashSet<>();
 }

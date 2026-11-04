@@ -27,7 +27,7 @@ public class OfferCreatorService {
         Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
         LocalDateTime startDate = LocalDateTime.parse(request.startDate());
         LocalDateTime endDate = LocalDateTime.parse(request.endDate());
-        Offer offerToSave = new Offer(null, commerce, request.value(), startDate, endDate);
+        Offer offerToSave = new Offer(null, commerce, request.value(), startDate, endDate, request.paymentMethods());
         return OfferMapper.toResponse(offerRepository.save(offerToSave));
     }
 }

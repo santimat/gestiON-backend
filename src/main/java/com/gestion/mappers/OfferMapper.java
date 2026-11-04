@@ -9,7 +9,8 @@ public class OfferMapper {
                 offer.getId(),
                 offer.getValue(),
                 offer.getStartDate(),
-                offer.getEndDate()
+                offer.getEndDate(),
+                offer.getPaymentMethods()
         );
     }
 }
