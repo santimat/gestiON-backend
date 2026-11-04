@@ -1,5 +1,6 @@
 package com.gestion.model;
 
+import com.gestion.enums.DiscountType;
 import com.gestion.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,6 +30,10 @@ public class Offer {
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal value;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "discount_type")
+    private DiscountType discountType;
 
     @Column(name = "start_date")
     private LocalDateTime startDate;

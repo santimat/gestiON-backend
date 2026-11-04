@@ -8,6 +8,7 @@ public class OfferMapper {
         return new OfferResponse(
                 offer.getId(),
                 offer.getValue(),
+                offer.getDiscountType(),
                 offer.getStartDate(),
                 offer.getEndDate(),
                 offer.getPaymentMethods()

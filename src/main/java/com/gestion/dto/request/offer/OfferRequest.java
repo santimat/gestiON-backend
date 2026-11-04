@@ -1,5 +1,6 @@
 package com.gestion.dto.request.offer;
 
+import com.gestion.enums.DiscountType;
 import com.gestion.enums.PaymentMethod;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -11,6 +12,8 @@ public record OfferRequest(
         @NotNull(message = "Offer value is required")
         @Positive(message = "Offer value must be a positive number")
         BigDecimal value,
+        @NotNull(message = "Discount type is required")
+        DiscountType discountType,
         @NotNull(message = "Start date is required")
         String startDate,
         @NotNull(message = "End date is required")
