@@ -1,6 +1,5 @@
 package com.gestion.service.sale;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.sale.SaleRequest;
 import com.gestion.dto.response.sale.SaleSummaryResponse;
 import com.gestion.mappers.SaleMapper;
@@ -37,8 +36,8 @@ public class SaleCreatorService {
     private final EntityManager entityManager;
 
     @Transactional
-    public SaleSummaryResponse createSale(SaleRequest request, UserPrincipal authenticatedUser) {
-        if (authenticatedUser.getCommerceId() == null) {
+    public SaleSummaryResponse createSale(SaleRequest request, Long userId, Long commerceId, Long sellPointId) {
+        if (commerceId == null) {
             throw new AccessDeniedException("Authenticated user does not have a commerce associated");
         }
 
@@ -47,14 +46,14 @@ public class SaleCreatorService {
 
         // validaciones previas: si algo falla, no se descuenta stock ni se persiste nada
         SaleDetailsValidationResult validation =
-                saleDetailsValidatorService.validate(authenticatedUser.getCommerceId(), quantitiesByProductId);
+                saleDetailsValidatorService.validate(commerceId, quantitiesByProductId);
         List<SaleDetail> details = validation.details();
         BigDecimal subtotal = validation.subtotal();
 
         // armado de la venta
         Sale sale = SaleMapper.toEntity(request);
-        sale.setUser(entityManager.getReference(com.gestion.model.User.class, authenticatedUser.getId()));
-        sale.setCommerce(entityManager.getReference(Commerce.class, authenticatedUser.getCommerceId()));
+        sale.setUser(entityManager.getReference(com.gestion.model.User.class, userId));
+        sale.setCommerce(entityManager.getReference(Commerce.class, commerceId));
         sale.setSubtotal(subtotal);
 
         BigDecimal totalAfterDiscount = saleDiscountApplierService.applyDiscount(
@@ -63,9 +62,9 @@ public class SaleCreatorService {
         sale.setTotal(totalAfterDiscount);
         sale.setStatus(saleStatusResolverService.resolveStatus(request));
 
-        sale.setSellPoint(saleSellPointResolverService.resolveSellPoint(authenticatedUser.getSellPointId()));
+        sale.setSellPoint(saleSellPointResolverService.resolveSellPoint(sellPointId));
 
-        sale.setClient(saleClientResolverService.resolveClient(request.clientId(), authenticatedUser.getCommerceId()));
+        sale.setClient(saleClientResolverService.resolveClient(request.clientId(), commerceId));
 
         // descuento de stock: solo se llega acá si todos los items pasaron la validación
         saleStockUpdaterService.applyStockDecrement(details);

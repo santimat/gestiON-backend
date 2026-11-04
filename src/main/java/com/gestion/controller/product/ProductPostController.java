@@ -25,7 +25,7 @@ public class ProductPostController {
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ProductResponse> createProduct(@ModelAttribute @Valid ProductRequest request,
                                                          @AuthenticationPrincipal UserPrincipal authenticatedUser) {
-        ProductResponse response = productCreatorService.createProduct(request, authenticatedUser);
+        ProductResponse response = productCreatorService.createProduct(request, authenticatedUser.getCommerceId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

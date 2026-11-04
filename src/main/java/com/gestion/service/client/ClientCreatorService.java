@@ -1,6 +1,5 @@
 package com.gestion.service.client;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.client.ClientRequest;
 import com.gestion.mappers.ClientMapper;
 import com.gestion.model.Client;
@@ -19,16 +18,16 @@ public class ClientCreatorService {
     private final CommerceFinderByIdService commerceFinderByIdService;
 
     @Transactional
-    public Client createClient(ClientRequest request, UserPrincipal authenticatedUser) {
-        if (authenticatedUser.getCommerceId() == null) {
+    public Client createClient(ClientRequest request, Long commerceId) {
+        if (commerceId == null) {
             throw new AccessDeniedException(
                     "Authenticated user does not have a commerce associated");
         }
 
-        clientValidatorByDniService.checkExistingClientByDni(request, authenticatedUser.getCommerceId());
+        clientValidatorByDniService.checkExistingClientByDni(request, commerceId);
 
         Client newClient = ClientMapper.toEntity(request,
-                commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId()));
+                commerceFinderByIdService.findCommerceById(commerceId));
         return clientRepository.save(newClient);
     }
 }

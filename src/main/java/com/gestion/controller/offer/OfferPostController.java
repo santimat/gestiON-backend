@@ -25,7 +25,7 @@ public class OfferPostController {
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<OfferResponse> createOffer(@RequestBody @Valid OfferRequest request,
                                                      @AuthenticationPrincipal UserPrincipal authenticatedUser) {
-        OfferResponse response = offerCreatorService.createOffer(request, authenticatedUser);
+        OfferResponse response = offerCreatorService.createOffer(request, authenticatedUser.getCommerceId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

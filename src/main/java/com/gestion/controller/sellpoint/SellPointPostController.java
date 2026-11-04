@@ -25,7 +25,7 @@ public class SellPointPostController {
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<SellPointResponse> createSellPoint(@RequestBody @Valid SellPointRequest request,
                                                              @AuthenticationPrincipal UserPrincipal authenticatedUser) {
-        SellPointResponse response = sellPointCreatorService.createSellPoint(request, authenticatedUser);
+        SellPointResponse response = sellPointCreatorService.createSellPoint(request, authenticatedUser.getCommerceId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

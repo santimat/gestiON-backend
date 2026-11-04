@@ -36,6 +36,6 @@ public class SellPointCashiersGetController {
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
 
-        return ResponseEntity.ok(sellPointCashiersFinderService.findCashiersBySellPoint(sellPointId, authenticatedUser, pageable));
+        return ResponseEntity.ok(sellPointCashiersFinderService.findCashiersBySellPoint(sellPointId, authenticatedUser.getCommerceId(), pageable));
     }
 }

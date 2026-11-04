@@ -29,6 +29,6 @@ public class ClientPutController {
             @RequestBody @Valid ClientRequest request,
             @AuthenticationPrincipal UserPrincipal authenticatedUser) {
         return ResponseEntity.ok(ClientMapper.toResponse(
-                clientUpdaterService.updateClient(id, request, authenticatedUser)));
+                clientUpdaterService.updateClient(id, request, authenticatedUser.getCommerceId())));
     }
 }

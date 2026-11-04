@@ -1,6 +1,5 @@
 package com.gestion.service.client;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.client.ClientRequest;
 import com.gestion.enums.ErrorCode;
 import com.gestion.exception.ResourceNotFoundException;
@@ -17,14 +16,14 @@ public class ClientUpdaterService {
     private final ClientValidatorByDniService clientValidatorByDniService;
 
     @Transactional
-    public Client updateClient(Long clientId, ClientRequest request, UserPrincipal authenticatedUser) {
+    public Client updateClient(Long clientId, ClientRequest request, Long commerceId) {
         Client clientToUpdate = jpaClientRepository
-                .findByIdAndCommerceId(clientId, authenticatedUser.getCommerceId())
+                .findByIdAndCommerceId(clientId, commerceId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ErrorCode.CLIENT_NOT_FOUND,
                         "Client with id " + clientId + " not found in this commerce"));
 
-        clientValidatorByDniService.checkExistingClientByDni(request, authenticatedUser.getCommerceId(), clientId);
+        clientValidatorByDniService.checkExistingClientByDni(request, commerceId, clientId);
 
         clientToUpdate.setName(request.name());
         clientToUpdate.setLastName(request.lastName());

@@ -1,6 +1,5 @@
 package com.gestion.service.client;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.client.ClientResponse;
 import com.gestion.mappers.ClientMapper;
 import com.gestion.model.Client;
@@ -17,9 +16,9 @@ public class ClientSearcherService {
     private final JpaClientRepository jpaClientRepository;
 
     @Transactional(readOnly = true)
-    public Page<ClientResponse> searchClients(UserPrincipal authenticatedUser, Pageable pageable) {
+    public Page<ClientResponse> searchClients(Long commerceId, Pageable pageable) {
         Page<Client> clients = jpaClientRepository
-                .findAllByCommerceId(authenticatedUser.getCommerceId(), pageable);
+                .findAllByCommerceId(commerceId, pageable);
         return clients.map(ClientMapper::toResponse);
     }
 }

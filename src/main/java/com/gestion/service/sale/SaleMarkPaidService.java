@@ -1,6 +1,5 @@
 package com.gestion.service.sale;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.sale.SaleUpdateStatusResponse;
 import com.gestion.enums.SaleStatus;
 import com.gestion.exception.SaleNotPendingException;
@@ -15,8 +14,8 @@ public class SaleMarkPaidService {
     private final SaleFinderByIdAndCommerceIdService saleFinderByIdAndCommerceIdService;
 
     @Transactional
-    public SaleUpdateStatusResponse markPaid(Long id, UserPrincipal authenticatedUser) {
-        Sale sale = saleFinderByIdAndCommerceIdService.findSaleByIdAndCommerceId(id, authenticatedUser.getCommerceId());
+    public SaleUpdateStatusResponse markPaid(Long id, Long commerceId) {
+        Sale sale = saleFinderByIdAndCommerceIdService.findSaleByIdAndCommerceId(id, commerceId);
         
         if (sale.getStatus() != SaleStatus.PENDING) {
             throw new SaleNotPendingException(

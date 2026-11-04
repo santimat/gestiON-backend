@@ -1,6 +1,5 @@
 package com.gestion.service.sale;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.sale.SaleSummaryResponse;
 import com.gestion.enums.PaymentMethod;
 import com.gestion.enums.SaleStatus;
@@ -24,13 +23,13 @@ public class SaleSearcherService {
     private final SaleItemQuantitiesMapperService saleItemQuantitiesMapperService;
 
     @Transactional(readOnly = true)
-    public Page<SaleSummaryResponse> searchSales(UserPrincipal authenticatedUser, Long clientId,
+    public Page<SaleSummaryResponse> searchSales(Long commerceId, Long clientId,
                                                  SaleStatus status, PaymentMethod paymentMethod, String searchText,
                                                  Pageable pageable) {
         String normalizedSearchText = (searchText != null && searchText.isBlank()) ? null : searchText;
 
         Page<Sale> sales = jpaSaleRepository.findAllWithFilters(
-                authenticatedUser.getCommerceId(), clientId, status, paymentMethod, normalizedSearchText, pageable);
+                commerceId, clientId, status, paymentMethod, normalizedSearchText, pageable);
 
         List<Long> saleIds = sales.getContent().stream().map(Sale::getId).filter(Objects::nonNull).toList();
         Map<Long, Long> itemCountsBySaleId = saleItemQuantitiesMapperService.mapSaleItemQuantities(saleIds);

@@ -25,7 +25,7 @@ public class CategoryPostController {
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<CategoryResponse> createCategory(@RequestBody @Valid CategoryRequest request,
                                                            @AuthenticationPrincipal UserPrincipal authenticatedUser) {
-        CategoryResponse response = categoryCreatorService.createCategory(request, authenticatedUser);
+        CategoryResponse response = categoryCreatorService.createCategory(request, authenticatedUser.getCommerceId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

@@ -1,6 +1,5 @@
 package com.gestion.service.cashier;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.cashier.CashierUpdateRequest;
 import com.gestion.dto.response.user.UserResponse;
 import com.gestion.mappers.CashierMapper;
@@ -21,13 +20,13 @@ public class CashierUpdaterService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public UserResponse updateCashier(Long cashierId, CashierUpdateRequest request, UserPrincipal authenticatedUser) {
-        if (authenticatedUser.getCommerceId() == null) {
+    public UserResponse updateCashier(Long cashierId, CashierUpdateRequest request, Long commerceId) {
+        if (commerceId == null) {
             throw new AccessDeniedException("Authenticated user does not have a commerce associated");
         }
 
         User cashier = cashierFinderByIdAndCommerceIdService.findCashierByIdAndCommerceId(
-                cashierId, authenticatedUser.getCommerceId());
+                cashierId, commerceId);
         cashierValidatorByEmailService.checkExistingCashierByEmail(cashier.getId(), request.email());
 
         cashier.setName(request.name());

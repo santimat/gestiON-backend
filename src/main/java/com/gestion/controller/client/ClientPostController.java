@@ -28,6 +28,6 @@ public class ClientPostController {
             @RequestBody @Valid ClientRequest request,
             @AuthenticationPrincipal UserPrincipal authenticatedUser) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ClientMapper.toResponse(clientCreatorService.createClient(request, authenticatedUser)));
+                .body(ClientMapper.toResponse(clientCreatorService.createClient(request, authenticatedUser.getCommerceId())));
     }
 }

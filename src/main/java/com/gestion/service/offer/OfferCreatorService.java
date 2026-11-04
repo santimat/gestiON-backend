@@ -1,6 +1,5 @@
 package com.gestion.service.offer;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.offer.OfferRequest;
 import com.gestion.dto.response.offer.OfferResponse;
 import com.gestion.mappers.OfferMapper;
@@ -21,8 +20,8 @@ public class OfferCreatorService {
     private final CommerceFinderByIdService commerceFinderByIdService;
 
     @Transactional
-    public OfferResponse createOffer(OfferRequest request, UserPrincipal authenticatedUser) {
-        Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
+    public OfferResponse createOffer(OfferRequest request, Long commerceId) {
+        Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
         LocalDateTime startDate = LocalDateTime.parse(request.startDate());
         LocalDateTime endDate = LocalDateTime.parse(request.endDate());
         Offer offerToSave = new Offer(null, commerce, request.value(), startDate, endDate, request.paymentMethods());

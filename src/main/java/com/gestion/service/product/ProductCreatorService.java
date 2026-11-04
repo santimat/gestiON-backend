@@ -1,6 +1,5 @@
 package com.gestion.service.product;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.product.ProductRequest;
 import com.gestion.dto.response.product.ProductResponse;
 import com.gestion.mappers.CategoryMapper;
@@ -27,10 +26,10 @@ public class ProductCreatorService {
     private final ProductImageUploaderService productImageUploaderService;
 
     @Transactional
-    public ProductResponse createProduct(ProductRequest request, UserPrincipal authenticatedUser) {
-        Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
+    public ProductResponse createProduct(ProductRequest request, Long commerceId) {
+        Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
         Category category = categoryFinderByIdAndCommerceIdService
-                .findCategoryByIdAndCommerceId(request.categoryId(), authenticatedUser.getCommerceId());
+                .findCategoryByIdAndCommerceId(request.categoryId(), commerceId);
 
         Product product = ProductMapper.toEntity(request, commerce, category);
         product.setActive(true);

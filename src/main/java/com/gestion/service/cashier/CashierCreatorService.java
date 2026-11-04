@@ -1,6 +1,5 @@
 package com.gestion.service.cashier;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.cashier.CashierRequest;
 import com.gestion.dto.response.user.UserResponse;
 import com.gestion.enums.Role;
@@ -25,14 +24,14 @@ public class CashierCreatorService {
     private final CommerceFinderByIdService commerceFinderByIdService;
 
     @Transactional
-    public UserResponse createCashier(CashierRequest request, UserPrincipal authenticatedUser) {
-        if (authenticatedUser.getCommerceId() == null) {
+    public UserResponse createCashier(CashierRequest request, Long commerceId) {
+        if (commerceId == null) {
             throw new AccessDeniedException("Authenticated user does not have a commerce associated");
         }
 
         userValidatorByEmailService.checkExistingUserByEmail(request.email());
 
-        Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
+        Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
 
         User cashier = CashierMapper.toEntity(request);
         cashier.setPassword(passwordEncoder.encode(cashier.getPassword()));

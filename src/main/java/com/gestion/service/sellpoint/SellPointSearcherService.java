@@ -1,6 +1,5 @@
 package com.gestion.service.sellpoint;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.sellpoint.SellPointResponse;
 import com.gestion.mappers.SellPointMapper;
 import com.gestion.model.SellPoint;
@@ -17,9 +16,9 @@ public class SellPointSearcherService {
     private final JpaSellPointRepository jpaSellPointRepository;
 
     @Transactional(readOnly = true)
-    public Page<SellPointResponse> searchSellPoints(UserPrincipal authenticatedUser, Pageable pageable) {
+    public Page<SellPointResponse> searchSellPoints(Long commerceId, Pageable pageable) {
         Page<SellPoint> sellPoints = jpaSellPointRepository
-                .findAllByCommerceId(authenticatedUser.getCommerceId(), pageable);
+                .findAllByCommerceId(commerceId, pageable);
         return sellPoints.map(SellPointMapper::toResponse);
     }
 }

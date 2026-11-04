@@ -26,7 +26,7 @@ public class CashierPutController {
     public ResponseEntity<UserResponse> updateCashier(@PathVariable Long id,
                                                       @RequestBody @Valid CashierUpdateRequest request,
                                                       @AuthenticationPrincipal UserPrincipal authenticatedUser) {
-        UserResponse response = cashierUpdaterService.updateCashier(id, request, authenticatedUser);
+        UserResponse response = cashierUpdaterService.updateCashier(id, request, authenticatedUser.getCommerceId());
         return ResponseEntity.ok(response);
     }
 }

@@ -39,6 +39,6 @@ public class SalesGetController {
         Sort sortConfig = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
         return ResponseEntity.ok(saleSearcherService
-                .searchSales(authenticatedUser, clientId, status, paymentMethod, searchText, pageable));
+                .searchSales(authenticatedUser.getCommerceId(), clientId, status, paymentMethod, searchText, pageable));
     }
 }

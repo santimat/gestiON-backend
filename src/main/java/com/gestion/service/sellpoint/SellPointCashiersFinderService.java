@@ -1,6 +1,5 @@
 package com.gestion.service.sellpoint;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.user.UserResponse;
 import com.gestion.mappers.CashierMapper;
 import com.gestion.model.SellPoint;
@@ -19,11 +18,11 @@ public class SellPointCashiersFinderService {
     private final SellPointFinderByIdAndCommerceIdService sellPointFinderByIdAndCommerceIdService;
 
     @Transactional(readOnly = true)
-    public Page<UserResponse> findCashiersBySellPoint(Long sellPointId, UserPrincipal authenticatedUser, Pageable pageable) {
+    public Page<UserResponse> findCashiersBySellPoint(Long sellPointId, Long commerceId, Pageable pageable) {
         SellPoint sellPoint = sellPointFinderByIdAndCommerceIdService
-                .findSellPointByIdAndCommerceId(sellPointId, authenticatedUser.getCommerceId());
+                .findSellPointByIdAndCommerceId(sellPointId, commerceId);
         Page<User> cashiers = jpaUserRepository
-                .findAllBySellPointIdAndCommerceId(sellPoint.getId(), authenticatedUser.getCommerceId(), pageable);
+                .findAllBySellPointIdAndCommerceId(sellPoint.getId(), commerceId, pageable);
         return cashiers.map(CashierMapper::toResponse);
     }
 }

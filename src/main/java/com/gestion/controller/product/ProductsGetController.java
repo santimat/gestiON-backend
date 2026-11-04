@@ -37,6 +37,6 @@ public class ProductsGetController {
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
         return ResponseEntity.ok(productSearcherService
-                .searchProducts(authenticatedUser, categoryId, searchText, active, pageable));
+                .searchProducts(authenticatedUser.getCommerceId(), categoryId, searchText, active, pageable));
     }
 }

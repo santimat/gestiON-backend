@@ -23,6 +23,6 @@ public class SaleMarkPaidPatchController {
     public ResponseEntity<SaleUpdateStatusResponse> markPaid(
             @PathVariable Long id,
             @AuthenticationPrincipal UserPrincipal authenticatedUser) {
-        return ResponseEntity.ok(saleMarkPaidService.markPaid(id, authenticatedUser));
+        return ResponseEntity.ok(saleMarkPaidService.markPaid(id, authenticatedUser.getCommerceId()));
     }
 }

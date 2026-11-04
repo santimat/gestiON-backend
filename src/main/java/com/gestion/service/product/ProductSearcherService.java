@@ -1,6 +1,5 @@
 package com.gestion.service.product;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.category.CategoryResponse;
 import com.gestion.dto.response.product.ProductResponse;
 import com.gestion.mappers.CategoryMapper;
@@ -27,15 +26,15 @@ public class ProductSearcherService {
     private final MinioProperties minioProperties;
     private final CommerceFinderByIdService commerceFinderByIdService;
 
-    public Page<ProductResponse> searchProducts(UserPrincipal authenticatedUser, Long categoryId, String searchText,
+    public Page<ProductResponse> searchProducts(Long commerceId, Long categoryId, String searchText,
                                                 Boolean active, Pageable pageable) {
         if (searchText != null && searchText.isBlank()) {
             searchText = null;
         }
 
         Page<Product> products = jpaProductRepository
-                .findAllWithFilters(authenticatedUser.getCommerceId(), categoryId, searchText,active, pageable);
-        Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
+                .findAllWithFilters(commerceId, categoryId, searchText,active, pageable);
+        Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
 
         return products.map(product -> {
             String productImageUrl = fileFinderService.getObjectUrl(product.getImageName(),

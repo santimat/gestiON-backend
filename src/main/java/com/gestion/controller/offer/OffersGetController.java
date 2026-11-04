@@ -35,6 +35,6 @@ public class OffersGetController {
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
         return ResponseEntity.ok(offerSearcherService
-                .searchOffers(authenticatedUser, expired, pageable));
+                .searchOffers(authenticatedUser.getCommerceId(), expired, pageable));
     }
 }

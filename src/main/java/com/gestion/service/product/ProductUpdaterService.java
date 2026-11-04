@@ -1,6 +1,5 @@
 package com.gestion.service.product;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.product.ProductUpdateRequest;
 import com.gestion.dto.response.product.ProductResponse;
 import com.gestion.mappers.CategoryMapper;
@@ -33,12 +32,12 @@ public class ProductUpdaterService {
     private final MinioProperties minioProperties;
 
     @Transactional
-    public ProductResponse updateProduct(Long productId, ProductUpdateRequest request, UserPrincipal authenticatedUser) {
+    public ProductResponse updateProduct(Long productId, ProductUpdateRequest request, Long commerceId) {
         Product product = productFinderByIdAndCommerceIdService
-                .findProductByIdAndCommerceId(productId, authenticatedUser.getCommerceId());
-        Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
+                .findProductByIdAndCommerceId(productId, commerceId);
+        Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
         Category category = categoryFinderByIdAndCommerceIdService
-                .findCategoryByIdAndCommerceId(request.categoryId(), authenticatedUser.getCommerceId());
+                .findCategoryByIdAndCommerceId(request.categoryId(), commerceId);
 
         product.setName(request.name());
         product.setDescription(request.description());

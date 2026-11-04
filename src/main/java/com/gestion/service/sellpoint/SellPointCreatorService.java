@@ -1,6 +1,5 @@
 package com.gestion.service.sellpoint;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.sellpoint.SellPointRequest;
 import com.gestion.dto.response.sellpoint.SellPointResponse;
 import com.gestion.mappers.SellPointMapper;
@@ -22,19 +21,19 @@ public class SellPointCreatorService {
     private final SellPointCashiersAssignerService sellPointCashiersAssignerService;
 
     @Transactional
-    public SellPointResponse createSellPoint(SellPointRequest request, UserPrincipal authenticatedUser) {
-        if (authenticatedUser == null || authenticatedUser.getCommerceId() == null) {
-            throw new AccessDeniedException("Authenticated user or commerce ID is null");
+    public SellPointResponse createSellPoint(SellPointRequest request, Long commerceId) {
+        if (commerceId == null) {
+            throw new AccessDeniedException("Commerce ID is null");
         }
 
         SellPointRequest parsedRequest = new SellPointRequest(request.name().strip(), request.cashierIds());
-        sellPointValidatorByNameService.checkExistingSellPointByName(authenticatedUser.getCommerceId(), parsedRequest);
+        sellPointValidatorByNameService.checkExistingSellPointByName(commerceId, parsedRequest);
 
-        Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
+        Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
         SellPoint savedSellPoint = sellPointRepository.save(SellPointMapper.toEntity(parsedRequest, commerce));
 
         sellPointCashiersAssignerService.assignCashiers(request.cashierIds(),
-                authenticatedUser.getCommerceId(), savedSellPoint);
+                commerceId, savedSellPoint);
 
         return SellPointMapper.toResponse(savedSellPoint);
     }

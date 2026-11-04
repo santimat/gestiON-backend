@@ -35,6 +35,6 @@ public class CategoriesGetController {
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
 
-        return ResponseEntity.ok(categorySearcherService.searchCategories(authenticatedUser, pageable));
+        return ResponseEntity.ok(categorySearcherService.searchCategories(authenticatedUser.getCommerceId(), pageable));
     }
 }

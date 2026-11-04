@@ -26,7 +26,7 @@ public class ProductPutController {
     public ResponseEntity<ProductResponse> updateProduct(@PathVariable Long id,
                                                          @Valid @ModelAttribute ProductUpdateRequest request,
                                                          @AuthenticationPrincipal UserPrincipal authenticatedUser) {
-        ProductResponse response = productUpdaterService.updateProduct(id, request, authenticatedUser);
+        ProductResponse response = productUpdaterService.updateProduct(id, request, authenticatedUser.getCommerceId());
         return ResponseEntity.ok(response);
     }
 }

@@ -1,6 +1,5 @@
 package com.gestion.service.category;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.category.CategoryResponse;
 import com.gestion.mappers.CategoryMapper;
 import com.gestion.model.Category;
@@ -23,8 +22,8 @@ public class CategorySearcherService {
     private ProductCounterByCategoryIds productCounterByCategoryIds;
 
     @Transactional(readOnly = true)
-    public Page<CategoryResponse> searchCategories(UserPrincipal authenticatedUser, Pageable pageable) {
-        Page<Category> categories = jpaCategoryRepository.findAllByCommerceId(authenticatedUser.getCommerceId(), pageable);
+    public Page<CategoryResponse> searchCategories(Long commerceId, Pageable pageable) {
+        Page<Category> categories = jpaCategoryRepository.findAllByCommerceId(commerceId, pageable);
 
         List<Long> categoryIds = categories.getContent().stream()
                 .map(Category::getId)
@@ -32,7 +31,7 @@ public class CategorySearcherService {
                 .toList();
 
 
-        Map<Long, Long> productCountsByCategoryId = productCounterByCategoryIds.countProductsByCategoryIds(authenticatedUser.getCommerceId()
+        Map<Long, Long> productCountsByCategoryId = productCounterByCategoryIds.countProductsByCategoryIds(commerceId
                 , categoryIds);
 
         return categories.map(category -> CategoryMapper.toResponse(category,

@@ -34,6 +34,6 @@ public class ClientsGetController {
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
 
-        return ResponseEntity.ok(clientSearcherService.searchClients(authenticatedUser, pageable));
+        return ResponseEntity.ok(clientSearcherService.searchClients(authenticatedUser.getCommerceId(), pageable));
     }
 }

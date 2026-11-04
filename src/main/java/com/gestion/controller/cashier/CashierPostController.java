@@ -25,7 +25,7 @@ public class CashierPostController {
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<UserResponse> createCashier(@RequestBody @Valid CashierRequest request,
                                                       @AuthenticationPrincipal UserPrincipal authenticatedUser) {
-        UserResponse response = cashierCreatorService.createCashier(request, authenticatedUser);
+        UserResponse response = cashierCreatorService.createCashier(request, authenticatedUser.getCommerceId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

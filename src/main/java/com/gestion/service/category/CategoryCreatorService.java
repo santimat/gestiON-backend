@@ -1,6 +1,5 @@
 package com.gestion.service.category;
 
-import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.category.CategoryRequest;
 import com.gestion.dto.response.category.CategoryResponse;
 import com.gestion.mappers.CategoryMapper;
@@ -21,15 +20,15 @@ public class CategoryCreatorService {
     private final CategoryValidatorByNameService categoryValidatorByNameService;
 
     @Transactional
-    public CategoryResponse createCategory(CategoryRequest request, UserPrincipal authenticatedUser) {
-        if (authenticatedUser == null || authenticatedUser.getCommerceId() == null) {
-            throw new AccessDeniedException("Authenticated user or commerce ID is null");
+    public CategoryResponse createCategory(CategoryRequest request, Long commerceId) {
+        if (commerceId == null) {
+            throw new AccessDeniedException("Commerce ID is null");
         }
 
         CategoryRequest parsedRequest = new CategoryRequest(request.name().strip(), request.description());
-        categoryValidatorByNameService.checkExistingCategoryByName(authenticatedUser.getCommerceId(), parsedRequest);
+        categoryValidatorByNameService.checkExistingCategoryByName(commerceId, parsedRequest);
 
-        Commerce commerce = commerceFinderByIdService.findCommerceById(authenticatedUser.getCommerceId());
+        Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
         Category newCategory = categoryRepository.save(CategoryMapper.toEntity(parsedRequest, commerce));
         return CategoryMapper.toResponse(newCategory);
     }

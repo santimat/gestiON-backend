@@ -34,6 +34,6 @@ public class SellPointsGetController {
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
 
-        return ResponseEntity.ok(sellPointSearcherService.searchSellPoints(authenticatedUser, pageable));
+        return ResponseEntity.ok(sellPointSearcherService.searchSellPoints(authenticatedUser.getCommerceId(), pageable));
     }
 }
