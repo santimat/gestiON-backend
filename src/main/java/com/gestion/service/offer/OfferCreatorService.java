@@ -8,7 +8,6 @@ import com.gestion.model.Commerce;
 import com.gestion.model.Offer;
 import com.gestion.repository.JpaOfferRepository;
 import com.gestion.service.commerce.CommerceFinderByIdService;
-import com.gestion.service.product.ProductFinderByIdService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +19,6 @@ import java.time.LocalDateTime;
 public class OfferCreatorService {
     private final JpaOfferRepository offerRepository;
     private final CommerceFinderByIdService commerceFinderByIdService;
-    private final ProductFinderByIdService productFinderByIdService;
 
     @Transactional
     public OfferResponse createOffer(OfferRequest request, UserPrincipal authenticatedUser) {
