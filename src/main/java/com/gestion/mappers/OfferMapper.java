@@ -11,6 +11,7 @@ public class OfferMapper {
                 offer.getDiscountType(),
                 offer.getStartDate(),
                 offer.getEndDate(),
+                offer.getStatus(),
                 offer.getPaymentMethods()
         );
     }

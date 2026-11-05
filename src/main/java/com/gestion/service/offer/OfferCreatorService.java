@@ -24,8 +24,11 @@ public class OfferCreatorService {
         Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
         LocalDateTime startDate = LocalDateTime.parse(request.startDate());
         LocalDateTime endDate = LocalDateTime.parse(request.endDate());
+
+        //TODO: resolver fecha de inicio y fin para calcular OfferStatus (ACTIVE, EXPIRED, SCHEDULED)
+        //TODO: además validar que la fecha de inicio sea menor a la fecha de fin y que no se solapen ofertas para el mismo comercio
         Offer offerToSave = new Offer(null, commerce, request.value(), request.discountType(),
-                startDate, endDate, request.paymentMethods());
+                startDate, endDate, null, request.paymentMethods());
         return OfferMapper.toResponse(offerRepository.save(offerToSave));
     }
 }

@@ -1,6 +1,7 @@
 package com.gestion.dto.response.offer;
 
 import com.gestion.enums.DiscountType;
+import com.gestion.enums.OfferStatus;
 import com.gestion.enums.PaymentMethod;
 
 import java.math.BigDecimal;
@@ -13,6 +14,7 @@ public record OfferResponse(
         DiscountType discountType,
         LocalDateTime startDate,
         LocalDateTime endDate,
+        OfferStatus status,
         Set<PaymentMethod> paymentMethods
 ) {
 }

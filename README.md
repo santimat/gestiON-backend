@@ -1,290 +1,222 @@
-@formatter:off
+# API de gestión de stock y control de ventas
 
-# Sistema de gestion de stock y control de ventas
+Sistema de gestión de stock y ventas para comercios (proyecto final de la materia Programación IV —
+UTN TUP). Expone una API REST para administrar comercios, productos, categorías, clientes, puntos de
+venta y ventas.
 
-Este es un proyecto realizado para la materia programación IV de la Tecnicatura Universitaria en Programación (TUP),
-UTN.
+## Tecnologías
 
-## Explicación de ciertas elecciones
+- **Java 25** + **Spring Boot 4** (Spring Security con JWT, Spring Data JPA)
+- **MySQL 8** como base de datos (schema generado por Hibernate `ddl-auto=update`)
+- **MinIO** (S3 compatible) para el almacenamiento de imágenes de productos y logos de comercio
+- **Lombok** para reducir boilerplate, **Maven Wrapper** para el build
+- Autenticación por **JWT en cookie `token`** (no se usa header `Authorization`)
 
-### Uso de Records para la creación de los DTO (Data Transfer Object)
+## Arquitectura
 
-Se utilizan Records debido a simplicidad a la hora de crearlos, estos por defecto ya traen metodos utiles sin
-necesidad de crearlos a mano. Además estos cuentan con la cualidad de ser inmutables por lo que nos asegura mayor
-consistencia en los datos.
-*** Cosas a saber ***
+Cada request sigue la cadena:
 
-- Los atributos por defecto son final, por lo que no se pueden modificar una vez creados.
-- La forma de acceder a los atributos es mediante metodos. Pero no con el prefijo get, sino con el nombre del
-  atributo. Por ejemplo mirecord.nombre() para acceder al atributo nombre.
+```
+Request → Controller → Service → Repository → MySQL
+```
 
-### Manejo de errores
-
-Todas las respuestas de error del API comparten un único formato, definido por el DTO `ExceptionResponse`:
+- **Controller** (`controller/<recurso>/...`): un archivo por endpoint, a cargo del mapeo HTTP,
+  la validación de rol (`@PreAuthorize`) y la extracción del usuario autenticado del JWT.
+- **Service** (`service/<recurso>/...`): un archivo por caso de uso, con toda la lógica de negocio
+  (scoping por comercio, validaciones, cálculo de montos).
+- **Repository** (`repository/Jpa*Repository`): interfaces Spring Data JPA con queries derivadas o
+  JPQL.
+- **DTOs**: requests y responses son *records* Java (`dto/request`, `dto/response`).
+- **Errores**: todas las respuestas de error comparten un formato único:
 
 ```json
 {
   "statusCode": 404,
   "code": "PRODUCT_NOT_FOUND",
-  "message": "Product with id 5 not found"
+  "message": "Product with id 5 not found",
+  "fields": [{ "field": "name", "message": "must not be blank" }]
 }
 ```
 
-- `statusCode`: código HTTP de la respuesta.
-- `code`: **key estable** para mapear el error en el frontend (ver catálogo más abajo). Los mensajes son en
-  inglés y están pensados para logs/debug; el frontend debe localizar los textos a partir de la key.
-- `message`: mensaje humano del error.
-- `fields`: solo aparece en errores de validación (`VALIDATION_ERROR`), con el detalle de cada campo:
+`code` es una key estable para manejar el error en el cliente (los mensajes son en inglés, para
+logs). `fields` solo aparece en errores de validación (`VALIDATION_ERROR`).
 
-```json
-{
-  "statusCode": 400,
-  "code": "VALIDATION_ERROR",
-  "message": "Request validation failed",
-  "fields": [
-    { "field": "name", "message": "must not be blank" }
-  ]
-}
-```
+## Autenticación
 
-Las excepciones de negocio extienden `BusinessException` y cargan un `ErrorCode` (enum central en
-`enums/ErrorCode`) que define la key, el estado HTTP y un mensaje por defecto. El handler único de
-`BusinessException` en `GlobalExceptionHandler` arma la respuesta a partir del enum; cualquier otra
-excepción no controlada responde `INTERNAL_ERROR` (500) con mensaje genérico, registrando el detalle
-en el log (nunca se filtran mensajes internos ni de la base de datos al cliente).
+1. `POST /api/auth/login` con `{ "email", "password" }` → devuelve el usuario y setea la **cookie
+   `token`** con el JWT. Todas las demás requests deben incluir esa cookie (`credentials: include`
+   en el navegador).
+2. El JWT lleva `userId`, `commerceId`, `role` y `sellPointId` (este último es `null` para
+   OWNER/SUDO). El backend confía en ese contenido sin volver a consultar la base.
+3. `POST /api/auth/logout` invalida la sesión.
 
-Los errores de seguridad (entry point 401 / access denied 403) y los del controlador `/api/auth/me`
-responden con este mismo formato.
+### Roles
 
-#### Catálogo de keys
-
-| Key | HTTP | Cuándo |
-|---|---|---|
-| `INVALID_CREDENTIALS` | 401 | Email inexistente o contraseña incorrecta en el login |
-| `UNAUTHORIZED` | 401 | Sin token, token ausente/inválido o sesión requerida |
-| `ACCOUNT_DISABLED` | 403 | Comercio inactivo (credenciales válidas) o cuenta deshabilitada |
-| `ACCESS_DENIED` | 403 | Rol insuficiente (`@PreAuthorize`) o acceso denegado |
-| `USER_NOT_FOUND` | 404 | Usuario inexistente por id o email |
-| `CLIENT_NOT_FOUND` | 404 | Cliente inexistente por DNI (dentro del comercio del JWT) |
-| `CATEGORY_NOT_FOUND` | 404 | Categoría inexistente |
-| `PRODUCT_NOT_FOUND` | 404 | Producto inexistente |
-| `COMMERCE_NOT_FOUND` | 404 | Comercio inexistente |
-| `SELL_POINT_NOT_FOUND` | 404 | Punto de venta inexistente (o de otro comercio) |
-| `SALE_NOT_FOUND` | 404 | Venta inexistente |
-| `ENDPOINT_NOT_FOUND` | 404 | Ruta inexistente |
-| `EMAIL_ALREADY_EXISTS` | 409 | Email de usuario ya registrado |
-| `CLIENT_DNI_ALREADY_EXISTS` | 409 | DNI de cliente ya registrado **para el comercio del JWT** (unicidad compuesta `commerce_id + dni`) |
-| `CATEGORY_NAME_ALREADY_EXISTS` | 409 | Nombre de categoría ya registrado para el comercio |
-| `SELL_POINT_NAME_ALREADY_EXISTS` | 409 | Nombre de punto de venta ya registrado para el comercio |
-| `COMMERCE_ADDRESS_ALREADY_EXISTS` | 409 | Dirección de comercio ya registrada |
-| `COMMERCE_CUIT_ALREADY_EXISTS` | 409 | CUIT de comercio ya registrado |
-| `INSUFFICIENT_STOCK` | 409 | Stock insuficiente para la cantidad pedida |
-| `PRODUCT_INACTIVE` | 409 | Producto inactivo, no disponible para la venta |
-| `SALE_NOT_PENDING` | 409 | `mark-paid` sobre una venta que no está `PENDING` |
-| `DATA_INTEGRITY_VIOLATION` | 409 | Violación de restricción de la base de datos |
-| `VALIDATION_ERROR` | 400 | Fallo de validación del body (incluye `fields[]`) |
-| `INVALID_DISCOUNT` | 400 | Descuento inválido (tipo no soportado) |
-| `DISCOUNT_WITHOUT_TYPE` | 400 | Se envió monto de descuento sin tipo de descuento |
-| `TYPE_WITHOUT_DISCOUNT` | 400 | Se envió tipo de descuento sin monto |
-| `DISCOUNT_EXCEEDS_SUBTOTAL` | 400 | Descuento fijo mayor al subtotal de la venta |
-| `INVALID_REQUEST_BODY` | 400 | JSON malformado o ilegible |
-| `INVALID_PARAMETER` | 400 | Parámetro de path/query con tipo inválido (ej. texto donde va un id) |
-| `MISSING_PARAMETER` | 400 | Parámetro requerido ausente |
-| `INVALID_FILE_TYPE` | 400 | Tipo de archivo no permitido (solo jpg/png/jpeg/webp) |
-| `FILE_TOO_LARGE` | 413 | Archivo mayor a 10 MB |
-| `METHOD_NOT_ALLOWED` | 405 | Método HTTP no soportado por el endpoint |
-| `UNSUPPORTED_MEDIA_TYPE` | 415 | Content-Type no soportado |
-| `FILE_UPLOAD_FAILED` | 500 | Error al subir archivo a MinIO |
-| `FILE_DELETE_FAILED` | 500 | Error al eliminar archivo de MinIO |
-| `FILE_PROCESSING_FAILED` | 500 | Error al procesar/detectar el archivo |
-| `INTERNAL_ERROR` | 500 | Error inesperado no controlado |
-
-## Gestión de cajeros
-
-Los cajeros son usuarios (`User`) con `role = CASHIER` dentro del comercio del OWNER autenticado. No son
-una entidad aparte: comparten la tabla `users`. Su gestión está protegida con
-`@PreAuthorize("hasRole('OWNER')")` y se scoping contra el `commerceId` que viene en el JWT
-(`UserPrincipal`): un OWNER solo puede afectar usuarios de su propio comercio.
-
-### Crear cajero
-
-`POST /api/cashiers` con `CashierRequest` (`name`, `email`, `password`, `phoneNumber`). Valida que el
-email no exista y responde `201` con el `UserResponse` del nuevo cajero.
-
-### Actualizar cajero
-
-`PUT /api/cashiers/{id}` con `CashierUpdateRequest`:
-
-```json
-{
-  "name": "Nombre actualizado",
-  "email": "cajero@comercio.com",
-  "password": "",
-  "phoneNumber": "2601234567"
-}
-```
-
-Reglas:
-
-- Se busca por `id + commerceId (JWT) + role = CASHIER` (`CashierFinderByIdAndCommerceIdService`): si no
-  matchea un cajero del propio comercio responde `404 USER_NOT_FOUND`. Nunca matchea al OWNER ni usuarios
-  de otro comercio.
-- `password` es opcional: si llega vacío, con espacios o se omite, **se mantiene la contraseña actual**;
-  si llega un valor, se guarda codificado con `PasswordEncoder`.
-- El email se valida globalmente excluyendo al propio registro (`existsByEmailAndIdNot` en
-  `CashierValidatorByEmailService`): si otro usuario ya lo usa responde `409 EMAIL_ALREADY_EXISTS`;
-  conservar el email actual del cajero es válido.
-- Solo actualiza `name`, `email` y `phoneNumber` (con validación del request). No modifica `role`,
-  `active` ni `commerce`.
-- Responde `200` con el `UserResponse` del cajero actualizado.
-
-### Activar/desactivar cajero
-
-`PATCH /api/cashiers/{id}/toggle-active` (`CashierToggleActivePatchController`). Igual que para categorías
-(`CategoryToggleActivePatchController`): invierte el valor de `active` del cajero buscado por
-`id + commerceId (JWT) + role = CASHIER` y responde `200` con `CashierUpdateActiveResponse`:
-
-```json
-{
-  "id": 5,
-  "active": false
-}
-```
-
-Si el id no corresponde a un cajero del propio comercio responde `404 USER_NOT_FOUND`. No modifica
-`role`, `email` ni ningún otro dato del usuario. Un cajero con `active = false` no puede iniciar sesión
-(`ACCOUNT_DISABLED` a nivel login por el estado del comercio/cuenta).
-
-## Puntos de venta (SellPoint)
-
-Los puntos de venta son la unidad de trabajo del cajero: un comercio tiene muchos puntos de venta y
-cada cajero (usuario `CASHIER`) pertenece a **un** punto. La relación vive en `users.sell_point_id`
-(`@ManyToOne`, nullable — OWNER/SUDO no tienen punto) y viaja en el JWT (`sellPointId` claim).
-
-### Claim `sellPointId` en el JWT
-
-- Emisor: `JwtService` + `TokenPayloadMapper` — se completa desde `user.getSellPoint()` al loguear.
-- OWNER/SUDO y los tokens emitidos antes de esta feature no tienen el claim (`null`).
-- **Re-logueo requerido**: los cajeros creados antes del rollout tienen que iniciar sesión de nuevo
-  para obtener el claim; mientras tanto sus ventas quedan sin punto de venta.
-
-### Endpoints
-
-| Endpoint | Descripción |
+| Rol | Alcance |
 |---|---|
-| `POST /api/sell-points` | Crea punto de venta (`SellPointRequest`: `name`, `cashierIds?`). Valida nombre único por comercio (`409 SELL_POINT_NAME_ALREADY_EXISTS`) y reasigna los cajeros indicados al punto |
-| `GET /api/sell-points` | Lista paginada de puntos del comercio (orden por `updatedAt` desc) |
-| `PUT /api/sell-points/{sellPointId}` | Actualiza nombre/cajeros (`SellPointUpdateRequest`) |
-| `PATCH /api/sell-points/{sellPointId}/toggle-active` | Activa/desactiva el punto |
-| `GET /api/sell-points/{sellPointId}/cashiers` | Cajeros asignados al punto (scoped `sellPointId + commerceId`; `404 SELL_POINT_NOT_FOUND` si no matchea) |
+| `SUDO` | Administrador global: gestiona comercios |
+| `OWNER` | Dueño de un comercio: gestiona su catálogo, cajeros, puntos de venta y ventas |
+| `CASHIER` | Cajero: consulta catálogo/clientes y registra ventas |
 
-## Ventas (Sale)
+Todo dato está **scopeado al comercio del JWT**: consultar un recurso de otro comercio responde
+`404` (nunca 403, para no filtrar su existencia).
 
-### Endpoints
+## Convenciones de listado
 
-| Endpoint | Descripción |
-|---|---|
-| `POST /api/sales` | Registra una venta (ver reglas abajo). `201` con `SaleResponse` |
-| `GET /api/sales` | Lista paginada de ventas del comercio del JWT (`SaleSummaryResponse`). Filtros opcionales: `clientId`, `status`, `paymentMethod`, `searchText` (matchea contra observaciones y nombre del cliente), paginación `page`/`size` y orden `sortBy`/`sortDir` (`createdAt` desc por defecto) |
-| `GET /api/sales/{id}` | Detalle completo con todas las líneas (`SaleResponse` + `details`). Scoped al comercio del JWT (`404 SALE_NOT_FOUND` si no matchea) |
-| `PATCH /api/sales/{id}/mark-paid` | Marca una venta `PENDING` como `PAY` (ver abajo). `200` con `{ id, status }`; si no está `PENDING` responde `409 SALE_NOT_PENDING` |
+Los endpoints de listado aceptan `page` (0-based), `size`, `sortBy` y `sortDir` (`asc`/`desc`) y
+responden paginado:
 
-### Crear venta
+```json
+{
+  "content": [ ... ],
+  "page": { "size": 10, "number": 0, "totalElements": 42, "totalPages": 5 }
+}
+```
 
-`POST /api/sales` con `SaleRequest`:
+Los campos de filtro son opcionales; se envían como query params (`?status=PENDING&searchText=marta`).
+
+## Endpoints
+
+> **Roles**: `SUDO` = solo administrador · `OWNER` = solo dueño · `CASHIER/OWNER` = ambos ·
+> `Auth` = cualquier usuario autenticado · `Público` = sin sesión.
+> `JSON` = body JSON · `multipart` = `multipart/form-data` (incluye archivo de imagen/logo).
+
+### Autenticación
+
+| Método | Ruta | Roles | Request | Response |
+|---|---|---|---|---|
+| POST | `/api/auth/login` | **Público** | `UserLoginRequest` (JSON) | `AuthenticatedUserResponse` + cookie `token` |
+| POST | `/api/auth/logout` | Auth | — | mensaje |
+| GET | `/api/auth/me` | Auth | — | `AuthenticatedUserResponse` |
+
+### Comercios
+
+| Método | Ruta | Roles | Request | Response |
+|---|---|---|---|---|
+| GET | `/api/commerces` | SUDO | — | `Page<CommerceWithOwnerResponse>` |
+| POST | `/api/commerces` | SUDO | `CommerceWithOwnerRequest` (multipart) | `CommerceWithOwnerResponse` (201) |
+| PUT | `/api/commerces/{commerceId}/user/{userId}` | SUDO | `CommerceWithOwnerUpdateRequest` (multipart) | `CommerceWithOwnerResponse` |
+| PATCH | `/api/commerces/{id}/toggle-active` | SUDO | — | `CommerceUpdateActiveResponse` |
+| GET | `/api/commerces/stats` | SUDO | — | `CommerceStatsResponse` |
+| GET | `/api/commerces/current` | CASHIER/OWNER | — | `CurrentCommerceResponse` |
+| PATCH | `/api/commerces/profit-multiplier` | OWNER | `CommerceProfitMultiplierRequest` (JSON) | `CommerceProfitMultiplierResponse` |
+
+### Categorías
+
+| Método | Ruta | Roles | Request | Response |
+|---|---|---|---|---|
+| GET | `/api/categories` | CASHIER/OWNER | — | `Page<CategoryResponse>` |
+| GET | `/api/categories/{categoryId}` | CASHIER/OWNER | — | `CategoryResponse` |
+| POST | `/api/categories` | OWNER | `CategoryRequest` (JSON) | `CategoryResponse` (201) |
+| PUT | `/api/categories/{categoryId}` | OWNER | `CategoryRequest` (JSON) | `CategoryResponse` |
+| PATCH | `/api/categories/{categoryId}/toggle-active` | OWNER | — | `CategoryUpdateActiveResponse` |
+
+### Productos
+
+| Método | Ruta | Roles | Request | Response |
+|---|---|---|---|---|
+| GET | `/api/products` | CASHIER/OWNER | — | `Page<ProductResponse>` · filtros: `categoryId`, `searchText`, `active` |
+| POST | `/api/products` | OWNER | `ProductRequest` (multipart, campo `image` opcional) | `ProductResponse` (201) |
+| PUT | `/api/products/{id}` | OWNER | `ProductUpdateRequest` (multipart) | `ProductResponse` |
+| PATCH | `/api/products/{id}/toggle-active` | OWNER | — | `ProductUpdateActiveResponse` |
+
+### Clientes
+
+| Método | Ruta | Roles | Request | Response |
+|---|---|---|---|---|
+| GET | `/api/clients` | CASHIER/OWNER | — | `Page<ClientResponse>` |
+| GET | `/api/clients/{dni}` | CASHIER/OWNER | — | `ClientResponse` (por DNI dentro del comercio) |
+| POST | `/api/clients` | CASHIER/OWNER | `ClientRequest` (JSON) | `ClientResponse` (201) |
+| PUT | `/api/clients/{id}` | CASHIER/OWNER | `ClientRequest` (JSON) | `ClientResponse` |
+
+El DNI es único **por comercio** (`409 CLIENT_DNI_ALREADY_EXISTS` si se repite).
+
+### Cajeros
+
+| Método | Ruta | Roles | Request | Response |
+|---|---|---|---|---|
+| GET | `/api/cashiers` | OWNER | — | `Page<UserResponse>` |
+| POST | `/api/cashiers` | OWNER | `CashierRequest` (JSON) | `UserResponse` (201) |
+| PUT | `/api/cashiers/{id}` | OWNER | `CashierUpdateRequest` (JSON; `password` vacío = mantener la actual) | `UserResponse` |
+| PATCH | `/api/cashiers/{id}/toggle-active` | OWNER | — | `CashierUpdateActiveResponse` |
+
+Los cajeros son usuarios (`role = CASHIER`) del comercio del OWNER autenticado.
+
+### Puntos de venta
+
+| Método | Ruta | Roles | Request | Response |
+|---|---|---|---|---|
+| GET | `/api/sell-points` | CASHIER/OWNER | — | `Page<SellPointResponse>` |
+| GET | `/api/sell-points/{sellPointId}/cashiers` | CASHIER/OWNER | — | `Page<UserResponse>` (cajeros del punto) |
+| POST | `/api/sell-points` | OWNER | `SellPointRequest` (JSON: `name`, `cashierIds`) | `SellPointResponse` (201) |
+| PUT | `/api/sell-points/{sellPointId}` | OWNER | `SellPointUpdateRequest` (JSON) | `SellPointResponse` |
+| PATCH | `/api/sell-points/{sellPointId}/toggle-active` | OWNER | — | `SellPointUpdateActiveResponse` |
+
+Un cajero pertenece a un solo punto de venta; el punto se toma del JWT al registrar ventas, nunca
+del request.
+
+### Ventas
+
+| Método | Ruta | Roles | Request | Response |
+|---|---|---|---|---|
+| GET | `/api/sales` | CASHIER/OWNER | — | `Page<SaleSummaryResponse>` · filtros: `clientId`, `status`, `paymentMethod`, `searchText` (observaciones o nombre del cliente) |
+| GET | `/api/sales/{saleId}` | Auth | — | `SaleResponse` (detalle con todas las líneas) |
+| POST | `/api/sales` | CASHIER/OWNER | `SaleRequest` (JSON) | `SaleSummaryResponse` (201) |
+| PATCH | `/api/sales/{id}/mark-paid` | CASHIER/OWNER | — | `SaleUpdateStatusResponse` |
+
+`SaleRequest`:
 
 ```json
 {
   "paymentMethod": "CASH",
-  "details": [
-    { "productId": 3, "quantity": 2 }
-  ],
+  "details": [{ "productId": 3, "quantity": 2 }],
   "clientId": 7,
-  "observations": "...",
   "discountType": "PERCENTAGE",
-  "discount": 10
+  "discount": 10,
+  "observations": "..."
 }
 ```
 
-Reglas de negocio (todo server-side, el front no decide montos):
+- Los precios, el subtotal y el total se calculan **siempre en el servidor**; el request solo envía
+  productos y cantidades. Los ítems repetidos del mismo producto se consolidan.
+- Valores de `paymentMethod`: `CASH`, `CARD`, `TRANSFER`, `CREDIT_ACCOUNT`. El fiado
+  (`CREDIT_ACCOUNT`) genera la venta con status `PENDING`; el resto, `PAYED`.
+- `discountType` (`PERCENTAGE` / `FIXED_AMOUNT`) y `discount` van juntos; un descuento fijo no puede
+  superar el subtotal.
+- El descuento de stock es todo-o-nada: si algún ítem no pasa la validación (producto inactivo o
+  sin stock), no se descuenta ni se registra nada (`409 PRODUCT_INACTIVE`, `409 INSUFFICIENT_STOCK`).
+- `mark-paid` solo admite la transición `PENDING → PAYED` (`409 SALE_NOT_PENDING` en otro caso).
 
-- Roles: `CASHIER` u `OWNER` (`@PreAuthorize`). El punto de venta **no** viene en el request: se
-  resuelve del claim `sellPointId` del JWT (`SaleSellPointResolverService`); OWNER/SUDO registran la
-  venta sin punto.
-- Ítems repetidos del mismo producto se consolidan sumando cantidades
-  (`SaleDetailsMergerService`).
-- **Validar todo antes de tocar stock**: se valida que cada producto exista en el comercio del JWT,
-  esté activo (`PRODUCT_INACTIVE`) y tenga stock suficiente (`INSUFFICIENT_STOCK`). Si algo falla, no
-  se descuenta stock ni se persiste nada (transacción all-or-nothing).
-- Precios: cada `SaleDetail` congela el `salePrice` del producto al momento de la venta; subtotal =
-  suma de ítems, calculado en servidor.
-- Descuento (opcional): tipo y monto van juntos (`TYPE_WITHOUT_DISCOUNT` /
-  `DISCOUNT_WITHOUT_TYPE`); un `FIXED_AMOUNT` no puede superar el subtotal
-  (`DISCOUNT_EXCEEDS_SUBTOTAL`). El `total` se calcula en servidor
-  (`SalePriceAfterDiscountResolverService`, precisión 2 con redondeo `HALF_UP`). Nota: la aplicación
-  de ofertas al descuento es una feature futura, hoy el descuento es manual.
-- Cliente opcional: si llega `clientId` debe pertenecer al comercio del JWT (`404 CLIENT_NOT_FOUND`
-  en caso contrario).
-- Status: `PaymentMethod` con `CREDIT_ACCOUNT` (fiado) produce venta `PENDING`; los demás métodos
-  producen `PAY`.
-- Respuesta `201` con `SaleSummaryResponse` — el mismo shape del listado (`id`, `itemCount` = suma de
-  unidades, `status`, `clientName`, `paymentMethod`, `createdAt`, `subtotal`, `discount`, `total`),
-  pensado para insertar la fila en la tabla del front. La vista con líneas de productos es
-  `GET /api/sales/{id}`. La fecha de la venta es `createdAt` (fecha de transacción, no se expone
-  `updatedAt`).
+### Ofertas
 
-### Marcar como pagada
+| Método | Ruta | Roles | Request | Response |
+|---|---|---|---|---|
+| GET | `/api/offers` | CASHIER/OWNER | — | `Page<OfferResponse>` · filtro: `expired` |
+| POST | `/api/offers` | OWNER | `OfferRequest` (JSON) | `OfferResponse` (201) |
 
-`PATCH /api/sales/{id}/mark-paid` (`SaleMarkPaidPatchController`, roles `CASHIER` u `OWNER`):
+## Códigos de error frecuentes
 
-- Busca la venta por `id + commerceId (JWT)` (`SaleFinderByIdAndCommerceIdService`): si no matchea,
-  `404 SALE_NOT_FOUND`.
-- Solo admite la transición `PENDING → PAY`; cualquier otro estado responde `409 SALE_NOT_PENDING`
-  (no es idempotente — marcar una venta ya `PAY` es error).
-- Único efecto: cambia `status`. No toca fechas, montos ni stock (no hace falta revalidar stock).
-- Responde `200` con `SaleUpdateStatusResponse { id, status }`; el front refresca el modal con
-  `GET /api/sales/{id}`.
+| Code | HTTP | Cuándo |
+|---|---|---|
+| `VALIDATION_ERROR` | 400 | Body inválido (incluye `fields[]` por campo) |
+| `INVALID_CREDENTIALS` | 401 | Email o contraseña incorrectos |
+| `UNAUTHORIZED` | 401 | Sin cookie `token` o token inválido |
+| `ACCOUNT_DISABLED` | 403 | Cuenta o comercio deshabilitado |
+| `ACCESS_DENIED` | 403 | Rol insuficiente para el endpoint |
+| `*_NOT_FOUND` | 404 | Recurso inexistente **o de otro comercio** |
+| `*_ALREADY_EXISTS` | 409 | Unicidad violada (email, DNI por comercio, nombre por comercio) |
+| `INSUFFICIENT_STOCK` / `PRODUCT_INACTIVE` | 409 | Venta con ítems no válidos |
+| `SALE_NOT_PENDING` | 409 | `mark-paid` sobre una venta que no está `PENDING` |
+| `INTERNAL_ERROR` | 500 | Error no controlado |
 
-### Arquitectura de `service/sale/`
+## Correr el proyecto
 
-`SaleCreatorService` es un orquestador puro; cada responsabilidad vive en su servicio:
+```bash
+# infraestructura: MySQL en localhost:3306 (base "gestion", root/admin) y MinIO (solo para imágenes)
+docker compose up -d   # solo levanta MinIO
 
-| Service | Responsabilidad |
-|---|---|
-| `SaleDetailsMergerService` | Consolidar ítems repetidos |
-| `SaleDetailsValidatorService` | Validar activo/stock y armar details + subtotal |
-| `SaleProductValidatorService` / `SaleStockValidatorService` | Reglas por ítem |
-| `SaleDiscountApplierService` | Validar coherencia del descuento |
-| `SalePriceAfterDiscountResolverService` | Matemática del precio final |
-| `SaleStatusResolverService` | Status según método de pago |
-| `SaleClientResolverService` | Cliente del comercio o `null` |
-| `SaleSellPointResolverService` | Punto de venta desde el JWT o `null` |
-| `SaleStockUpdaterService` | Descontar stock |
-| `SaleDetailCreatorService` | Persistir los details |
-| `SaleSearcherService` | Listado paginado con filtros (armado de `SaleSummaryResponse` + conteo de ítems por venta) |
-| `SaleFinderByIdAndCommerceIdService` | Lookup por `id + commerceId` con `@EntityGraph` (cliente, punto y usuario eager); `404 SALE_NOT_FOUND` |
-| `SaleMarkPaidService` | Transición `PENDING → PAY` |
+./mvnw spring-boot:run # requiere JDK 25
+```
 
-## Clientes
-
-Los clientes son **del comercio** (`@ManyToOne Commerce`, unicidad compuesta `commerce_id + dni` en
-DB, `uk_clients_commerce_dni`): dos comercios pueden tener el mismo DNI sin conflicto.
-
-| Endpoint | Descripción |
-|---|---|
-| `GET /api/clients` | Lista del comercio del JWT (con filtros) |
-| `GET /api/clients/{dni}` | Cliente por DNI dentro del comercio (`404 CLIENT_NOT_FOUND` si no matchea) |
-| `POST /api/clients` | Crea cliente (`201`), valida DNI único por comercio |
-| `PUT /api/clients/{id}` | Actualiza cliente (por id + comercio del JWT) |
-
-## Renombres y formato
-
-- **`Commerce.businessName` → `name`**: el atributo y los campos de API de commerce se llaman `name`
-  (request: `CommerceRequest`, `CommerceWithOwnerRequest`, `CommerceWithOwnerUpdateRequest`; response:
-  `CommerceResponse`, `CurrentCommerceResponse`, `CommerceWithOwnerResponse`). ⚠️ La columna de DB
-  sigue siendo `business_name` (mapeada en el `@Column`); el cambio solo afecta la superficie HTTP.
-- **Decimales**: todos los campos monetarios (`BigDecimal` de `Product`, `Offer`, `Sale` y
-  `SaleDetail`) usan `@Column(precision = 12, scale = 2)` — montos hasta `9.999.999.999,99`.
-- Paginación: los listados paginados de categorías, productos, clientes, cajeros y puntos de venta
-  ordenan por `updatedAt` desc por defecto; los de ventas usan el `createdAt` del registro.
-
+La base debe existir previamente; el schema lo genera Hibernate al arrancar. El usuario admin por
+defecto (`admin@admin.com`) se crea automáticamente al iniciar.
