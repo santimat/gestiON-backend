@@ -43,7 +43,7 @@ public class OfferUpdaterService {
         Instant normalizedEnd = request.endDate().truncatedTo(ChronoUnit.MICROS);
         Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
-        offerDateValidatorService.validateOfferDates(normalizedStart, normalizedEnd, now);
+        offerDateValidatorService.validateOfferDatesForUpdate(normalizedStart, normalizedEnd, now, offer.getStartDate());
 
         Set<PaymentMethod> normalizedPaymentMethods =
                 request.paymentMethods() == null ? Set.of() : request.paymentMethods();
