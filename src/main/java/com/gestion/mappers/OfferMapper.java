@@ -1,18 +1,33 @@
 package com.gestion.mappers;
 
+import com.gestion.dto.request.offer.OfferRequest;
 import com.gestion.dto.response.offer.OfferResponse;
+import com.gestion.enums.OfferStatus;
+import com.gestion.model.Commerce;
 import com.gestion.model.Offer;
 
 public class OfferMapper {
-    public static OfferResponse toResponse(Offer offer) {
+    public static OfferResponse toResponse(Offer offer, OfferStatus offerStatus) {
         return new OfferResponse(
                 offer.getId(),
                 offer.getValue(),
                 offer.getDiscountType(),
                 offer.getStartDate(),
                 offer.getEndDate(),
-                offer.getStatus(),
+                offerStatus,
                 offer.getPaymentMethods()
+        );
+    }
+
+    public static Offer toEntity(OfferRequest request, Commerce commerce) {
+        return new Offer(
+                null,
+                commerce,
+                request.value(),
+                request.discountType(),
+                request.startDate(),
+                request.endDate(),
+                request.paymentMethods()
         );
     }
 }
