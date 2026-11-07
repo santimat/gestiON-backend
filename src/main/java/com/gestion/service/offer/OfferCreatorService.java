@@ -29,6 +29,7 @@ public class OfferCreatorService {
     private final JpaOfferRepository offerRepository;
     private final CommerceFinderByIdService commerceFinderByIdService;
     private final OfferDateValidatorService offerDateValidatorService;
+    private final OfferOverlapValidatorService offerOverlapValidatorService;
     private final OfferStatusResolverService offerStatusResolverService;
     private final DiscountRangeValidatorService discountRangeValidatorService;
 
@@ -56,43 +57,14 @@ public class OfferCreatorService {
 
         offerDateValidatorService.validateOfferDates(normalizedStart, normalizedEnd, now);
 
-        Set<PaymentMethod> normalizedPaymentMethods =
-                request.paymentMethods() == null ? Set.of() : request.paymentMethods();
-
-        // ofertas con el mismo rango de fechas
-        List<Offer> existingOffers = offerRepository.findOverlappingByCommerceIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-                commerceId, normalizedEnd, normalizedStart);
-
-        for (Offer existingOffer : existingOffers) {
-
-            // evitamos nullPointerException
-            Set<PaymentMethod> existingPaymentMethods =
-                    existingOffer.getPaymentMethods() == null
-                            ? Set.of()
-                            : existingOffer.getPaymentMethods();
-
-
-            boolean bothNonEmpty = !normalizedPaymentMethods.isEmpty() && !existingPaymentMethods.isEmpty();
-            boolean bothEmpty = normalizedPaymentMethods.isEmpty() && existingPaymentMethods.isEmpty();
-
-            if (bothNonEmpty &&
-                    // comparten al menos un método de pago
-                    !Collections.disjoint(normalizedPaymentMethods, existingPaymentMethods)) {
-                throw new OfferOverlapException(
-                        ErrorCode.OFFER_OVERLAP,
-                        "An overlapping offer already exists for the selected payment methods");
-            }
-
-            // si ambos metodos de pago están vacíos, significa que la oferta se usa para productos.
-            // en ese caso, no se permite que existan dos ofertas de productos con el mismo valor y tipo de descuento.
-            if (bothEmpty
-                    && existingOffer.getValue().compareTo(normalizedRequest.value()) == 0
-                    && existingOffer.getDiscountType() == normalizedRequest.discountType()) {
-                throw new OfferOverlapException(
-                        ErrorCode.OFFER_OVERLAP,
-                        "An overlapping product offer already exists for the same discount");
-            }
-        }
+        offerOverlapValidatorService.validateNoOverlap(
+                commerceId,
+                null,
+                normalizedStart,
+                normalizedEnd,
+                request.value(),
+                request.discountType(),
+                request.paymentMethods());
 
         Offer offerToSave = OfferMapper.toEntity(normalizedRequest, commerce);
         Offer savedOffer = offerRepository.save(offerToSave);

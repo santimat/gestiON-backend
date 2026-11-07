@@ -17,6 +17,7 @@ public enum ErrorCode {
     COMMERCE_NOT_FOUND(404, "Commerce not found"),
     SELL_POINT_NOT_FOUND(404, "Sell point not found"),
     SALE_NOT_FOUND(404, "Sale not found"),
+    OFFER_NOT_FOUND(404, "Offer not found"),
     ENDPOINT_NOT_FOUND(404, "Endpoint not found"),
 
     EMAIL_ALREADY_EXISTS(409, "Email is already registered"),

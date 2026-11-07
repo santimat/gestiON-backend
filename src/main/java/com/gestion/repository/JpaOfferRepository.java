@@ -9,10 +9,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 public interface JpaOfferRepository extends JpaRepository<Offer, Long> {
 
     Page<Offer> findByCommerceId(Long commerceId, Pageable pageable);
+
+    Optional<Offer> findByIdAndCommerceId(Long id, Long commerceId);
 
     Page<Offer> findByCommerceIdAndEndDateBefore(Long commerceId, Instant threshold, Pageable pageable);
 
