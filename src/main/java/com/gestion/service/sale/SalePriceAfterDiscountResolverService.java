@@ -25,6 +25,15 @@ public class SalePriceAfterDiscountResolverService {
                     "Unsupported discount type");
         }
 
+        // red de seguridad: un total negativo nunca debe persistirse.
+        // la validación de rango vive en SaleDiscountApplierService, pero este
+        // calculador no debe poder devolver un total negativo si se usa de nuevo
+        // desde otro flujo (por ejemplo, cuando las ofertas se apliquen a la venta).
+        if (totalAfterDiscount.signum() < 0) {
+            throw new InvalidDiscountException(ErrorCode.INVALID_DISCOUNT,
+                    "The discount cannot be greater than the sale subtotal");
+        }
+
         return totalAfterDiscount.setScale(2, RoundingMode.HALF_UP);
     }
 }

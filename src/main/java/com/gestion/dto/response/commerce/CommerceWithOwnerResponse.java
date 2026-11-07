@@ -1,6 +1,6 @@
 package com.gestion.dto.response.commerce;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record CommerceWithOwnerResponse(
         Long userId,
@@ -14,6 +14,6 @@ public record CommerceWithOwnerResponse(
         String businessLogoUrl,
         boolean businessActive,
         Double profitMultiplier,
-        LocalDateTime updatedAt
+        Instant updatedAt
 ) {
 }

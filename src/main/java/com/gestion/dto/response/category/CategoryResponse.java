@@ -1,6 +1,6 @@
 package com.gestion.dto.response.category;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record CategoryResponse(
         Long id,
@@ -8,7 +8,7 @@ public record CategoryResponse(
         String name,
         String description,
         boolean active,
-        LocalDateTime updatedAt,
+        Instant updatedAt,
         long productCount
 ) {
 }

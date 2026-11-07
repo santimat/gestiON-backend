@@ -26,7 +26,6 @@ public class AuthCheckController {
         if (authenticatedUser == null)
             throw new AuthenticationCredentialsNotFoundException("No authenticated user");
 
-        // TODO: preguntar si conviene tener una tabla intermedia para la relación usuarios comercios.
         if (authenticatedUser.getCommerceId() != null && !authCheckerStatusService.isCommerceUserActive(authenticatedUser.getEmail()))
             throw new InactiveResourceException(ErrorCode.ACCOUNT_DISABLED, "The account is disabled");
 

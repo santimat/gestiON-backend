@@ -5,7 +5,7 @@ import com.gestion.enums.PaymentMethod;
 import com.gestion.enums.SaleStatus;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 public record SaleResponse(
@@ -19,7 +19,7 @@ public record SaleResponse(
         DiscountType discountType,
         BigDecimal discount,
         BigDecimal total,
-        LocalDateTime createdAt,
+        Instant createdAt,
         String observations,
         SaleStatus status,
         List<SaleDetailResponse> details

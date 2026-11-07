@@ -2,7 +2,7 @@ package com.gestion.dto.response.user;
 
 import com.gestion.enums.Role;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record UserResponse(
         Long id,
@@ -11,6 +11,6 @@ public record UserResponse(
         Role role,
         boolean active,
         String phoneNumber,
-        LocalDateTime updatedAt
+        Instant updatedAt
 ) {
 }

@@ -3,20 +3,17 @@ package com.gestion.service.sale;
 import com.gestion.enums.DiscountType;
 import com.gestion.enums.ErrorCode;
 import com.gestion.exception.InvalidDiscountException;
+import com.gestion.service.discount.DiscountRangeValidatorService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
-/**
- * Valida la coherencia del descuento de la venta (tipo y monto van juntos, y
- * el monto en rango) y delega el cálculo del precio final al
- * SalePriceAfterDiscountResolverService.
- */
 @Service
 @AllArgsConstructor
 public class SaleDiscountApplierService {
     private final SalePriceAfterDiscountResolverService salePriceAfterDiscountResolverService;
+    private final DiscountRangeValidatorService discountRangeValidatorService;
 
     public BigDecimal applyDiscount(BigDecimal subtotal, DiscountType discountType, BigDecimal discount) {
         if (discountType == null) {
@@ -32,9 +29,10 @@ public class SaleDiscountApplierService {
                     "A discount type was provided without a discount amount");
         }
 
-        if (discountType == DiscountType.FIXED_AMOUNT && discount.compareTo(subtotal) > 0) {
-            throw new InvalidDiscountException(ErrorCode.DISCOUNT_EXCEEDS_SUBTOTAL,
-                    "Fixed amount discount cannot be greater than the sale subtotal");
+        if (discountType == DiscountType.FIXED_AMOUNT) {
+            discountRangeValidatorService.validateFixedAmountNotGreaterThanTotal(discount, subtotal);
+        } else if (discountType == DiscountType.PERCENTAGE) {
+            discountRangeValidatorService.validatePercentageNotGreaterThan100(discount);
         }
 
         return salePriceAfterDiscountResolverService

@@ -3,7 +3,7 @@ package com.gestion.dto.response.product;
 import com.gestion.dto.response.category.CategoryResponse;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record ProductResponse(
         Long id,
@@ -18,6 +18,6 @@ public record ProductResponse(
         String imageUrl,
         CategoryResponse category,
         boolean active,
-        LocalDateTime updatedAt
+        Instant updatedAt
 ) {
 }

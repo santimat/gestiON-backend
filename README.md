@@ -182,7 +182,8 @@ del request.
 - Valores de `paymentMethod`: `CASH`, `CARD`, `TRANSFER`, `CREDIT_ACCOUNT`. El fiado
   (`CREDIT_ACCOUNT`) genera la venta con status `PENDING`; el resto, `PAYED`.
 - `discountType` (`PERCENTAGE` / `FIXED_AMOUNT`) y `discount` van juntos; un descuento fijo no puede
-  superar el subtotal.
+  superar el subtotal (`400 DISCOUNT_EXCEEDS_SUBTOTAL`) y un descuento porcentual no puede superar
+  el 100% (`400 DISCOUNT_PERCENTAGE_EXCEEDS_100`).
 - El descuento de stock es todo-o-nada: si algún ítem no pasa la validación (producto inactivo o
   sin stock), no se descuenta ni se registra nada (`409 PRODUCT_INACTIVE`, `409 INSUFFICIENT_STOCK`).
 - `mark-paid` solo admite la transición `PENDING → PAYED` (`409 SALE_NOT_PENDING` en otro caso).
@@ -193,6 +194,10 @@ del request.
 |---|---|---|---|---|
 | GET | `/api/offers` | CASHIER/OWNER | — | `Page<OfferResponse>` · filtro: `expired` |
 | POST | `/api/offers` | OWNER | `OfferRequest` (JSON) | `OfferResponse` (201) |
+
+- El `value` de la oferta se interpreta según `discountType`: con `PERCENTAGE` es un porcentaje y no
+  puede superar el 100% (`400 DISCOUNT_PERCENTAGE_EXCEEDS_100`); con `FIXED_AMOUNT` es un monto y
+  todavía no tiene un máximo porque las ofertas aún no se aplican a la venta.
 
 ## Códigos de error frecuentes
 
@@ -207,6 +212,8 @@ del request.
 | `*_ALREADY_EXISTS` | 409 | Unicidad violada (email, DNI por comercio, nombre por comercio) |
 | `INSUFFICIENT_STOCK` / `PRODUCT_INACTIVE` | 409 | Venta con ítems no válidos |
 | `SALE_NOT_PENDING` | 409 | `mark-paid` sobre una venta que no está `PENDING` |
+| `DISCOUNT_EXCEEDS_SUBTOTAL` | 400 | Descuento fijo mayor al subtotal de la venta |
+| `DISCOUNT_PERCENTAGE_EXCEEDS_100` | 400 | Descuento porcentual mayor al 100% (venta u oferta) |
 | `INTERNAL_ERROR` | 500 | Error no controlado |
 
 ## Correr el proyecto
