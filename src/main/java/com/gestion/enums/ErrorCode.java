@@ -42,6 +42,9 @@ public enum ErrorCode {
     DISCOUNT_WITHOUT_TYPE(400, "Discount amount requires a discount type"),
     TYPE_WITHOUT_DISCOUNT(400, "Discount type requires a discount amount"),
     DISCOUNT_EXCEEDS_SUBTOTAL(400, "Fixed amount discount cannot be greater than the sale subtotal"),
+    DISCOUNT_PERCENTAGE_EXCEEDS_100(400, "Percentage discount cannot be greater than 100"),
+
+    INVALID_DATE(400, "Date is not valid"),
 
     INVALID_REQUEST_BODY(400, "Request body is malformed"),
     INVALID_PARAMETER(400, "A request parameter is invalid"),
