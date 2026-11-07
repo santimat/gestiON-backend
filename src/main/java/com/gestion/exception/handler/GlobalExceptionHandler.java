@@ -4,6 +4,7 @@ import com.gestion.dto.response.exception.ExceptionResponse;
 import com.gestion.enums.ErrorCode;
 import com.gestion.exception.BusinessException;
 import com.gestion.exception.InvalidDateException;
+import com.gestion.exception.InvalidProductPriceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidDateException.class)
     public ResponseEntity<ExceptionResponse> handleInvalidDateException(InvalidDateException exception) {
+        return buildResponse(exception.getCode(), exception.getMessage());
+    }
+
+    @ExceptionHandler(InvalidProductPriceException.class)
+    public ResponseEntity<ExceptionResponse> handleInvalidProductPriceException(InvalidProductPriceException exception) {
         return buildResponse(exception.getCode(), exception.getMessage());
     }
 
