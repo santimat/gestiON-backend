@@ -21,7 +21,7 @@ public class ProductSuggestedPriceCalculatorService {
             profitMultiplier = 1.0;
         }
 
-        return product.getSalePrice()
+        return product.getCostPrice()
                 .multiply(BigDecimal.valueOf(profitMultiplier))
                 .setScale(2, RoundingMode.HALF_UP);
     }
