@@ -1,7 +1,6 @@
 package com.gestion.model;
 
 import com.gestion.enums.DiscountType;
-import com.gestion.enums.OfferStatus;
 import com.gestion.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -10,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -37,13 +36,10 @@ public class Offer {
     private DiscountType discountType;
 
     @Column(name = "start_date")
-    private LocalDateTime startDate;
+    private Instant startDate;
 
     @Column(name = "end_date")
-    private LocalDateTime endDate;
-
-    @Column(name = "status")
-    private OfferStatus status;
+    private Instant endDate;
 
     // tabla auxiliar para guardar metodos de pago que tienen oferta
     @ElementCollection(fetch = FetchType.LAZY)
