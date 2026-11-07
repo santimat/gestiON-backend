@@ -19,7 +19,9 @@ public class SaleMapper {
         sale.setPaymentMethod(request.paymentMethod());
         sale.setObservations(request.observations());
         sale.setDiscountType(request.discountType());
-        sale.setDiscount(request.discount() != null ? request.discount() : BigDecimal.ZERO);
+        // si no viene descuento, queda null (no se coerciona a 0): es el service el que aplica la regla
+        // de coherencia tipo <-> monto; pasar 0 aca dejaba la rama `discount != null` muerta.
+        sale.setDiscount(request.discount());
         return sale;
     }
 
@@ -41,7 +43,7 @@ public class SaleMapper {
                 sale.getPaymentMethod(),
                 sale.getSubtotal(),
                 sale.getDiscountType(),
-                sale.getDiscount(),
+                sale.getDiscount() != null ? sale.getDiscount() : BigDecimal.ZERO,
                 sale.getTotal(),
                 sale.getCreatedAt(),
                 sale.getObservations(),
@@ -62,7 +64,7 @@ public class SaleMapper {
                 sale.getPaymentMethod(),
                 sale.getCreatedAt(),
                 sale.getSubtotal(),
-                sale.getDiscount(),
+                sale.getDiscount() != null ? sale.getDiscount() : BigDecimal.ZERO,
                 sale.getDiscountType(),
                 sale.getTotal()
         );
