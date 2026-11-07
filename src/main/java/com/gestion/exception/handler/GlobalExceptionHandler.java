@@ -5,6 +5,7 @@ import com.gestion.enums.ErrorCode;
 import com.gestion.exception.BusinessException;
 import com.gestion.exception.InvalidDateException;
 import com.gestion.exception.InvalidProductPriceException;
+import com.gestion.exception.OfferOverlapException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +40,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidProductPriceException.class)
     public ResponseEntity<ExceptionResponse> handleInvalidProductPriceException(InvalidProductPriceException exception) {
+        return buildResponse(exception.getCode(), exception.getMessage());
+    }
+
+    @ExceptionHandler(OfferOverlapException.class)
+    public ResponseEntity<ExceptionResponse> handleOfferOverlapException(OfferOverlapException exception) {
         return buildResponse(exception.getCode(), exception.getMessage());
     }
 
