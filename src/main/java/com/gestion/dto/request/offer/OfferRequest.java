@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Set;
 
 public record OfferRequest(
@@ -15,10 +16,10 @@ public record OfferRequest(
         @NotNull(message = "Discount type is required")
         DiscountType discountType,
         @NotNull(message = "Start date is required")
-        String startDate,
+        Instant startDate,
         @NotNull(message = "End date is required")
-        String endDate,
-        
+        Instant endDate,
+
         Set<PaymentMethod> paymentMethods
 ) {
 }
