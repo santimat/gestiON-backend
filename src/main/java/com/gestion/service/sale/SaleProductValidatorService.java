@@ -5,10 +5,6 @@ import com.gestion.exception.InactiveResourceException;
 import com.gestion.model.Product;
 import org.springframework.stereotype.Service;
 
-/**
- * Valida que el producto esté disponible para venta (activo). Los productos
- * desactivados no pueden venderse aunque tengan stock.
- */
 @Service
 public class SaleProductValidatorService {
 

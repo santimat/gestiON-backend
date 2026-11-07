@@ -7,10 +7,7 @@ import com.gestion.repository.JpaClientRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-/**
- * Resuelve el cliente de una venta. Un clientId null significa venta anónima
- * (consumidor final), así que devuelve null sin error en ese caso.
- */
+
 @Service
 @AllArgsConstructor
 public class SaleClientResolverService {
