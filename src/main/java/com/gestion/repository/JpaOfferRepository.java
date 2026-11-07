@@ -1,24 +1,37 @@
 package com.gestion.repository;
 
+import com.gestion.enums.OfferStatus;
 import com.gestion.model.Offer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+
+import java.time.Instant;
 
 public interface JpaOfferRepository extends JpaRepository<Offer, Long> {
 
-    // :expired = null -> todas; true -> solo vencidas (fecha actual > end_date); false -> solo vigentes
-    @Query("""
-            SELECT o FROM Offer o
-            WHERE o.commerce.id = :commerceId
-              AND (:expired IS NULL
-                   OR (:expired = TRUE AND o.endDate < CURRENT_TIMESTAMP)
-                   OR (:expired = FALSE AND (o.endDate IS NULL OR o.endDate >= CURRENT_TIMESTAMP)))
-            """)
-    Page<Offer> findAllWithFilters(@Param("commerceId") Long commerceId,
-                                   @Param("expired") Boolean expired,
-                                   Pageable pageable);
+    Page<Offer> findByCommerceId(Long commerceId, Pageable pageable);
+
+    Page<Offer> findByCommerceIdAndEndDateBefore(Long commerceId, Instant threshold, Pageable pageable);
+
+    Page<Offer> findByCommerceIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(Long commerceId,
+                                                                                    Instant startDate,
+                                                                                    Instant endDate,
+                                                                                    Pageable pageable);
+
+    Page<Offer> findByCommerceIdAndStartDateAfter(Long commerceId, Instant threshold, Pageable pageable);
+
+    default Page<Offer> findAllWithFilters(Long commerceId, OfferStatus status, Instant now, Pageable pageable) {
+        Instant normalizedNow = now.truncatedTo(java.time.temporal.ChronoUnit.MICROS);
+        if (status == null) {
+            return findByCommerceId(commerceId, pageable);
+        }
+        return switch (status) {
+            case EXPIRED -> findByCommerceIdAndEndDateBefore(commerceId, normalizedNow, pageable);
+            case ACTIVE ->
+                    findByCommerceIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(commerceId, normalizedNow, normalizedNow, pageable);
+            case SCHEDULED -> findByCommerceIdAndStartDateAfter(commerceId, normalizedNow, pageable);
+        };
+    }
 
 }
