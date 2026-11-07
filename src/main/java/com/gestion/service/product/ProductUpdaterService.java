@@ -26,6 +26,7 @@ public class ProductUpdaterService {
     private final CategoryFinderByIdAndCommerceIdService categoryFinderByIdAndCommerceIdService;
     private final CommerceFinderByIdService commerceFinderByIdService;
     private final ProductSuggestedPriceCalculatorService productSuggestedPriceCalculatorService;
+    private final ProductPriceValidatorService productPriceValidatorService;
     private final JpaProductRepository productRepository;
     private final ProductImageUploaderService productImageUploaderService;
     private final FileFinderService fileFinderService;
@@ -38,6 +39,8 @@ public class ProductUpdaterService {
         Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
         Category category = categoryFinderByIdAndCommerceIdService
                 .findCategoryByIdAndCommerceId(request.categoryId(), commerceId);
+
+        productPriceValidatorService.validateSalePriceNotLowerThanCostPrice(request.costPrice(), request.salePrice());
 
         product.setName(request.name());
         product.setDescription(request.description());

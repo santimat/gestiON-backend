@@ -15,7 +15,6 @@ public record CashierUpdateRequest(
         @Email
         String email,
 
-        // optional: empty password keeps the current one
         @Pattern(regexp = "^$|.{3,50}", message = "Password's length must be between 3 and 50")
         String password,
 

@@ -10,6 +10,7 @@ import com.gestion.model.Product;
 import com.gestion.repository.JpaProductRepository;
 import com.gestion.service.category.CategoryFinderByIdAndCommerceIdService;
 import com.gestion.service.commerce.CommerceFinderByIdService;
+import com.gestion.service.product.ProductPriceValidatorService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class ProductCreatorService {
     private final ProductSuggestedPriceCalculatorService productSuggestedPriceCalculatorService;
     private final CommerceFinderByIdService commerceFinderByIdService;
     private final CategoryFinderByIdAndCommerceIdService categoryFinderByIdAndCommerceIdService;
+    private final ProductPriceValidatorService productPriceValidatorService;
     private final ProductImageUploaderService productImageUploaderService;
 
     @Transactional
@@ -30,6 +32,8 @@ public class ProductCreatorService {
         Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
         Category category = categoryFinderByIdAndCommerceIdService
                 .findCategoryByIdAndCommerceId(request.categoryId(), commerceId);
+
+        productPriceValidatorService.validateSalePriceNotLowerThanCostPrice(request.costPrice(), request.salePrice());
 
         Product product = ProductMapper.toEntity(request, commerce, category);
         product.setActive(true);
