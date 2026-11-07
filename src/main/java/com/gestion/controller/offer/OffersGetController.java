@@ -3,6 +3,7 @@ package com.gestion.controller.offer;
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.offer.OfferResponse;
 import com.gestion.enums.OfferStatus;
+import com.gestion.enums.PaymentMethod;
 import com.gestion.service.offer.OfferSearcherService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,7 @@ public class OffersGetController {
     public ResponseEntity<Page<OfferResponse>> searchOffers(
             @AuthenticationPrincipal UserPrincipal authenticatedUser,
             @RequestParam(required = false) OfferStatus status,
+            @RequestParam(required = false) PaymentMethod paymentMethod,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "endDate") String sortBy,
@@ -36,6 +38,6 @@ public class OffersGetController {
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
         return ResponseEntity.ok(offerSearcherService
-                .searchOffers(authenticatedUser.getCommerceId(), status, pageable));
+                .searchOffers(authenticatedUser.getCommerceId(), status, paymentMethod, pageable));
     }
 }

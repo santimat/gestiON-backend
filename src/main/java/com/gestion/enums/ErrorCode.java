@@ -39,13 +39,14 @@ public enum ErrorCode {
     VALIDATION_ERROR(400, "Request validation failed"),
 
     INVALID_DISCOUNT(400, "Discount is not valid"),
+    INVALID_DISCOUNT_PREFIX_ZERO(400, "Discount cannot be zero"),
     DISCOUNT_WITHOUT_TYPE(400, "Discount amount requires a discount type"),
     TYPE_WITHOUT_DISCOUNT(400, "Discount type requires a discount amount"),
     DISCOUNT_EXCEEDS_SUBTOTAL(400, "Fixed amount discount cannot be greater than the sale subtotal"),
     DISCOUNT_PERCENTAGE_EXCEEDS_100(400, "Percentage discount cannot be greater than 100"),
 
     INVALID_DATE(400, "Date is not valid"),
-
+    OFFER_OVERLAP(409, "An overlapping offer already exists for the selected scope"),
     INVALID_REQUEST_BODY(400, "Request body is malformed"),
     INVALID_PARAMETER(400, "A request parameter is invalid"),
     MISSING_PARAMETER(400, "A required request parameter is missing"),
