@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @AllArgsConstructor
@@ -33,7 +34,7 @@ public class OfferAssignerProductService {
 
 
     @Transactional
-    public void assignOfferToProducts(List<Long> productIds, Long offerId, Long commerceId) {
+    public void assignOfferToProducts(Set<Long> productIds, Long offerId, Long commerceId) {
         Offer offer = offerFinderByIdAndCommerceIdService.findOfferByIdAndCommerceId(offerId, commerceId);
 
         if (offer.getPaymentMethods() != null && !offer.getPaymentMethods().isEmpty()) {
@@ -46,25 +47,11 @@ public class OfferAssignerProductService {
                 .findProductsByIdsAndCommerceId(productIds, commerceId);
 
         for (Product product : products) {
-            
+
             product.setOffer(offer);
         }
 
         productRepository.saveAll(products);
     }
 
-    @Transactional
-    public void assignProductsToOffer(List<Long> productIds, Long offerId, Long commerceId) {
-        assignOfferToProducts(productIds, offerId, commerceId);
-    }
-
-    @Transactional
-    public void assignOffer(Long offerId, List<Long> productIds, Long commerceId) {
-        assignOfferToProducts(productIds, offerId, commerceId);
-    }
-
-    @Transactional
-    public void assign(List<Long> productIds, Long offerId, Long commerceId) {
-        assignOfferToProducts(productIds, offerId, commerceId);
-    }
 }

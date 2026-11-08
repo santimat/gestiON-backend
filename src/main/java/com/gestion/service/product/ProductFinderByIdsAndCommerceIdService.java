@@ -6,13 +6,14 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @AllArgsConstructor
 public class ProductFinderByIdsAndCommerceIdService {
     private final JpaProductRepository jpaProductRepository;
 
-    public List<Product> findProductsByIdsAndCommerceId(List<Long> ids, Long commerceId) {
+    public List<Product> findProductsByIdsAndCommerceId(Set<Long> ids, Long commerceId) {
         if (ids == null || ids.isEmpty()) {
             return List.of();
         }

@@ -10,12 +10,13 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface JpaProductRepository extends JpaRepository<Product, Long> {
 
     Optional<Product> findByIdAndCommerceId(Long id, Long commerceId);
 
-    List<Product> findByIdInAndCommerceId(List<Long> ids, Long commerceId);
+    List<Product> findByIdInAndCommerceId(Set<Long> ids, Long commerceId);
 
     @Query("""
             SELECT p FROM Product p
