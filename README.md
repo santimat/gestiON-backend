@@ -192,12 +192,16 @@ del request.
 
 | Método | Ruta | Roles | Request | Response |
 |---|---|---|---|---|
-| GET | `/api/offers` | CASHIER/OWNER | — | `Page<OfferResponse>` · filtro: `expired` |
+| GET | `/api/offers` | CASHIER/OWNER | — | `Page<OfferResponse>` · filtros: `status`, `paymentMethod`, `offerType` |
 | POST | `/api/offers` | OWNER | `OfferRequest` (JSON) | `OfferResponse` (201) |
+| PUT | `/api/offers/{id}` | OWNER | `OfferUpdateRequest` (JSON) | `OfferResponse` |
 
 - El `value` de la oferta se interpreta según `discountType`: con `PERCENTAGE` es un porcentaje y no
   puede superar el 100% (`400 DISCOUNT_PERCENTAGE_EXCEEDS_100`); con `FIXED_AMOUNT` es un monto y
   todavía no tiene un máximo porque las ofertas aún no se aplican a la venta.
+- Cada oferta tiene un `offerType` derivado de sus `paymentMethods`: con al menos un método de pago es
+  `PAYMENT_METHOD`, y sin métodos es `PRODUCT`. Se filtra con `?offerType=PRODUCT` o
+  `?offerType=PAYMENT_METHOD`, y se refleja en `OfferResponse.offerType`.
 
 ## Códigos de error frecuentes
 

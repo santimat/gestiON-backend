@@ -48,6 +48,7 @@ public enum ErrorCode {
 
     INVALID_DATE(400, "Date is not valid"),
     OFFER_OVERLAP(409, "An overlapping offer already exists for the selected scope"),
+    OFFER_HAS_PAYMENT_METHODS(400, "Offers with payment methods cannot be applied to products"),
     INVALID_REQUEST_BODY(400, "Request body is malformed"),
     INVALID_PARAMETER(400, "A request parameter is invalid"),
     MISSING_PARAMETER(400, "A required request parameter is missing"),
