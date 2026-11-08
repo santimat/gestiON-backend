@@ -6,6 +6,7 @@ import com.gestion.model.Offer;
 import com.gestion.model.Product;
 import com.gestion.repository.JpaProductRepository;
 import com.gestion.service.product.ProductFinderByIdsAndCommerceIdService;
+import com.gestion.service.product.ProductFinderByOfferIdAndCommerceIdService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,8 @@ public class OfferAssignerProductService {
 
         List<Product> products = productFinderByIdsAndCommerceIdService
                 .findProductsByIdsAndCommerceId(productIds, commerceId);
+
+        List<Product> productsWithOffer = ProductFinderByOfferIdAndCommerceIdService.findProductsByOfferIdAndCommerceId(offerId, commerceId);
 
         for (Product product : products) {
 
