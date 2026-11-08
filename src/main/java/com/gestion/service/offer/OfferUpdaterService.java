@@ -11,7 +11,6 @@ import com.gestion.model.Offer;
 import com.gestion.repository.JpaOfferRepository;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import com.gestion.service.discount.DiscountRangeValidatorService;
-import com.gestion.service.product.ProductFinderByOfferIdAndCommerceIdService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,7 +31,6 @@ public class OfferUpdaterService {
     private final OfferOverlapValidatorService offerOverlapValidatorService;
     private final OfferPaymentMethodsValidatorService offerPaymentMethodsValidatorService;
     private final JpaOfferRepository offerRepository;
-    private final ProductFinderByOfferIdAndCommerceIdService productFinderByOfferIdAndCommerceIdService;
 
     @Transactional
     public OfferResponse updateOffer(Long offerId, OfferUpdateRequest request, Long commerceId) {
