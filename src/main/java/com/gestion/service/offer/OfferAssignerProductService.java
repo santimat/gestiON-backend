@@ -1,5 +1,6 @@
 package com.gestion.service.offer;
 
+import com.gestion.dto.request.offer.OfferProductIdsRequest;
 import com.gestion.enums.ErrorCode;
 import com.gestion.exception.OfferHasPaymentMethodsException;
 import com.gestion.model.Offer;
@@ -7,35 +8,25 @@ import com.gestion.model.Product;
 import com.gestion.repository.JpaProductRepository;
 import com.gestion.service.product.ProductFinderByIdsAndCommerceIdService;
 import com.gestion.service.product.ProductFinderByOfferIdAndCommerceIdService;
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Stream;
 
 @Service
 @AllArgsConstructor
 public class OfferAssignerProductService {
 
     private final ProductFinderByIdsAndCommerceIdService productFinderByIdsAndCommerceIdService;
+    private final ProductFinderByOfferIdAndCommerceIdService productFinderByOfferIdAndCommerceIdService;
     private final OfferFinderByIdAndCommerceIdService offerFinderByIdAndCommerceIdService;
     private final JpaProductRepository productRepository;
 
-    //TODO: List<Product> findAllByOfferId(Long offerId);
-    //TODO: manejar la desasignación de la oferta de los productos que ya tienen una oferta asignada
-    // ejemplo:
-    // 1. llega {productIds: [1, 2, 3], offerId: 1}
-    // 2. luego llega {productIds: [2, 3, 4], offerId: 1} se debe desasignar la oferta 1 del producto con el id 1
-
-    //TODO: manejar la asignación de una oferta a un producto que ya tiene otra oferta asignada, ejemplo:
-    // 1. llega {productIds: [1, 2, 3], offerId: 1}
-    // 2. luego llega {productIds: [2, 3, 4], offerId: 2} se debe desasignar la oferta 1 de los productos con id 2, 3
-    // y asignarles la oferta 2, y asignar la oferta 2 al producto con id 4
-
 
     @Transactional
-    public void assignOfferToProducts(Set<Long> productIds, Long offerId, Long commerceId) {
+    public void assignOfferToProducts(Long offerId, OfferProductIdsRequest request, Long commerceId) {
         Offer offer = offerFinderByIdAndCommerceIdService.findOfferByIdAndCommerceId(offerId, commerceId);
 
         if (offer.getPaymentMethods() != null && !offer.getPaymentMethods().isEmpty()) {
@@ -44,17 +35,25 @@ public class OfferAssignerProductService {
                     "Offers with payment methods cannot be applied to products");
         }
 
-        List<Product> products = productFinderByIdsAndCommerceIdService
-                .findProductsByIdsAndCommerceId(productIds, commerceId);
+        List<Product> productsToUnassign = productFinderByOfferIdAndCommerceIdService
+                .findProductsByOfferIdAndCommerceId(offerId, commerceId);
 
-        List<Product> productsWithOffer = ProductFinderByOfferIdAndCommerceIdService.findProductsByOfferIdAndCommerceId(offerId, commerceId);
+        List<Product> productsToAssign = productFinderByIdsAndCommerceIdService
+                .findProductsByIdsAndCommerceId(request.productIds(), commerceId);
 
-        for (Product product : products) {
+        for (Product product : productsToUnassign) {
+            product.setOffer(null);
+        }
 
+        for (Product product : productsToAssign) {
             product.setOffer(offer);
         }
 
-        productRepository.saveAll(products);
+        // unica lista para guardar con .saveAll()
+        List<Product> productsToSave =
+                Stream.concat(productsToUnassign.stream(), productsToAssign.stream()).distinct().toList();
+
+        productRepository.saveAll(productsToSave);
     }
 
 }

@@ -11,6 +11,7 @@ import com.gestion.model.Offer;
 import com.gestion.repository.JpaOfferRepository;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import com.gestion.service.discount.DiscountRangeValidatorService;
+import com.gestion.service.product.ProductFinderByOfferIdAndCommerceIdService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,9 @@ public class OfferUpdaterService {
     private final OfferStatusResolverService offerStatusResolverService;
     private final DiscountRangeValidatorService discountRangeValidatorService;
     private final OfferOverlapValidatorService offerOverlapValidatorService;
+    private final OfferPaymentMethodsValidatorService offerPaymentMethodsValidatorService;
     private final JpaOfferRepository offerRepository;
+    private final ProductFinderByOfferIdAndCommerceIdService productFinderByOfferIdAndCommerceIdService;
 
     @Transactional
     public OfferResponse updateOffer(Long offerId, OfferUpdateRequest request, Long commerceId) {
@@ -49,6 +52,8 @@ public class OfferUpdaterService {
         Set<PaymentMethod> normalizedPaymentMethods =
                 request.paymentMethods() == null ? Set.of() : request.paymentMethods();
 
+        offerPaymentMethodsValidatorService.validateNoAssignedProducts(offerId, commerceId, normalizedPaymentMethods);
+
         offerOverlapValidatorService.validateNoOverlap(
                 commerceId,
                 offerId,
@@ -63,7 +68,7 @@ public class OfferUpdaterService {
         offer.setStartDate(normalizedStart);
         offer.setEndDate(normalizedEnd);
         offer.setPaymentMethods(normalizedPaymentMethods);
-offer.setOfferType(normalizedPaymentMethods.isEmpty() ? OfferType.PRODUCT : OfferType.PAYMENT_METHOD);
+        offer.setOfferType(normalizedPaymentMethods.isEmpty() ? OfferType.PRODUCT : OfferType.PAYMENT_METHOD);
 
         Offer savedOffer = offerRepository.save(offer);
 

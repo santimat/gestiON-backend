@@ -19,7 +19,7 @@ public enum ErrorCode {
     SALE_NOT_FOUND(404, "Sale not found"),
     OFFER_NOT_FOUND(404, "Offer not found"),
     ENDPOINT_NOT_FOUND(404, "Endpoint not found"),
-
+    PRODUCTS_OFFER_NOT_FOUND(404, "Some products were not found for the current commerce"),
     EMAIL_ALREADY_EXISTS(409, "Email is already registered"),
     CLIENT_DNI_ALREADY_EXISTS(409, "Client DNI is already registered"),
     CATEGORY_NAME_ALREADY_EXISTS(409, "Category name already exists in this commerce"),
@@ -49,6 +49,7 @@ public enum ErrorCode {
     INVALID_DATE(400, "Date is not valid"),
     OFFER_OVERLAP(409, "An overlapping offer already exists for the selected scope"),
     OFFER_HAS_PAYMENT_METHODS(400, "Offers with payment methods cannot be applied to products"),
+    OFFER_HAS_PRODUCTS(409, "An offer with assigned products cannot have payment methods"),
     INVALID_REQUEST_BODY(400, "Request body is malformed"),
     INVALID_PARAMETER(400, "A request parameter is invalid"),
     MISSING_PARAMETER(400, "A required request parameter is missing"),

@@ -16,6 +16,7 @@ public record ProductResponse(
         Integer currentStock,
         Integer minStock,
         String imageUrl,
+        Long offerId,
         CategoryResponse category,
         boolean active,
         Instant updatedAt

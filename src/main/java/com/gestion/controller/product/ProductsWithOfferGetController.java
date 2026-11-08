@@ -1,0 +1,42 @@
+package com.gestion.controller.product;
+
+import com.gestion.config.UserPrincipal;
+import com.gestion.dto.response.product.ProductWithOfferResponse;
+import com.gestion.service.product.ProductWithOfferSearcherService;
+import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/products")
+@AllArgsConstructor
+public class ProductsWithOfferGetController {
+    private final ProductWithOfferSearcherService productWithOfferSearcherService;
+
+    @GetMapping("/with-offer")
+    @PreAuthorize("hasRole('OWNER') or hasRole('CASHIER')")
+    public ResponseEntity<Page<ProductWithOfferResponse>> searchProductsWithOffer(
+            @AuthenticationPrincipal UserPrincipal authenticatedUser,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String searchText,
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "updatedAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort.Direction sortDirection = Sort.Direction.fromString(sortDir);
+        Sort sortConfig = Sort.by(sortDirection, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sortConfig);
+        return ResponseEntity.ok(productWithOfferSearcherService
+                .searchProductsWithOffer(authenticatedUser.getCommerceId(), categoryId, searchText, active, pageable));
+    }
+}
