@@ -4,6 +4,7 @@ import com.gestion.dto.request.offer.OfferUpdateRequest;
 import com.gestion.dto.response.offer.OfferResponse;
 import com.gestion.enums.DiscountType;
 import com.gestion.enums.OfferStatus;
+import com.gestion.enums.OfferType;
 import com.gestion.enums.PaymentMethod;
 import com.gestion.mappers.OfferMapper;
 import com.gestion.model.Offer;
@@ -62,6 +63,7 @@ public class OfferUpdaterService {
         offer.setStartDate(normalizedStart);
         offer.setEndDate(normalizedEnd);
         offer.setPaymentMethods(normalizedPaymentMethods);
+offer.setOfferType(normalizedPaymentMethods.isEmpty() ? OfferType.PRODUCT : OfferType.PAYMENT_METHOD);
 
         Offer savedOffer = offerRepository.save(offer);
 
