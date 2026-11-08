@@ -3,6 +3,7 @@ package com.gestion.controller.offer;
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.offer.OfferResponse;
 import com.gestion.enums.OfferStatus;
+import com.gestion.enums.OfferType;
 import com.gestion.enums.PaymentMethod;
 import com.gestion.service.offer.OfferSearcherService;
 import lombok.AllArgsConstructor;
@@ -30,6 +31,7 @@ public class OffersGetController {
             @AuthenticationPrincipal UserPrincipal authenticatedUser,
             @RequestParam(required = false) OfferStatus status,
             @RequestParam(required = false) PaymentMethod paymentMethod,
+            @RequestParam(required = false) OfferType offerType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "endDate") String sortBy,
@@ -38,6 +40,6 @@ public class OffersGetController {
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
         return ResponseEntity.ok(offerSearcherService
-                .searchOffers(authenticatedUser.getCommerceId(), status, paymentMethod, pageable));
+                .searchOffers(authenticatedUser.getCommerceId(), status, paymentMethod, offerType, pageable));
     }
 }
