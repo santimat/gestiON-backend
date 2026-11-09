@@ -12,6 +12,7 @@ public record ClientResponse(
         String dni,
         Long salesCount,
         Long pendingSalesCount,
-        BigDecimal totalSpent
+        BigDecimal totalSpent,
+        BigDecimal totalPending
 ) {
 }

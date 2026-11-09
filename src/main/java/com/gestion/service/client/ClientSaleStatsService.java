@@ -11,6 +11,6 @@ public class ClientSaleStatsService {
     private final JpaSaleRepository jpaSaleRepository;
 
     public JpaSaleRepository.ClientSalesSummary getClientSaleStats(Long clientId, Long commerceId) {
-        return jpaSaleRepository.countSalesAndSpendedByClient(clientId, commerceId);
+        return jpaSaleRepository.countSalesAndSpentByClient(clientId, commerceId);
     }
 }

@@ -56,8 +56,11 @@ public class ClientSearcherService {
             BigDecimal totalSpent = stats != null && stats.getTotalSpent() != null
                     ? stats.getTotalSpent()
                     : BigDecimal.ZERO;
+            BigDecimal totalPending = stats != null && stats.getTotalPending() != null
+                    ? stats.getTotalPending()
+                    : BigDecimal.ZERO;
 
-            return ClientMapper.toResponse(client, salesCount, pendingSalesCount, totalSpent);
+            return ClientMapper.toResponse(client, salesCount, pendingSalesCount, totalSpent, totalPending);
         });
     }
 }

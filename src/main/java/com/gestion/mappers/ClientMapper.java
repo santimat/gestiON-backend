@@ -9,13 +9,14 @@ import java.math.BigDecimal;
 public class ClientMapper {
 
     public static ClientResponse toResponse(Client client) {
-        return toResponse(client, null, null, null);
+        return toResponse(client, null, null, null, null);
     }
 
     public static ClientResponse toResponse(Client client,
                                             Long salesCount,
                                             Long pendingSalesCount,
-                                            BigDecimal totalSpent) {
+                                            BigDecimal totalSpent,
+                                            BigDecimal totalPending) {
         return new ClientResponse(
                 client.getId(),
                 client.getCommerce().getId(),
@@ -26,7 +27,8 @@ public class ClientMapper {
                 client.getDni(),
                 salesCount,
                 pendingSalesCount,
-                totalSpent
+                totalSpent,
+                totalPending
         );
     }
 

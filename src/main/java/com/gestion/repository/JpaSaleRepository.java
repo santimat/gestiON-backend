@@ -15,12 +15,6 @@ import java.util.Optional;
 
 public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
 
-    interface ClientSalesSummary {
-        Number getPaidSalesCount();
-        Number getPendingSalesCount();
-        BigDecimal getTotalSpent();
-    }
-
     @Query("""
             SELECT s FROM Sale s
             LEFT JOIN FETCH s.client c
@@ -66,10 +60,20 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
     BigDecimal sumPaidSalesTotalByClient(@Param("clientId") Long clientId,
                                          @Param("commerceId") Long commerceId);
 
-    default ClientSalesSummary countSalesAndSpendedByClient(Long clientId, Long commerceId) {
+    @Query("""
+            SELECT COALESCE(SUM(s.total), 0) FROM Sale s
+            WHERE s.client.id = :clientId
+              AND s.commerce.id = :commerceId
+              AND s.status = com.gestion.enums.SaleStatus.PENDING
+            """)
+    BigDecimal sumPendingSalesTotalByClient(@Param("clientId") Long clientId,
+                                            @Param("commerceId") Long commerceId);
+
+    default ClientSalesSummary countSalesAndSpentByClient(Long clientId, Long commerceId) {
         long paidCount = countPaidSalesByClient(clientId, commerceId);
         long pendingCount = countPendingSalesByClient(clientId, commerceId);
         BigDecimal totalSpent = sumPaidSalesTotalByClient(clientId, commerceId);
+        BigDecimal totalPending = sumPendingSalesTotalByClient(clientId, commerceId);
 
         return new ClientSalesSummary() {
             @Override
@@ -86,10 +90,25 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
             public BigDecimal getTotalSpent() {
                 return totalSpent;
             }
+
+            @Override
+            public BigDecimal getTotalPending() {
+                return totalPending;
+            }
         };
     }
 
     // @EntityGraph para cargar las relaciones junto con la entidad Sale, evitando el problema de N+1
     @EntityGraph(attributePaths = {"client", "sellPoint", "user"})
     Optional<Sale> findByIdAndCommerceId(Long id, Long commerceId);
+
+    interface ClientSalesSummary {
+        Number getPaidSalesCount();
+
+        Number getPendingSalesCount();
+
+        BigDecimal getTotalSpent();
+
+        BigDecimal getTotalPending();
+    }
 }
