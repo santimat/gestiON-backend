@@ -16,9 +16,18 @@ public class ClientSearcherService {
     private final JpaClientRepository jpaClientRepository;
 
     @Transactional(readOnly = true)
-    public Page<ClientResponse> searchClients(Long commerceId, Pageable pageable) {
+    public Page<ClientResponse> searchClients(Long commerceId, String searchText, String dni, Pageable pageable) {
+        
+        if (searchText != null && searchText.isBlank()) {
+            searchText = null;
+        }
+
+        if (dni != null && dni.isBlank()) {
+            dni = null;
+        }
+
         Page<Client> clients = jpaClientRepository
-                .findAllByCommerceId(commerceId, pageable);
+                .findAllWithFilters(commerceId, searchText, dni, pageable);
         return clients.map(ClientMapper::toResponse);
     }
 }
