@@ -11,6 +11,8 @@ import com.gestion.service.saleDetails.SaleDetailCreatorService;
 import com.gestion.service.saleDetails.SaleDetailsMergerService;
 import com.gestion.service.saleDetails.SaleDetailsValidationResult;
 import com.gestion.service.saleDetails.SaleDetailsValidatorService;
+import com.gestion.service.offer.OfferFinderByPaymentMethodAndCommerceIdService;
+import com.gestion.model.Offer;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -33,6 +35,7 @@ public class SaleCreatorService {
     private final SaleSellPointResolverService saleSellPointResolverService;
     private final SaleStockUpdaterService saleStockUpdaterService;
     private final SaleDetailCreatorService saleDetailCreatorService;
+    private final OfferFinderByPaymentMethodAndCommerceIdService offerFinderByPaymentMethodAndCommerceIdService;
     private final EntityManager entityManager;
 
     @Transactional
@@ -55,6 +58,16 @@ public class SaleCreatorService {
         sale.setUser(entityManager.getReference(com.gestion.model.User.class, userId));
         sale.setCommerce(entityManager.getReference(Commerce.class, commerceId));
         sale.setSubtotal(subtotal);
+
+        // si el metodo de pago de la venta esta asociado a una oferta activa, el descuento
+        // de la oferta prevalece sobre el descuento manual (decay en request); en caso
+        // contrario queda el descuento manual del request (puede ser null/null -> sin descuento)
+        offerFinderByPaymentMethodAndCommerceIdService
+                .findActiveByPaymentMethodAndCommerceId(sale.getPaymentMethod(), commerceId)
+                .ifPresent(offer -> {
+                    sale.setDiscountType(offer.getDiscountType());
+                    sale.setDiscount(offer.getValue());
+                });
 
         BigDecimal totalAfterDiscount = saleDiscountApplierService.applyDiscount(
                 subtotal, sale.getDiscountType(), sale.getDiscount());
