@@ -4,9 +4,18 @@ import com.gestion.dto.request.client.ClientRequest;
 import com.gestion.dto.response.client.ClientResponse;
 import com.gestion.model.Client;
 
+import java.math.BigDecimal;
+
 public class ClientMapper {
 
     public static ClientResponse toResponse(Client client) {
+        return toResponse(client, null, null, null);
+    }
+
+    public static ClientResponse toResponse(Client client,
+                                            Long salesCount,
+                                            Long pendingSalesCount,
+                                            BigDecimal totalSpent) {
         return new ClientResponse(
                 client.getId(),
                 client.getCommerce().getId(),
@@ -14,7 +23,10 @@ public class ClientMapper {
                 client.getLastName(),
                 client.getAddress(),
                 client.getPhoneNumber(),
-                client.getDni()
+                client.getDni(),
+                salesCount,
+                pendingSalesCount,
+                totalSpent
         );
     }
 

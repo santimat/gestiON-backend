@@ -1,5 +1,7 @@
 package com.gestion.dto.response.client;
 
+import java.math.BigDecimal;
+
 public record ClientResponse(
         Long id,
         Long commerceId,
@@ -7,6 +9,9 @@ public record ClientResponse(
         String lastName,
         String address,
         String phoneNumber,
-        String dni
+        String dni,
+        Long salesCount,
+        Long pendingSalesCount,
+        BigDecimal totalSpent
 ) {
 }

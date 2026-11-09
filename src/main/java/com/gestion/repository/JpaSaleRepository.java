@@ -10,9 +10,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
+
+    interface ClientSalesSummary {
+        Number getPaidSalesCount();
+        Number getPendingSalesCount();
+        BigDecimal getTotalSpent();
+    }
 
     @Query("""
             SELECT s FROM Sale s
@@ -31,6 +38,56 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
                                   @Param("paymentMethod") PaymentMethod paymentMethod,
                                   @Param("searchText") String searchText,
                                   Pageable pageable);
+
+    @Query("""
+            SELECT COUNT(s) FROM Sale s
+            WHERE s.client.id = :clientId
+              AND s.commerce.id = :commerceId
+              AND s.status = com.gestion.enums.SaleStatus.PAYED
+            """)
+    long countPaidSalesByClient(@Param("clientId") Long clientId,
+                                @Param("commerceId") Long commerceId);
+
+    @Query("""
+            SELECT COUNT(s) FROM Sale s
+            WHERE s.client.id = :clientId
+              AND s.commerce.id = :commerceId
+              AND s.status = com.gestion.enums.SaleStatus.PENDING
+            """)
+    long countPendingSalesByClient(@Param("clientId") Long clientId,
+                                   @Param("commerceId") Long commerceId);
+
+    @Query("""
+            SELECT COALESCE(SUM(s.total), 0) FROM Sale s
+            WHERE s.client.id = :clientId
+              AND s.commerce.id = :commerceId
+              AND s.status = com.gestion.enums.SaleStatus.PAYED
+            """)
+    BigDecimal sumPaidSalesTotalByClient(@Param("clientId") Long clientId,
+                                         @Param("commerceId") Long commerceId);
+
+    default ClientSalesSummary countSalesAndSpendedByClient(Long clientId, Long commerceId) {
+        long paidCount = countPaidSalesByClient(clientId, commerceId);
+        long pendingCount = countPendingSalesByClient(clientId, commerceId);
+        BigDecimal totalSpent = sumPaidSalesTotalByClient(clientId, commerceId);
+
+        return new ClientSalesSummary() {
+            @Override
+            public Number getPaidSalesCount() {
+                return paidCount;
+            }
+
+            @Override
+            public Number getPendingSalesCount() {
+                return pendingCount;
+            }
+
+            @Override
+            public BigDecimal getTotalSpent() {
+                return totalSpent;
+            }
+        };
+    }
 
     // @EntityGraph para cargar las relaciones junto con la entidad Sale, evitando el problema de N+1
     @EntityGraph(attributePaths = {"client", "sellPoint", "user"})

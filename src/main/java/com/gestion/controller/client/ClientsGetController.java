@@ -29,7 +29,6 @@ public class ClientsGetController {
             @RequestParam(required = false) String searchText,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String lastName,
-            @RequestParam(required = false) String dni,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "updatedAt") String sortBy,
@@ -38,23 +37,7 @@ public class ClientsGetController {
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
 
-        String effectiveSearchText = searchText;
-        if ((effectiveSearchText == null || effectiveSearchText.isBlank())
-                && (name != null || lastName != null)) {
-            StringBuilder builder = new StringBuilder();
-            if (name != null) {
-                builder.append(name).append(" ");
-            }
-            if (lastName != null) {
-                builder.append(lastName);
-            }
-            effectiveSearchText = builder.toString().trim();
-            if (effectiveSearchText.isBlank()) {
-                effectiveSearchText = null;
-            }
-        }
-
         return ResponseEntity.ok(clientSearcherService.searchClients(
-                authenticatedUser.getCommerceId(), effectiveSearchText, dni, pageable));
+                authenticatedUser.getCommerceId(), searchText, name, lastName, pageable));
     }
 }

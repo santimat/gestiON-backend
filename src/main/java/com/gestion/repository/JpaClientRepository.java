@@ -24,11 +24,10 @@ public interface JpaClientRepository extends JpaRepository<Client, Long> {
             WHERE c.commerce.id = :commerceId
               AND (:searchText IS NULL
                    OR LOWER(c.name) LIKE LOWER(CONCAT('%', :searchText, '%'))
-                   OR LOWER(c.lastName) LIKE LOWER(CONCAT('%', :searchText, '%')))
-              AND (:dni IS NULL OR c.dni LIKE CONCAT('%', :dni, '%'))
+                   OR LOWER(c.lastName) LIKE LOWER(CONCAT('%', :searchText, '%'))
+                   OR LOWER(c.dni) LIKE LOWER(CONCAT('%', :searchText, '%')))
             """)
     Page<Client> findAllWithFilters(@Param("commerceId") Long commerceId,
                                     @Param("searchText") String searchText,
-                                    @Param("dni") String dni,
                                     Pageable pageable);
 }
