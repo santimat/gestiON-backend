@@ -19,8 +19,9 @@ public class CommerceCurrentFinderService {
         Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
 
         String businessLogoUrl =
-                fileFinderService.getObjectUrl(commerce.getLogoName(),
-                        minioDirProperties.dir().businessLogos());
+                commerce.getLogoName() != null ?
+                        fileFinderService.getObjectUrl(commerce.getLogoName(),
+                                minioDirProperties.dir().businessLogos()) : null;
 
         return CommerceMapper.toCurrentResponse(commerce, businessLogoUrl);
     }
