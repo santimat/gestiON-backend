@@ -116,6 +116,7 @@ Los campos de filtro son opcionales; se envían como query params (`?status=PEND
 | Método | Ruta | Roles | Request | Response |
 |---|---|---|---|---|
 | GET | `/api/products` | CASHIER/OWNER | — | `Page<ProductResponse>` · filtros: `categoryId`, `searchText`, `active` |
+| GET | `/api/products/with-offer` | CASHIER/OWNER | — | `Page<ProductWithOfferResponse>` · filtros: `categoryId`, `searchText`, `active` · incluye oferta vigente, precio con descuento y precio sugerido |
 | POST | `/api/products` | OWNER | `ProductRequest` (multipart, campo `image` opcional) | `ProductResponse` (201) |
 | PUT | `/api/products/{id}` | OWNER | `ProductUpdateRequest` (multipart) | `ProductResponse` |
 | PATCH | `/api/products/{id}/toggle-active` | OWNER | — | `ProductUpdateActiveResponse` |
@@ -193,8 +194,10 @@ del request.
 | Método | Ruta | Roles | Request | Response |
 |---|---|---|---|---|
 | GET | `/api/offers` | CASHIER/OWNER | — | `Page<OfferResponse>` · filtros: `status`, `paymentMethod`, `offerType` |
+| GET | `/api/offers/payment-methods` | CASHIER/OWNER | — | `List<OfferPaymentMethodResponse>` (métodos de pago con oferta vigente) |
 | POST | `/api/offers` | OWNER | `OfferRequest` (JSON) | `OfferResponse` (201) |
 | PUT | `/api/offers/{id}` | OWNER | `OfferUpdateRequest` (JSON) | `OfferResponse` |
+| PUT | `/api/offers/{id}/products` | OWNER | `OfferProductIdsRequest` (JSON) | `200 OK` (asigna productos a la oferta) |
 
 - El `value` de la oferta se interpreta según `discountType`: con `PERCENTAGE` es un porcentaje y no
   puede superar el 100% (`400 DISCOUNT_PERCENTAGE_EXCEEDS_100`); con `FIXED_AMOUNT` es un monto y
@@ -202,6 +205,9 @@ del request.
 - Cada oferta tiene un `offerType` derivado de sus `paymentMethods`: con al menos un método de pago es
   `PAYMENT_METHOD`, y sin métodos es `PRODUCT`. Se filtra con `?offerType=PRODUCT` o
   `?offerType=PAYMENT_METHOD`, y se refleja en `OfferResponse.offerType`.
+- `GET /api/offers/payment-methods` devuelve, por cada método de pago con oferta vigente, el método de pago
+  (key del enum), el valor y el tipo de descuento de la oferta. Pensado para la vista de venta, de modo de
+  mostrar en tiempo real el descuento aplicado a cada método de pago.
 
 ## Códigos de error frecuentes
 
