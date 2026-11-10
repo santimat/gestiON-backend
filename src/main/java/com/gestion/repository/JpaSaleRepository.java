@@ -2,12 +2,14 @@ package com.gestion.repository;
 
 import com.gestion.dto.project.PeriodRange;
 import com.gestion.dto.response.sale.PeriodProductCount;
+import com.gestion.dto.response.sale.TopProductsSoldResponse;
 import com.gestion.enums.PaymentMethod;
 import com.gestion.enums.PeriodGranularity;
 import com.gestion.enums.SaleStatus;
 import com.gestion.model.Sale;
 import com.gestion.model.SaleDetail;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -251,6 +253,32 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
             result.add(new PeriodProductCount(weekStart.toString(), grouped.getOrDefault(week, 0L)));
         }
         return result;
+    }
+
+    @Query("""
+            SELECT new com.gestion.dto.response.sale.TopProductsSoldResponse(
+                p.id,
+                p.name,
+                SUM(sd.quantity)
+            )
+            FROM SaleDetail sd
+            JOIN sd.sale s
+            JOIN sd.product p
+            WHERE s.commerce.id = :commerceId
+              AND s.status = com.gestion.enums.SaleStatus.PAYED
+              AND s.createdAt >= :start
+              AND s.createdAt < :end
+            GROUP BY p.id, p.name
+            ORDER BY SUM(sd.quantity) DESC
+            """)
+    List<TopProductsSoldResponse> topProductsSoldByCommerceId(@Param("commerceId") Long commerceId,
+                                                              @Param("start") Instant start,
+                                                              @Param("end") Instant end,
+                                                              Pageable pageable);
+
+    default List<TopProductsSoldResponse> getTopProductsSold(Long commerceId, int limit) {
+        PeriodRange range = resolveRange(PeriodGranularity.MONTH);
+        return topProductsSoldByCommerceId(commerceId, range.start(), range.end(), PageRequest.of(0, limit));
     }
 
     interface ClientSalesSummary {
