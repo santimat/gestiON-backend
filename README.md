@@ -60,8 +60,10 @@ Códigos de estado de autenticación:
   para no filtrar si el email existe).
 - `401 UNAUTHORIZED`: no hay cookie `token`, o el token es inválido o expiró.
 - `403 ACCESS_DENIED`: el rol del usuario no alcanza para el endpoint.
-- `403 ACCOUNT_DISABLED`: la cuenta o el comercio está deshabilitado (también lo devuelve
-  `GET /api/auth/me` para un comercio inactivo, y el login de un comercio deshabilitado).
+- `403 ACCOUNT_DISABLED`: el **comercio** del usuario está deshabilitado (también lo devuelve
+  `GET /api/auth/me` y el login de un comercio deshabilitado). Ojo: un usuario dado de baja
+  individualmente —el flag `active` de un cajero— **sigue pudiendo autenticarse**, porque ese flag
+  no se valida en el login.
 
 CORS: el origen habilitado es `http://localhost:5173` (el front de desarrollo), con credenciales y
 `Set-Cookie` expuesto. Solo `POST /api/auth/login` y los preflight `OPTIONS` son públicos; el resto
@@ -76,8 +78,9 @@ de las rutas cae en deny-all.
 | `CASHIER` | Cajero: consulta catálogo/clientes y registra ventas |
 
 Todo dato está **scopeado al comercio del JWT**: consultar un recurso de otro comercio responde
-`404` (nunca `403`, para no filtrar su existencia). El `403` queda reservado para problemas de rol
-o de cuenta deshabilitada.
+`404` (nunca `403`, para no filtrar su existencia). El `403` queda reservado para el rol
+insuficiente, la cuenta o el comercio deshabilitados, y para un usuario sin comercio en el JWT
+(el SUDO).
 
 ## Convenciones de listado
 
@@ -99,6 +102,10 @@ responden con un `Page` de Spring Data serializado directo, **sin envoltorio**:
 (junto a esos metadatos viajan también `numberOfElements`, `empty`, `sort` y `pageable`).
 
 Los campos de filtro son opcionales; se envían como query params (`?status=PENDING&searchText=marta`).
+
+Ningún listado filtra por `active` salvo que el endpoint lo pida explícitamente: `GET
+/api/categories`, `GET /api/cashiers` y `GET /api/sell-points` devuelven también los dados de baja,
+y en `GET /api/products` el filtro `active` es opcional (si se omite, trae los inactivos).
 
 Defaults de paginación y orden por recurso:
 
@@ -156,7 +163,8 @@ Defaults de paginación y orden por recurso:
   `409 COMMERCE_CUIT_ALREADY_EXISTS`, `409 COMMERCE_ADDRESS_ALREADY_EXISTS`).
 - `PATCH /api/commerces` **nuevo**: actualización parcial del comercio del OWNER autenticado. Todos
   los campos son opcionales y solo se actualizan los que llegan: `name` (2–100 caracteres),
-  `profitMultiplier` (positivo), `image`. Devuelve el comercio tal como lo ve `GET /api/commerces/current`.
+  `profitMultiplier` (positivo), `image`. Si mandás `image`, **reemplaza** el logo anterior (el
+  archivo viejo se borra de MinIO). Devuelve el comercio tal como lo ve `GET /api/commerces/current`.
 - `PATCH /api/commerces/profit-multiplier` solo cambia el multiplicador de ganancia del comercio.
 
 ### Dashboard y estadísticas
@@ -173,8 +181,9 @@ Defaults de paginación y orden por recurso:
   (lista de `period` + `quantity`) y `profit`.
 - Todas las estadísticas cuentan **solo ventas `PAYED`**. Ojo con `profit`: es la **suma de los
   totales** de esas ventas (ingresos del período), no el margen contra el costo.
-- `productsSoldByPeriod` agrupa por hora (`HH:00`), por día (`yyyy-MM-dd`) o por semana (el lunes de
-  esa semana), según la granularidad.
+- `productsSoldByPeriod` agrupa según la granularidad: por hora (`HH:00`), por día (`yyyy-MM-dd`) o
+  en bloques de 7 días. Ojo con `MONTH`: los bloques arrancan en el día 30 de la ventana y `period`
+  es la fecha de **inicio** del bloque, no un lunes de calendario.
 - `top-products`: ranking por cantidad vendida, contando **solo ventas `PAYED`** de los últimos 30
   días (ventana fija, no depende de ninguna granularidad). Cada item trae `productId`, `productName`
   y `quantity`.
@@ -222,15 +231,22 @@ Defaults de paginación y orden por recurso:
 | PUT | `/api/clients/{id}` | CASHIER/OWNER | `ClientRequest` (JSON) | `ClientResponse` |
 | GET | `/api/clients/{clientId}/pending-sales-with-details` | CASHIER/OWNER | — | `PendingSalesWithDetailsResponse` **nuevo** |
 
-- **Ojo con los dos identificadores**: el detalle por cliente usa el **DNI** (`/api/clients/{dni}`) y
-  las ventas pendientes usan el **id de cliente** (`/api/clients/{clientId}/...`). No son
-  intercambiables.
-- `ClientRequest`: `name`, `lastName`, `address`, `phoneNumber`, `dni` (todos obligatorios, entre 2
-  y 20/50 caracteres).
-- `ClientResponse` incluye el resumen de cuenta corriente: `salesCount`, `pendingSalesCount`,
-  `totalSpent` y `totalPending`.
+- **Ojo con los identificadores**: el detalle por cliente usa el **DNI** (`/api/clients/{dni}`), la
+  actualización usa el **id de cliente** (`/api/clients/{id}`) y las ventas pendientes también
+  (`/api/clients/{clientId}/...`). No son intercambiables.
+- **Los filtros de búsqueda no son independientes**: `searchText` busca (parcial, case-insensitive)
+  contra nombre, apellido o DNI. Si no mandás `searchText`, los parámetros `name` y `lastName` se
+  **unen en un único texto** que se busca igual contra nombre, apellido o DNI: mandar
+  `?name=Juan&lastName=Perez` busca el literal "Juan Perez" y no matchea un cliente que se llame
+  Juan Pérez. Y si mandás `searchText`, los otros dos se ignoran.
+- `ClientRequest`: `name`, `lastName`, `phoneNumber` y `dni` son obligatorios y admiten entre 2 y 20
+  caracteres; `address` es obligatoria y admite entre 2 y 50.
+- El resumen de cuenta corriente (`salesCount`, `pendingSalesCount`, `totalSpent`, `totalPending`)
+  viene calculado **solo en el listado** `GET /api/clients`. En `GET /api/clients/{dni}`, `POST` y
+  `PUT /api/clients/{id}` esos cuatro campos llegan en `null` (no en cero).
 - `GET /api/clients/{clientId}/pending-sales-with-details` **nuevo** devuelve `pendingSalesCount`,
-  `totalPending` y `pendingSales` (lista de `SaleResponse`), ordenadas por fecha de creación. Ojo:
+  `totalPending` y `pendingSales` (lista de `SaleResponse`), ordenadas por fecha de creación
+  (ascendente). Ojo:
   **no valida que el cliente exista** — si no tiene ventas pendientes (o no existe) responde
   `pendingSalesCount: 0`, `totalPending: 0` y `pendingSales: []`, no `404`.
 - El DNI es único **por comercio** (`409 CLIENT_DNI_ALREADY_EXISTS`).
@@ -256,6 +272,8 @@ Defaults de paginación y orden por recurso:
   ids de cajeros). El nombre es único por comercio (`409 SELL_POINT_NAME_ALREADY_EXISTS`). Un cajero
   reasignado a otro punto deja de pertenecer al anterior. Un `cashierIds` inexistente o de otro
   comercio responde `404 USER_NOT_FOUND`.
+- En el PUT, el `cashierIds` **reemplaza** el conjunto de cajeros del punto: los que no vengas en la
+  lista quedan desasignados (no se mergean).
 - `GET /api/sell-points` devuelve **también los puntos inactivos** (no filtra por `active`).
 - Un cajero pertenece a un solo punto de venta; el punto se toma del JWT al registrar ventas, nunca
   del request.
@@ -350,9 +368,9 @@ Lo incorporado respecto de la versión anterior de este documento:
 - Alertas de stock bajo (`GET /api/products/low-stock`).
 - Ventas pendientes de un cliente con detalle (`GET /api/clients/{clientId}/pending-sales-with-details`).
 - Actualización parcial del comercio (`PATCH /api/commerces`).
-- Resumen de cuenta corriente en la respuesta de clientes (`salesCount`, `pendingSalesCount`,
-  `totalSpent`, `totalPending`).
-- Filtros por texto y nombre en el listado de clientes y en el de cajeros.
+- Resumen de cuenta corriente en el **listado** de clientes (`salesCount`, `pendingSalesCount`,
+  `totalSpent`, `totalPending`; en el resto de las respuestas de cliente vienen en `null`).
+- Filtro de texto en el listado de clientes y en el de cajeros.
 
 ## Códigos de error
 
@@ -368,7 +386,7 @@ Lo incorporado respecto de la versión anterior de este documento:
 | **Autenticación y autorización** | | |
 | `INVALID_CREDENTIALS` | 401 | Email o contraseña incorrectos |
 | `UNAUTHORIZED` | 401 | Sin cookie `token` o token inválido |
-| `ACCOUNT_DISABLED` | 403 | Cuenta o comercio deshabilitado |
+| `ACCOUNT_DISABLED` | 403 | Comercio del usuario deshabilitado |
 | `ACCESS_DENIED` | 403 | Rol insuficiente para el endpoint |
 | **Recurso inexistente (404)** | | |
 | `USER_NOT_FOUND` | 404 | Usuario inexistente |
@@ -395,7 +413,7 @@ Lo incorporado respecto de la versión anterior de este documento:
 | `DATA_INTEGRITY_VIOLATION` | 409 | La operación viola una restricción de integridad |
 | **Descuentos** | | |
 | `INVALID_DISCOUNT` | 400 | Descuento inválido |
-| `INVALID_DISCOUNT_PREFIX_ZERO` | 400 | Descuento igual a cero |
+| `INVALID_DISCOUNT_PREFIX_ZERO` | 400 | Descuento igual a cero (el backend no llega a emitirlo hoy) |
 | `DISCOUNT_WITHOUT_TYPE` | 400 | Monto de descuento sin `discountType` |
 | `TYPE_WITHOUT_DISCOUNT` | 400 | `discountType` sin monto de descuento |
 | `DISCOUNT_EXCEEDS_SUBTOTAL` | 400 | Descuento fijo mayor al subtotal de la venta |
