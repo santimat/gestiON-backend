@@ -1,8 +1,9 @@
 package com.gestion.controller.sale;
 
 import com.gestion.config.UserPrincipal;
-import com.gestion.dto.response.sale.SalesStatsResponse;
-import com.gestion.service.sale.SalesStatsService;
+import com.gestion.dto.response.sale.SalesStatsByPeriodResponse;
+import com.gestion.enums.PeriodGranularity;
+import com.gestion.service.sale.SalesStatsByProfitGetterService;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,22 +14,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
-
 @RestController
 @RequestMapping("/api/sales")
 @AllArgsConstructor
-public class GetSalesStatsController {
+public class SalesStatsByPeriodGetController {
 
-    private final SalesStatsService salesStatsService;
+    private final SalesStatsByProfitGetterService salesStatsService;
 
     @GetMapping("/stats")
     @PreAuthorize("hasRole('OWNER')")
-    public ResponseEntity<SalesStatsResponse> getSalesStats(
-            @RequestParam @NotNull LocalDate startDate,
-            @RequestParam @NotNull LocalDate endDate,
+    public ResponseEntity<SalesStatsByPeriodResponse> getSalesStats(
+            @RequestParam @NotNull PeriodGranularity granularity,
             @AuthenticationPrincipal UserPrincipal authenticatedUser) {
         return ResponseEntity.ok(salesStatsService.getSalesStats(
-                authenticatedUser.getCommerceId(), startDate, endDate));
+                authenticatedUser.getCommerceId(), granularity));
     }
 }

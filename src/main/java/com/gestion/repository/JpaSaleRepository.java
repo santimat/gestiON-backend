@@ -1,7 +1,9 @@
 package com.gestion.repository;
 
+import com.gestion.dto.project.PeriodRange;
 import com.gestion.dto.response.sale.PeriodProductCount;
 import com.gestion.enums.PaymentMethod;
+import com.gestion.enums.PeriodGranularity;
 import com.gestion.enums.SaleStatus;
 import com.gestion.model.Sale;
 import com.gestion.model.SaleDetail;
@@ -13,8 +15,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
-import java.time.*;
-import java.time.temporal.ChronoField;
+import java.math.RoundingMode;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +28,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
+
+    ZoneId BUSINESS_ZONE = ZoneId.of("America/Argentina/Buenos_Aires");
 
     @Query("""
             SELECT s FROM Sale s
@@ -111,7 +118,6 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
     @EntityGraph(attributePaths = {"client", "sellPoint", "user"})
     Optional<Sale> findByIdAndCommerceId(Long id, Long commerceId);
 
-    
     @Query("""
             SELECT COALESCE(SUM(s.total), 0) FROM Sale s
             WHERE s.commerce.id = :commerceId
@@ -122,16 +128,6 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
     BigDecimal sumPayedTotalByCommerceBetween(@Param("commerceId") Long commerceId,
                                               @Param("start") java.time.Instant start,
                                               @Param("end") java.time.Instant end);
-
-    default BigDecimal getProfitByPeriod(Long commerceId, LocalDate startDate, LocalDate endDate) {
-        ZoneId zone = ZoneOffset.UTC;
-        Instant start = startDate.atStartOfDay(zone).toInstant();
-        Instant end = startDate.equals(endDate)
-                ? startDate.plusDays(1).atStartOfDay(zone).toInstant()
-                : endDate.atStartOfDay(zone).toInstant();
-        return sumPayedTotalByCommerceBetween(commerceId, start, end);
-    }
-
 
     @Query("""
             SELECT COUNT(s) FROM Sale s
@@ -144,16 +140,6 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
                             @Param("start") Instant start,
                             @Param("end") Instant end);
 
-    default long getSalesCountByPeriod(Long commerceId, LocalDate startDate, LocalDate endDate) {
-        ZoneId zone = ZoneOffset.UTC;
-        Instant start = startDate.atStartOfDay(zone).toInstant();
-        Instant end = startDate.equals(endDate)
-                ? startDate.plusDays(1).atStartOfDay(zone).toInstant()
-                : endDate.atStartOfDay(zone).toInstant();
-        return countSalesByPeriod(commerceId, start, end);
-    }
-
-
     @Query("""
             SELECT COALESCE(AVG(s.total), 0) FROM Sale s
             WHERE s.commerce.id = :commerceId
@@ -164,17 +150,6 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
     Double averageSaleValueByPeriod(@Param("commerceId") Long commerceId,
                                     @Param("start") java.time.Instant start,
                                     @Param("end") java.time.Instant end);
-
-    default BigDecimal getAverageSaleValueByPeriod(Long commerceId, LocalDate startDate, LocalDate endDate) {
-        ZoneId zone = ZoneOffset.UTC;
-        Instant start = startDate.atStartOfDay(zone).toInstant();
-        Instant end = startDate.equals(endDate)
-                ? startDate.plusDays(1).atStartOfDay(zone).toInstant()
-                : endDate.atStartOfDay(zone).toInstant();
-        Double avg = averageSaleValueByPeriod(commerceId, start, end);
-        return avg == null ? BigDecimal.ZERO : BigDecimal.valueOf(avg);
-    }
-
 
     @Query("""
             SELECT d FROM SaleDetail d
@@ -188,58 +163,92 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
                                          @Param("start") Instant start,
                                          @Param("end") Instant end);
 
-    default List<PeriodProductCount> getProductsSoldByPeriod(
-            Long commerceId, LocalDate startDate, LocalDate endDate) {
-        ZoneId zone = ZoneOffset.UTC;
+    default PeriodRange resolveRange(PeriodGranularity granularity) {
+        ZoneId zone = BUSINESS_ZONE;
+        Instant now = Instant.now();
+        LocalDate today = LocalDate.now(zone);
+        LocalDate startDate;
+
+        switch (granularity) {
+            case DAY -> startDate = today;
+            case WEEK -> startDate = today.minusDays(6);
+            case MONTH -> startDate = today.minusDays(29);
+            default -> throw new IllegalArgumentException("Unsupported granularity: " + granularity);
+        }
 
         Instant start = startDate.atStartOfDay(zone).toInstant();
-        Instant end = startDate.equals(endDate)
-                ? startDate.plusDays(1).atStartOfDay(zone).toInstant()
-                : endDate.atStartOfDay(zone).toInstant();
+        return new PeriodRange(start, now, startDate, today);
+    }
 
-        List<SaleDetail> details = saleDetailsInPeriod(commerceId, start, end);
+    default BigDecimal getProfitByPeriod(Long commerceId, PeriodGranularity granularity) {
+        PeriodRange range = resolveRange(granularity);
+        return sumPayedTotalByCommerceBetween(commerceId, range.start(), range.end());
+    }
 
-        boolean byHour = startDate.equals(endDate);
-        boolean byWeek = !byHour && ChronoUnit.DAYS.between(startDate, endDate) + 1 <= 7;
-        // fallback to week when exactly up to 7 calendar days, otherwise month
+    default long getSalesCountByPeriod(Long commerceId, PeriodGranularity granularity) {
+        PeriodRange range = resolveRange(granularity);
+        return countSalesByPeriod(commerceId, range.start(), range.end());
+    }
 
-        if (byHour) {
-            Map<Integer, Long> grouped = details.stream()
-                    .collect(Collectors.groupingBy(
-                            d -> d.getSale().getCreatedAt().atZone(zone).getHour(),
-                            Collectors.summingLong(SaleDetail::getQuantity)));
-            List<PeriodProductCount> result = new ArrayList<>();
-            for (int hour = 0; hour < 24; hour++) {
-                result.add(new PeriodProductCount(
-                        String.format("%02d:00", hour),
-                        grouped.getOrDefault(hour, 0L)));
-            }
-            return result;
-        }
+    default BigDecimal getAverageSaleValueByPeriod(Long commerceId, PeriodGranularity granularity) {
+        PeriodRange range = resolveRange(granularity);
+        Double avg = averageSaleValueByPeriod(commerceId, range.start(), range.end());
+        return avg == null ? BigDecimal.ZERO : BigDecimal.valueOf(avg).setScale(2, RoundingMode.HALF_UP);
+    }
 
-        if (byWeek) {
-            Map<DayOfWeek, Long> grouped = details.stream()
-                    .collect(Collectors.groupingBy(
-                            d -> d.getSale().getCreatedAt().atZone(zone).getDayOfWeek(),
-                            Collectors.summingLong(SaleDetail::getQuantity)));
-            List<PeriodProductCount> result = new ArrayList<>();
-            for (DayOfWeek day : DayOfWeek.values()) {
-                result.add(new PeriodProductCount(
-                        day.name(),
-                        grouped.getOrDefault(day, 0L)));
-            }
-            return result;
-        }
+    default List<PeriodProductCount> getProductsSoldByPeriod(Long commerceId, PeriodGranularity granularity) {
+        ZoneId zone = BUSINESS_ZONE;
+        PeriodRange range = resolveRange(granularity);
+        List<SaleDetail> details = saleDetailsInPeriod(commerceId, range.start(), range.end());
 
+        return switch (granularity) {
+            case DAY -> groupByHour(details, zone);
+            case WEEK -> groupByDay(details, zone, range.startDate(), range.endDate());
+            case MONTH -> groupByWeek(details, zone, range.startDate(), range.endDate());
+        };
+    }
+
+    private List<PeriodProductCount> groupByHour(List<SaleDetail> details, ZoneId zone) {
         Map<Integer, Long> grouped = details.stream()
                 .collect(Collectors.groupingBy(
-                        d -> d.getSale().getCreatedAt().atZone(zone).get(ChronoField.ALIGNED_WEEK_OF_MONTH),
+                        d -> d.getSale().getCreatedAt().atZone(zone).getHour(),
                         Collectors.summingLong(SaleDetail::getQuantity)));
-        java.util.List<PeriodProductCount> result = new java.util.ArrayList<>();
-        for (int week = 1; week <= 4; week++) {
-            result.add(new PeriodProductCount(
-                    "Week " + week,
-                    grouped.getOrDefault(week, 0L)));
+
+        int currentHour = ZonedDateTime.now(zone).getHour();
+        List<PeriodProductCount> result = new ArrayList<>();
+        for (int hour = 0; hour <= currentHour; hour++) {
+            result.add(new PeriodProductCount(String.format("%02d:00", hour), grouped.getOrDefault(hour, 0L)));
+        }
+        return result;
+    }
+
+    private List<PeriodProductCount> groupByDay(List<SaleDetail> details, ZoneId zone, LocalDate startDate, LocalDate endDate) {
+        Map<LocalDate, Long> grouped = details.stream()
+                .collect(Collectors.groupingBy(
+                        d -> d.getSale().getCreatedAt().atZone(zone).toLocalDate(),
+                        Collectors.summingLong(SaleDetail::getQuantity)));
+
+        List<PeriodProductCount> result = new ArrayList<>();
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            result.add(new PeriodProductCount(date.toString(), grouped.getOrDefault(date, 0L)));
+        }
+        return result;
+    }
+
+    private List<PeriodProductCount> groupByWeek(List<SaleDetail> details, ZoneId zone, LocalDate startDate, LocalDate endDate) {
+        Map<Long, Long> grouped = details.stream()
+                .collect(Collectors.groupingBy(
+                        d -> {
+                            LocalDate date = d.getSale().getCreatedAt().atZone(zone).toLocalDate();
+                            return ChronoUnit.DAYS.between(startDate, date) / 7;
+                        },
+                        Collectors.summingLong(SaleDetail::getQuantity)));
+
+        long totalWeeks = ChronoUnit.DAYS.between(startDate, endDate) / 7 + 1;
+        List<PeriodProductCount> result = new ArrayList<>();
+        for (long week = 0; week < totalWeeks; week++) {
+            LocalDate weekStart = startDate.plusDays(week * 7);
+            result.add(new PeriodProductCount(weekStart.toString(), grouped.getOrDefault(week, 0L)));
         }
         return result;
     }
@@ -253,4 +262,6 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
 
         BigDecimal getTotalPending();
     }
+
+
 }

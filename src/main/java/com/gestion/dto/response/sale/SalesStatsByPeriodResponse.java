@@ -3,7 +3,7 @@ package com.gestion.dto.response.sale;
 import java.math.BigDecimal;
 import java.util.List;
 
-public record SalesStatsResponse(
+public record SalesStatsByPeriodResponse(
         long salesCount,
         BigDecimal averageSaleValue,
         List<PeriodProductCount> productsSoldByPeriod,

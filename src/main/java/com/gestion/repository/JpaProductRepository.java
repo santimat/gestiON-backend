@@ -1,6 +1,7 @@
 package com.gestion.repository;
 
 import com.gestion.dto.project.CategoryProductCount;
+import com.gestion.dto.response.product.ProductLowStockResponse;
 import com.gestion.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,5 +47,19 @@ public interface JpaProductRepository extends JpaRepository<Product, Long> {
             """)
     List<CategoryProductCount> countByCategoryIds(@Param("commerceId") Long commerceId,
                                                   @Param("categoryIds") List<Long> categoryIds);
+
+    @Query("""
+            SELECT new com.gestion.dto.response.product.ProductLowStockResponse(
+                p.id,
+                p.name,
+                p.minStock,
+                p.currentStock
+            )
+            FROM Product p
+            WHERE p.commerce.id = :commerceId
+              AND p.active = true
+              AND p.currentStock <= p.minStock
+            """)
+    List<ProductLowStockResponse> findLowStockProductsByCommerceId(@Param("commerceId") Long commerceId);
 
 }
