@@ -8,10 +8,10 @@ import java.math.BigDecimal;
 
 public class ClientMapper {
 
-    public static ClientResponse toResponse(Client client) {
-        return toResponse(client, null, null, null, null);
-    }
-
+    /**
+     * Solo existe el overload con el resumen de cuenta corriente: el que no lo recibe deja los
+     * campos en null, así que construir la respuesta pasa siempre por ClientResponseAssembler.
+     */
     public static ClientResponse toResponse(Client client,
                                             Long salesCount,
                                             Long pendingSalesCount,

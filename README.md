@@ -242,8 +242,8 @@ Defaults de paginación y orden por recurso:
 - `ClientRequest`: `name`, `lastName`, `phoneNumber` y `dni` son obligatorios y admiten entre 2 y 20
   caracteres; `address` es obligatoria y admite entre 2 y 50.
 - El resumen de cuenta corriente (`salesCount`, `pendingSalesCount`, `totalSpent`, `totalPending`)
-  viene calculado **solo en el listado** `GET /api/clients`. En `GET /api/clients/{dni}`, `POST` y
-  `PUT /api/clients/{id}` esos cuatro campos llegan en `null` (no en cero).
+  viene calculado en **todos** los endpoints que devuelven un cliente (listado, detalle, alta y
+  edición). Un cliente sin ventas devuelve `0` en los contadores y `0.00` en los montos.
 - `GET /api/clients/{clientId}/pending-sales-with-details` **nuevo** devuelve `pendingSalesCount`,
   `totalPending` y `pendingSales` (lista de `SaleResponse`), ordenadas por fecha de creación
   (ascendente). Ojo:
@@ -368,8 +368,8 @@ Lo incorporado respecto de la versión anterior de este documento:
 - Alertas de stock bajo (`GET /api/products/low-stock`).
 - Ventas pendientes de un cliente con detalle (`GET /api/clients/{clientId}/pending-sales-with-details`).
 - Actualización parcial del comercio (`PATCH /api/commerces`).
-- Resumen de cuenta corriente en el **listado** de clientes (`salesCount`, `pendingSalesCount`,
-  `totalSpent`, `totalPending`; en el resto de las respuestas de cliente vienen en `null`).
+- Resumen de cuenta corriente en la respuesta de clientes (`salesCount`, `pendingSalesCount`,
+  `totalSpent`, `totalPending`), también en el detalle, el alta y la edición.
 - Filtro de texto en el listado de clientes y en el de cajeros.
 
 ## Códigos de error

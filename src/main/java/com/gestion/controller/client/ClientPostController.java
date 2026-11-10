@@ -3,8 +3,8 @@ package com.gestion.controller.client;
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.client.ClientRequest;
 import com.gestion.dto.response.client.ClientResponse;
-import com.gestion.mappers.ClientMapper;
 import com.gestion.service.client.ClientCreatorService;
+import com.gestion.service.client.ClientResponseAssembler;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,13 +21,16 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class ClientPostController {
     private final ClientCreatorService clientCreatorService;
+    private final ClientResponseAssembler clientResponseAssembler;
 
     @PostMapping
     @PreAuthorize("hasRole('OWNER') or hasRole('CASHIER')")
     public ResponseEntity<ClientResponse> createClient(
             @RequestBody @Valid ClientRequest request,
             @AuthenticationPrincipal UserPrincipal authenticatedUser) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ClientMapper.toResponse(clientCreatorService.createClient(request, authenticatedUser.getCommerceId())));
+        ClientResponse response = clientResponseAssembler.toResponse(
+                clientCreatorService.createClient(request, authenticatedUser.getCommerceId()),
+                authenticatedUser.getCommerceId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
