@@ -26,5 +26,19 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
 
     Page<User> findAllByRole(Role role, Pageable pageable);
 
+    // join fetch trae el commerce del cajero evitando el n+1
+    @Query("""
+            SELECT u FROM User u
+            JOIN FETCH u.commerce c
+            WHERE u.role = com.gestion.enums.Role.CASHIER
+              AND c.id = :commerceId
+              AND (:searchText IS NULL
+                   OR LOWER(u.name) LIKE LOWER(CONCAT('%', :searchText, '%'))
+                   OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchText, '%')))
+            """)
+    Page<User> findAllCashiersWithFilters(@Param("commerceId") Long commerceId,
+                                           @Param("searchText") String searchText,
+                                           Pageable pageable);
+
     Page<User> findAllBySellPointIdAndCommerceId(Long sellPointId, Long commerceId, Pageable pageable);
 }

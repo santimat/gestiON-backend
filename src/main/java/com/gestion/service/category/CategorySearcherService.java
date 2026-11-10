@@ -22,8 +22,8 @@ public class CategorySearcherService {
     private ProductCounterByCategoryIds productCounterByCategoryIds;
 
     @Transactional(readOnly = true)
-    public Page<CategoryResponse> searchCategories(Long commerceId, Pageable pageable) {
-        Page<Category> categories = jpaCategoryRepository.findAllByCommerceId(commerceId, pageable);
+    public Page<CategoryResponse> searchCategories(Long commerceId, String categoryName, Pageable pageable) {
+        Page<Category> categories = jpaCategoryRepository.findAllWithFilters(commerceId, categoryName, pageable);
 
         List<Long> categoryIds = categories.getContent().stream()
                 .map(Category::getId)

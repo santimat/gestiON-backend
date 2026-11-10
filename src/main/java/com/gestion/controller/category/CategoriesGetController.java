@@ -30,11 +30,13 @@ public class CategoriesGetController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "updatedAt") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String categoryName) {
         Sort.Direction sortDirection = Sort.Direction.fromString(sortDir);
         Sort sortConfig = Sort.by(sortDirection, sortBy);
         Pageable pageable = PageRequest.of(page, size, sortConfig);
 
-        return ResponseEntity.ok(categorySearcherService.searchCategories(authenticatedUser.getCommerceId(), pageable));
+        return ResponseEntity.ok(categorySearcherService
+                .searchCategories(authenticatedUser.getCommerceId(), categoryName, pageable));
     }
 }

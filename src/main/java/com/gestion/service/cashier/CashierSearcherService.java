@@ -2,7 +2,6 @@ package com.gestion.service.cashier;
 
 
 import com.gestion.dto.response.user.UserResponse;
-import com.gestion.enums.Role;
 import com.gestion.mappers.UserMapper;
 import com.gestion.model.User;
 import com.gestion.repository.JpaUserRepository;
@@ -16,8 +15,10 @@ import org.springframework.stereotype.Service;
 public class CashierSearcherService {
     private JpaUserRepository jpaUserRepository;
 
-    public Page<UserResponse> searchCashier(Pageable pageable) {
-        Page<User> cashiers = jpaUserRepository.findAllByRole(Role.CASHIER, pageable);
+    public Page<UserResponse> searchCashiers(Long commerceId, String searchText, Pageable pageable) {
+        String effectiveSearchText = (searchText == null || searchText.isBlank()) ? null : searchText.trim();
+        Page<User> cashiers = jpaUserRepository
+                .findAllCashiersWithFilters(commerceId, effectiveSearchText, pageable);
         return cashiers.map(UserMapper::toResponse);
     }
 }
