@@ -1,5 +1,6 @@
 package com.gestion.repository;
 
+import com.gestion.dto.project.ClientAccountSummary;
 import com.gestion.dto.project.PeriodRange;
 import com.gestion.dto.response.sale.PeriodProductCount;
 import com.gestion.dto.response.sale.TopProductsSoldResponse;
@@ -24,6 +25,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,70 +53,25 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
                                   @Param("searchText") String searchText,
                                   Pageable pageable);
 
+    /**
+     * Resumen de cuenta corriente de varios clientes en una sola query: cantidad de ventas pagadas y
+     * pendientes, y suma de sus totales. Los clientes sin ventas no aparecen en el resultado.
+     */
     @Query("""
-            SELECT COUNT(s) FROM Sale s
-            WHERE s.client.id = :clientId
-              AND s.commerce.id = :commerceId
-              AND s.status = com.gestion.enums.SaleStatus.PAYED
+            SELECT new com.gestion.dto.project.ClientAccountSummary(
+                s.client.id,
+                SUM(CASE WHEN s.status = com.gestion.enums.SaleStatus.PAYED THEN 1 ELSE 0 END),
+                SUM(CASE WHEN s.status = com.gestion.enums.SaleStatus.PENDING THEN 1 ELSE 0 END),
+                SUM(CASE WHEN s.status = com.gestion.enums.SaleStatus.PAYED THEN s.total END),
+                SUM(CASE WHEN s.status = com.gestion.enums.SaleStatus.PENDING THEN s.total END))
+            FROM Sale s
+            WHERE s.commerce.id = :commerceId
+              AND s.client.id IN :clientIds
+            GROUP BY s.client.id
             """)
-    long countPaidSalesByClient(@Param("clientId") Long clientId,
-                                @Param("commerceId") Long commerceId);
-
-    @Query("""
-            SELECT COUNT(s) FROM Sale s
-            WHERE s.client.id = :clientId
-              AND s.commerce.id = :commerceId
-              AND s.status = com.gestion.enums.SaleStatus.PENDING
-            """)
-    long countPendingSalesByClient(@Param("clientId") Long clientId,
-                                   @Param("commerceId") Long commerceId);
-
-    @Query("""
-            SELECT COALESCE(SUM(s.total), 0) FROM Sale s
-            WHERE s.client.id = :clientId
-              AND s.commerce.id = :commerceId
-              AND s.status = com.gestion.enums.SaleStatus.PAYED
-            """)
-    BigDecimal sumPaidSalesTotalByClient(@Param("clientId") Long clientId,
-                                         @Param("commerceId") Long commerceId);
-
-    @Query("""
-            SELECT COALESCE(SUM(s.total), 0) FROM Sale s
-            WHERE s.client.id = :clientId
-              AND s.commerce.id = :commerceId
-              AND s.status = com.gestion.enums.SaleStatus.PENDING
-            """)
-    BigDecimal sumPendingSalesTotalByClient(@Param("clientId") Long clientId,
-                                            @Param("commerceId") Long commerceId);
-
-    default ClientSalesSummary countSalesAndSpentByClient(Long clientId, Long commerceId) {
-        long paidCount = countPaidSalesByClient(clientId, commerceId);
-        long pendingCount = countPendingSalesByClient(clientId, commerceId);
-        BigDecimal totalSpent = sumPaidSalesTotalByClient(clientId, commerceId);
-        BigDecimal totalPending = sumPendingSalesTotalByClient(clientId, commerceId);
-
-        return new ClientSalesSummary() {
-            @Override
-            public Number getPaidSalesCount() {
-                return paidCount;
-            }
-
-            @Override
-            public Number getPendingSalesCount() {
-                return pendingCount;
-            }
-
-            @Override
-            public BigDecimal getTotalSpent() {
-                return totalSpent;
-            }
-
-            @Override
-            public BigDecimal getTotalPending() {
-                return totalPending;
-            }
-        };
-    }
+    List<ClientAccountSummary> findAccountSummariesByClientIds(
+            @Param("clientIds") Collection<Long> clientIds,
+            @Param("commerceId") Long commerceId);
 
     // @EntityGraph para cargar las relaciones junto con la entidad Sale, evitando el problema de N+1
     @EntityGraph(attributePaths = {"client", "sellPoint", "user"})
@@ -280,16 +237,5 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
         PeriodRange range = resolveRange(PeriodGranularity.MONTH);
         return topProductsSoldByCommerceId(commerceId, range.start(), range.end(), PageRequest.of(0, limit));
     }
-
-    interface ClientSalesSummary {
-        Number getPaidSalesCount();
-
-        Number getPendingSalesCount();
-
-        BigDecimal getTotalSpent();
-
-        BigDecimal getTotalPending();
-    }
-
 
 }

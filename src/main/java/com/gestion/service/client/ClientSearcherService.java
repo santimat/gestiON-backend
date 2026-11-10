@@ -9,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+
 @Service
 @AllArgsConstructor
 public class ClientSearcherService {
@@ -42,6 +44,10 @@ public class ClientSearcherService {
         Page<Client> clients = jpaClientRepository
                 .findAllWithFilters(commerceId, effectiveSearchText, pageable);
 
-        return clients.map(client -> clientResponseAssembler.toResponse(client, commerceId));
+        // una sola query de resumen para toda la pagina
+        Map<Long, ClientResponse> responses = clientResponseAssembler
+                .toResponses(clients.getContent(), commerceId);
+
+        return clients.map(client -> responses.get(client.getId()));
     }
 }

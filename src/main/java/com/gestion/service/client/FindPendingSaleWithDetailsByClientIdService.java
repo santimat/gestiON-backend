@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -22,24 +23,21 @@ public class FindPendingSaleWithDetailsByClientIdService {
 
     private final JpaSaleRepository jpaSaleRepository;
     private final JpaSaleDetailRepository jpaSaleDetailRepository;
-    private final ClientSaleStatsService clientSaleStatsService;
 
     @Transactional(readOnly = true)
     public PendingSalesWithDetailsResponse findPendingSalesWithDetailsByClientId(Long clientId, Long commerceId) {
-        JpaSaleRepository.ClientSalesSummary stats = clientSaleStatsService.getClientSaleStats(clientId, commerceId);
-
-        Long pendingSalesCount = stats != null && stats.getPendingSalesCount() != null
-                ? stats.getPendingSalesCount().longValue()
-                : 0L;
-        BigDecimal totalPending = stats != null && stats.getTotalPending() != null
-                ? stats.getTotalPending()
-                : BigDecimal.ZERO;
-
         Pageable pageable = Pageable.unpaged(Sort.by(Sort.Direction.ASC, "createdAt"));
 
         List<Sale> pendingSales = jpaSaleRepository
                 .findAllWithFilters(commerceId, clientId, SaleStatus.PENDING, null, null, pageable)
                 .getContent();
+
+        // el conteo y el total salen de la misma lista: no hace falta una query extra de resumen
+        long pendingSalesCount = pendingSales.size();
+        BigDecimal totalPending = pendingSales.stream()
+                .map(Sale::getTotal)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         List<SaleResponse> pendingSaleResponses = pendingSales.stream()
                 .map(sale -> SaleMapper.toResponse(sale, jpaSaleDetailRepository.findAllBySaleId(sale.getId())))
