@@ -6,12 +6,14 @@ import com.gestion.mappers.CategoryMapper;
 import com.gestion.mappers.ProductMapper;
 import com.gestion.model.Category;
 import com.gestion.model.Commerce;
+import com.gestion.model.Offer;
 import com.gestion.model.Product;
 import com.gestion.properties.MinioProperties;
 import com.gestion.repository.JpaProductRepository;
 import com.gestion.service.category.CategoryFinderByIdAndCommerceIdService;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import com.gestion.service.file.FileFinderService;
+import com.gestion.service.offer.OfferProductPriceValidatorService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ public class ProductUpdaterService {
     private final CommerceFinderByIdService commerceFinderByIdService;
     private final ProductSuggestedPriceCalculatorService productSuggestedPriceCalculatorService;
     private final ProductPriceValidatorService productPriceValidatorService;
+    private final OfferProductPriceValidatorService offerProductPriceValidatorService;
     private final JpaProductRepository productRepository;
     private final ProductImageUploaderService productImageUploaderService;
     private final FileFinderService fileFinderService;
@@ -41,6 +44,13 @@ public class ProductUpdaterService {
                 .findCategoryByIdAndCommerceId(request.categoryId(), commerceId);
 
         productPriceValidatorService.validateSalePriceNotLowerThanCostPrice(request.costPrice(), request.salePrice());
+
+        // validar que el valor de la oferta no deje el precio del producto negativo
+        Offer assignedOffer = product.getOffer();
+        if (assignedOffer != null) {
+            offerProductPriceValidatorService
+                    .validateOfferNotGreaterThanProductPrice(assignedOffer, request.salePrice());
+        }
 
         product.setName(request.name());
         product.setDescription(request.description());

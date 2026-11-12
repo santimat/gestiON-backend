@@ -8,15 +8,19 @@ import com.gestion.enums.OfferType;
 import com.gestion.enums.PaymentMethod;
 import com.gestion.mappers.OfferMapper;
 import com.gestion.model.Offer;
+import com.gestion.model.Product;
 import com.gestion.repository.JpaOfferRepository;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import com.gestion.service.discount.DiscountRangeValidatorService;
+import com.gestion.service.product.ProductFinderByOfferIdAndCommerceIdService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -30,6 +34,8 @@ public class OfferUpdaterService {
     private final DiscountRangeValidatorService discountRangeValidatorService;
     private final OfferOverlapValidatorService offerOverlapValidatorService;
     private final OfferPaymentMethodsValidatorService offerPaymentMethodsValidatorService;
+    private final OfferProductPriceValidatorService offerProductPriceValidatorService;
+    private final ProductFinderByOfferIdAndCommerceIdService productFinderByOfferIdAndCommerceIdService;
     private final JpaOfferRepository offerRepository;
 
     @Transactional
@@ -47,8 +53,10 @@ public class OfferUpdaterService {
 
         offerDateValidatorService.validateOfferDatesForUpdate(normalizedStart, normalizedEnd, now, offer.getStartDate());
 
+        // Set.of() devuelve una coleccion inmutable: Hibernate la reemplaza al mergear la entidad
+        // y falla con UnsupportedOperationException al intentar limpiarla.
         Set<PaymentMethod> normalizedPaymentMethods =
-                request.paymentMethods() == null ? Set.of() : request.paymentMethods();
+                request.paymentMethods() == null ? new HashSet<>() : new HashSet<>(request.paymentMethods());
 
         offerPaymentMethodsValidatorService.validateNoAssignedProducts(offerId, commerceId, normalizedPaymentMethods);
 
@@ -67,6 +75,12 @@ public class OfferUpdaterService {
         offer.setEndDate(normalizedEnd);
         offer.setPaymentMethods(normalizedPaymentMethods);
         offer.setOfferType(normalizedPaymentMethods.isEmpty() ? OfferType.PRODUCT : OfferType.PAYMENT_METHOD);
+
+        // si la oferta ya tiene productos asignados, el nuevo descuento no puede superar el precio
+        // de venta de ninguno de ellos.
+        List<Product> assignedProducts = productFinderByOfferIdAndCommerceIdService
+                .findProductsByOfferIdAndCommerceId(offerId, commerceId);
+        offerProductPriceValidatorService.validateOfferNotGreaterThanProductPrices(offer, assignedProducts);
 
         Offer savedOffer = offerRepository.save(offer);
 

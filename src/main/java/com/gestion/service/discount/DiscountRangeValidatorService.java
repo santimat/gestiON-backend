@@ -34,4 +34,17 @@ public class DiscountRangeValidatorService {
                     "Fixed amount discount cannot be greater than the sale subtotal");
         }
     }
+
+    public void validateOfferValueNotGreaterThanProductSalePrice(BigDecimal offerValue,
+                                                                 BigDecimal productSalePrice) {
+        if (offerValue == null || productSalePrice == null) {
+            throw new InvalidDiscountException(ErrorCode.INVALID_DISCOUNT,
+                    "Offer value and product sale price are required");
+        }
+
+        if (offerValue.compareTo(productSalePrice) > 0) {
+            throw new InvalidDiscountException(ErrorCode.OFFER_EXCEEDS_PRODUCT_PRICE,
+                    "The offer's discount cannot be greater than the product's sale price");
+        }
+    }
 }
