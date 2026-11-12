@@ -34,6 +34,12 @@ public class AuthLoginService {
         if (!passwordMatches)
             throw new InvalidCredentialsException("Invalid email or password");
 
+        // el flag active del usuario se valida antes de emitir el token: un usuario desactivado
+        // no debe poder iniciar sesion. JwtFilter tambien lo revalida en cada request, asi que
+        // desactivar un usuario le corta el acceso aunque su token siga sin expirar.
+        if (!loginUser.isActive())
+            throw new InactiveResourceException(ErrorCode.ACCOUNT_DISABLED, "The account is disabled");
+
         if (loginUser.getCommerce() != null && !authCheckerStatusService.isCommerceUserActive(loginUser.getEmail()))
             throw new InactiveResourceException(ErrorCode.ACCOUNT_DISABLED, "The account is disabled");
 

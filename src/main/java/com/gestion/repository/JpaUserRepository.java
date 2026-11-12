@@ -1,5 +1,6 @@
 package com.gestion.repository;
 
+import com.gestion.dto.project.UserActiveStatus;
 import com.gestion.enums.Role;
 import com.gestion.model.User;
 import org.springframework.data.domain.Page;
@@ -41,4 +42,22 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
                                            Pageable pageable);
 
     Page<User> findAllBySellPointIdAndCommerceId(Long sellPointId, Long commerceId, Pageable pageable);
+
+    /**
+     * Revalida el estado de la sesion con una sola consulta minima: no carga la entidad User
+     * ni sus relaciones, solo los dos flags que deciden si la sesion sigue viva.
+     *
+     * El JwtFilter corre en cada request autenticado, asi que la consulta tiene que ser barata:
+     * es un lookup por primary key sobre dos columnas.
+     */
+    @Query("""
+            SELECT new com.gestion.dto.project.UserActiveStatus(
+                u.active,
+                c.active
+            )
+            FROM User u
+            LEFT JOIN u.commerce c
+            WHERE u.id = :userId
+            """)
+    Optional<UserActiveStatus> findActiveStatusById(@Param("userId") Long userId);
 }
