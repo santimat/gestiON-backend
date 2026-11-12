@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class CommerceUpdaterService {
     private final CommerceFinderByIdService commerceFinderByIdService;
+    private final CommerceValidatorByCuitService validatorByCuitService;
+    private final CommerceValidatorByAddressService validatorByAddressService;
     private final JpaCommerceRepository commerceRepository;
     private final FileDeleterService fileDeleterService;
     private final FileUploaderService fileUploaderService;
@@ -22,6 +24,12 @@ public class CommerceUpdaterService {
     @Transactional
     public Commerce updateCommerce(CommerceRequest request, Long commerceId) {
         Commerce commerceToUpdate = commerceFinderByIdService.findCommerceById(commerceId);
+
+        // el cuit y la direccion son unicos: sin estos chequeos la violacion de la unique
+        // constraint arrives como un DATA_INTEGRITY_VIOLATION en vez del codigo especifico.
+        validatorByCuitService.checkExistingCommerceByCuitAndIdNot(request.cuit(), commerceId);
+        validatorByAddressService.checkExistingCommerceByAddressAndIdNot(request.address(), commerceId);
+
         commerceToUpdate.setName(request.name());
         commerceToUpdate.setCuit(request.cuit());
         commerceToUpdate.setAddress(request.address());

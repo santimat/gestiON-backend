@@ -31,7 +31,7 @@ public class CommerceWithOwnerUpdaterService {
         Commerce updatedCommerce = commerceUpdaterService.updateCommerce(commerceRequest, commerceId);
 
         UserUpdateRequest userRequest = UserUpdateMapper.toUpdateRequestFromCWOUR(request);
-        User updatedUser = userUpdaterService.updateUser(userRequest, userId);
+        User updatedUser = userUpdaterService.updateUser(userRequest, userId, commerceId);
 
         String businessLogoUrl =
                 fileFinderService.getObjectUrl(updatedCommerce.getLogoName(),
