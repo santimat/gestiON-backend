@@ -3,11 +3,11 @@ package com.gestion.controller.sellpoint;
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.sellpoint.SellPointResponse;
 import com.gestion.service.sellpoint.SellPointSearcherService;
+import com.gestion.utils.PageableFactory;
+import com.gestion.utils.SortableProperties;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,9 +30,7 @@ public class SellPointsGetController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "updatedAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
-        Sort.Direction sortDirection = Sort.Direction.fromString(sortDir);
-        Sort sortConfig = Sort.by(sortDirection, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sortConfig);
+        Pageable pageable = PageableFactory.create(page, size, sortBy, sortDir, SortableProperties.SELL_POINT);
 
         return ResponseEntity.ok(sellPointSearcherService.searchSellPoints(authenticatedUser.getCommerceId(), pageable));
     }

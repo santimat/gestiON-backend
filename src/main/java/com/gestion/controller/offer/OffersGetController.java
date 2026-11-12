@@ -6,11 +6,11 @@ import com.gestion.enums.OfferStatus;
 import com.gestion.enums.OfferType;
 import com.gestion.enums.PaymentMethod;
 import com.gestion.service.offer.OfferSearcherService;
+import com.gestion.utils.PageableFactory;
+import com.gestion.utils.SortableProperties;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -36,9 +36,7 @@ public class OffersGetController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "endDate") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
-        Sort.Direction sortDirection = Sort.Direction.fromString(sortDir);
-        Sort sortConfig = Sort.by(sortDirection, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sortConfig);
+        Pageable pageable = PageableFactory.create(page, size, sortBy, sortDir, SortableProperties.OFFER);
         return ResponseEntity.ok(offerSearcherService
                 .searchOffers(authenticatedUser.getCommerceId(), status, paymentMethod, offerType, pageable));
     }

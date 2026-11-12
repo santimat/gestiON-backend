@@ -5,11 +5,11 @@ import com.gestion.dto.response.sale.SaleSummaryResponse;
 import com.gestion.enums.PaymentMethod;
 import com.gestion.enums.SaleStatus;
 import com.gestion.service.sale.SaleSearcherService;
+import com.gestion.utils.PageableFactory;
+import com.gestion.utils.SortableProperties;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -36,8 +36,7 @@ public class SalesGetController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
-        Sort sortConfig = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
-        Pageable pageable = PageRequest.of(page, size, sortConfig);
+        Pageable pageable = PageableFactory.create(page, size, sortBy, sortDir, SortableProperties.SALE);
         return ResponseEntity.ok(saleSearcherService
                 .searchSales(authenticatedUser.getCommerceId(), clientId, status, paymentMethod, searchText, pageable));
     }

@@ -10,6 +10,7 @@ import com.gestion.exception.OfferOverlapException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -151,6 +152,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponse> handleDataIntegrityViolationException(DataIntegrityViolationException exception) {
         log.error("Data integrity violation: {}", exception.getMostSpecificCause().getMessage(), exception);
         return buildResponse(ErrorCode.DATA_INTEGRITY_VIOLATION, ErrorCode.DATA_INTEGRITY_VIOLATION.getDefaultMessage());
+    }
+
+    /**
+     * Red de seguridad para los parametros de paginacion. PageableFactory ya valida page,
+     * size, sortBy y sortDir antes de armar el PageRequest, asi que en teoria no deberia
+     * llegar nada aca: pero un IllegalArgumentException o un PropertyReferenceException
+     * terminarian en el catch-all y devolverian un 500 por un error del cliente.
+     */
+    @ExceptionHandler({IllegalArgumentException.class, PropertyReferenceException.class})
+    public ResponseEntity<ExceptionResponse> handleInvalidPaginationParameter(Exception exception) {
+        log.warn("Invalid pagination parameter: {}", exception.getMessage());
+        return buildResponse(ErrorCode.INVALID_PARAMETER, ErrorCode.INVALID_PARAMETER.getDefaultMessage());
     }
 
     @ExceptionHandler(Exception.class)

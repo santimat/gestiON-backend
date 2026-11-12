@@ -3,11 +3,11 @@ package com.gestion.controller.product;
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.product.ProductWithOfferResponse;
 import com.gestion.service.product.ProductWithOfferSearcherService;
+import com.gestion.utils.PageableFactory;
+import com.gestion.utils.SortableProperties;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -33,9 +33,7 @@ public class ProductsWithOfferGetController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "updatedAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
-        Sort.Direction sortDirection = Sort.Direction.fromString(sortDir);
-        Sort sortConfig = Sort.by(sortDirection, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sortConfig);
+        Pageable pageable = PageableFactory.create(page, size, sortBy, sortDir, SortableProperties.PRODUCT);
         return ResponseEntity.ok(productWithOfferSearcherService
                 .searchProductsWithOffer(authenticatedUser.getCommerceId(), categoryId, searchText, active, pageable));
     }
