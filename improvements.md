@@ -32,7 +32,7 @@ Tres afirmaciones de los subagentes no resistieron la verificación y se ajustar
 
 ## P0 — Corregir antes de seguir
 
-### P0-1 · Se puede persistir una venta con total negativo
+### P0-1 · Se puede persistir una venta con total negativo — **RESUELTO**
 
 - **Ubicación:** `service/product/ProductDiscountedPriceCalculatorService.java:16-22` → `service/saleDetails/SaleDetailsValidatorService.java:46-47, 52, 56` → `service/sale/SaleCreatorService.java`
 - **Problema:** el precio con descuento de la oferta se calcula como `salePrice.subtract(value)` **sin guard de total negativo**, y ese valor entra como `detail.price` y se acumula en el `subtotal` de la venta.
@@ -42,50 +42,85 @@ Tres afirmaciones de los subagentes no resistieron la verificación y se ajustar
 - **Por qué importa:** una oferta `FIXED_AMOUNT` mayor que el precio del producto produce una venta con `subtotal` y `total` negativos que **se persisten**, junto con el descuento de stock. Corrompe la facturación, deja stock negativo y ensucia las estadísticas por comercio.
 - **Estado:** verificado por código y por datos. **Latente hoy**: las ofertas fijas del seed son 250.00 y 500.00 contra productos de 1100–5200, y no hay ninguna venta con `total < 0` en la base. Alcanzable por cualquier OWNER.
 - **Fix:** (a) capear la oferta contra el `salePrice` del producto al asignarla; (b) mover el guard `signum() < 0` a `ProductDiscountedPriceCalculatorService` (o hacer que este delegue en `SalePriceAfterDiscountResolverService`, que ya tiene el guard); (c) corregir el comentario desactualizado de `OfferCreatorService`.
+- **Resolución:** los tres puntos del fix están aplicados.
+  - `ProductDiscountedPriceCalculatorService` tiene el guard `signum() < 0` y devuelve
+    `409 OFFER_EXCEEDS_PRODUCT_PRICE` (`InvalidDiscountException`).
+  - El capeo contra el `salePrice` se aplica en los tres caminos de mutación:
+    `OfferAssignerProductService` (al asignar productos), `OfferUpdaterService` (al cambiar el
+    valor de una oferta que ya tiene productos) y `ProductUpdaterService` (al bajar el precio de
+    un producto que tiene oferta asignada). La lógica vive en
+    `OfferProductPriceValidatorService` + `DiscountRangeValidatorService`.
+  - El comentario obsoleto de `OfferCreatorService` y el de `SalePriceAfterDiscountResolverService`
+    están corregidos: la oferta de monto fijo se capean **al asignar y al actualizar**, no al
+    crear, porque al crearse todavía no hay productos contra los que comparar.
+  - Cubierto por `ProductDiscountedPriceCalculatorServiceTests` y
+    `OfferProductPriceValidatorServiceTests`.
 
-### P0-2 · Los borrados de archivo son no-ops silenciosos
+### P0-2 · Los borrados de archivo son no-ops silenciosos — **RESUELTO**
 
 - **Ubicación:** `service/file/FileUploaderService.java:48, 58` vs `service/file/FileDeleterService.java:26`
 - **Problema:** el upload **guarda** el objeto como `subDir + "/" + objectName` pero **devuelve** solo `objectName`; el deleter borra `objectName` sin el prefijo. La clave nunca coincide → el borrado no falla (MinIO no da error al borrar una clave inexistente) y no borra nada.
 - **Por qué importa:** los "borrar el logo anterior" / "borrar la imagen anterior" en `ProductImageUploaderService:22-24`, `CommercePartialUpdaterService:40-42` y `CommerceUpdaterService:34-36` son no-ops. El bucket crece sin límite y quedan logos/imágenes viejas (con datos de negocio) sin ruta de limpieza.
 - **Estado:** verificado. `FileFinderService:27` **sí** antepone el `subDir`, así que las URLs presignadas funcionan — el bug es solo del deleter.
 - **Fix:** pasar `subDir + "/" + objectName` al deleter, o persistir la object key completa en la entidad y usar esa.
+- **Resolución:** la clave se centralizó en `FileObjectKey.of(subDir, objectName)` y la usan el
+  uploader, el finder y el deleter, así que ya no pueden volver a divergir. Cubierto por
+  `FileObjectKeyTests`.
 
-### P0-3 · Los errores de validación multipart devuelven 500 en vez de 400
+### P0-3 · Los errores de validación multipart devuelven 500 en vez de 400 — **RESUELTO**
 
 - **Ubicación:** `exception/handler/GlobalExceptionHandler.java:120` (catch-all) vs `:67` (solo `MethodArgumentNotValidException`)
 - **Problema:** 5 endpoints bindean con `@Valid @ModelAttribute` (`ProductPostController:26`, `ProductPutController:27`, `CommercePatchController:27`, `CommerceWithOwnerPostController:24`, `CommerceWithOwnerPutController:21`). Spring lanza **`BindException`** en esos casos, y el handler no tiene rama para esa clase → cae en `@ExceptionHandler(Exception.class)` → `500 INTERNAL_ERROR`.
 - **Por qué importa:** rompe el contrato de error documentado (400 `VALIDATION_ERROR` con `fields[]`) que el front consume, y esconde errores del cliente como fallas del servidor.
 - **Estado:** verificado (no hay ningún `BindException` en el handler; los 5 endpoints existen).
 - **Fix:** agregar `@ExceptionHandler(BindException.class)` que devuelva el mismo payload `fields[]` / `VALIDATION_ERROR` que `handleValidationException`.
+- **Resolución:** `GlobalExceptionHandler` tiene la rama `BindException` y devuelve el mismo
+  `fields[]` / `VALIDATION_ERROR`.
 
-### P0-4 · La validación de método nativa también devuelve 500
+### P0-4 · La validación de método nativa también devuelve 500 — **RESUELTO**
 
 - **Ubicación:** `exception/handler/GlobalExceptionHandler.java:120` + `controller/sale/TopProductsSoldGetController.java:29`
 - **Problema:** desde Spring 6.1 la validación de método de controller es nativa (no hace falta `@Validated`), y el proyecto tiene `@Min(1) int limit` en un `@RequestParam`. Eso dispara `HandlerMethodValidationException`, que el catch-all se traga → 500 en vez de 400.
 - **Por qué importa:** igual que P0-3, cualquier `@NotNull`/`@Min` sobre un parámetro de método devuelve 500.
 - **Estado:** verificado (la restricción existe, el handler no la cubre).
 - **Fix:** agregar `@ExceptionHandler(HandlerMethodValidationException.class)` aplanando `getParameterValidationResults()` al mismo formato `fields[]`.
+- **Resolución:** la rama existe y aplana `getParameterValidationResults()` al mismo formato
+  `fields[]`. Cubierto por `MethodValidationIntegrationTests`.
 
 ---
 
 ## P1 — Debería corregirse
 
-### P1-5 · Desactivar un usuario no revoca el acceso
+### P1-5 · Desactivar un usuario no revoca el acceso — **RESUELTO**
 
 - **Ubicación:** `service/auth/AuthLoginService.java:33-38`, `config/JwtFilter.java:34-42`
 - **Problema:** el login solo mira `commerce.isActive()`; `User.active` no se consulta en el login ni se revalida por request. `PATCH /api/cashiers/{id}/toggle-active` mueve un flag que nadie lee.
 - **Por qué importa:** un cajero dado de baja sigue autenticándose y conserva acceso completo de lectura/escritura durante la vida del token (24 h).
 - **Estado:** verificado. **AGENTS.md ya lo documenta como limitación conocida** (*"el flag `active` de un cajero sigue pudiendo autenticarse, porque ese flag no se valida en el login"*) → es una decisión de producto pendiente, no un descuido.
 - **Fix:** rechazar `!loginUser.isActive()` con `ACCOUNT_DISABLED` en el login y revalidar el usuario (o un token version) por request.
+- **Resolución:** implementado con la **opción (c)** (una query liviana por request).
+  - El login rechaza al usuario desactivado con `403 ACCOUNT_DISABLED`.
+  - `JwtFilter` revalida la sesión en cada request autenticado con una proyección mínima
+    (`UserActiveStatus`: solo los flags `active` del usuario y del comercio, por primary key), sin
+    cargar la entidad ni sus relaciones. Un usuario desactivado → `403 ACCOUNT_DISABLED`; un
+    usuario que ya no existe → `401 UNAUTHORIZED`.
+  - Cubierto por `DeactivatedUserAccessIntegrationTests` y `UserActiveStatusTests`.
 
-### P1-6 · `size` de paginación sin tope en 9 endpoints
+### P1-6 · `size` de paginación sin tope en 9 endpoints — **RESUELTO**
 
 - **Ubicación:** `ClientsGetController:38`, `SalesGetController:40`, `ProductsGetController:38`, `CategoriesGetController:37`, `SellPointsGetController:35`, `SellPointCashiersGetController:37`, `OffersGetController:41`, `CommercesWithOwnerGetController:34`, `ProductsWithOfferGetController:38`
 - **Problema:** arman `PageRequest.of(page, size, sort)` a mano, así que **esquivan** el `max-page-size` que aplica `PageableHandlerMethodArgumentResolver`, y no hay `spring.data.web.pageable.max-page-size` configurado. `page < 0` o `size = 0` hacen que `PageRequest.of` lance `IllegalArgumentException` → 500 (no hay handler). Un `sortBy` desconocido → `PropertyReferenceException` → 500.
 - **Por qué importa:** `?size=1000000` convierte un endpoint paginado en un dump de tabla. Peor: la query agregada de clientes expande `IN :clientIds` a un placeholder por id, y **MySQL corta en 65.535 placeholders** → error SQL duro en una página grande.
 - **Estado:** verificado (9 controllers, sin config, `PropertyReferenceException` no está en el handler).
 - **Fix:** clampar `page >= 0` y `1 <= size <= 100` (helper compartido), allow-list de propiedades ordenables, y mapear `IllegalArgumentException` / `PropertyReferenceException` a 400 `INVALID_PARAMETER`.
+- **Resolución:** implementado con **rechazo en vez de clampeo silencioso**.
+  - `PageableFactory.create(...)` valida `page >= 0`, `1 <= size <= 100`, `sortBy` contra la
+    allow-list de `SortableProperties` y `sortDir` ∈ {`asc`, `desc`}. Los 9 controllers lo usan.
+  - Un valor fuera de rango se rechaza con `400 INVALID_PARAMETER` (`InvalidParameterException`):
+    el cliente tiene que saber que lo que pidió no se puede servir.
+  - El handler mapea `IllegalArgumentException` y `PropertyReferenceException` a `400` como red de
+    seguridad.
+  - Cubierto por `PageableFactoryTests` y `PaginationParametersIntegrationTests`.
 
 ### P1-7 · N+1 en productos y ofertas
 
@@ -103,38 +138,47 @@ Tres afirmaciones de los subagentes no resistieron la verificación y se ajustar
 - **Estado:** verificado. No hay datos que lo disparen hoy, pero la carrera es real.
 - **Fix:** `@Version` en `Product` (→ `OptimisticLockException` → 409) o lock `PESSIMISTIC_WRITE` en el paso de descuento con re-chequeo de stock dentro del lock.
 
-### P1-9 · Secretos de producción commiteados
+### P1-9 · Secretos de producción commiteados — **PARCIAL**
 
 - **Ubicación:** `src/main/resources/application.properties:6` (password de MySQL), `:15` (secret del JWT), `:20-21` (access/secret key de MinIO), `:28` (password del admin SUDO)
 - **Problema:** los cuatro están en el repo. El secret del JWT es una **frase legible de ~45 caracteres**, no material aleatorio.
 - **Por qué importa:** cualquiera con acceso al repo puede **forjar tokens** para cualquier `userId`/`commerceId`/`role` (incluido `SUDO`) y entrar a MySQL y MinIO directo. Invalida el modelo de confianza del JWT por completo.
 - **Estado:** verificado.
 - **Fix:** mover a variables de entorno / secret manager (`${JWT_SECRET}`), fallar el arranque si faltan, rotar los cuatro valores y sacarlos del historial de git.
+- **Resolución parcial:** `application.properties` ahora lee las credenciales de variables de
+  entorno (`MYSQL_*`, `JWT_*`, `MINIO_*`, `ADMIN_*`) y, si no están, cae en los valores de
+  desarrollo hardcodeados. Se agregó `.env.example` (commiteado, sin valores) y `.env` (ignorado
+  por git) con los datos de desarrollo para que cada quien los complete.
+  **Falta** (requiere intervención manual): rotar los cuatro valores reales y sacarlos del
+  historial de git. El default hardcodeado sigue siendo el valor de desarrollo, así que la
+  rotación no es opcional antes de exponer el servicio.
 
-### P1-10 · Un CASHIER puede aplicar cualquier descuento manual
+### P1-10 · Un CASHIER puede aplicar cualquier descuento manual — **PENDIENTE (decisión de producto)**
 
 - **Ubicación:** `controller/sale/SalePostController.java:25` (`@PreAuthorize` cubre OWNER y CASHIER), `dto/request/sale/SaleRequest.java:24-27`, `service/sale/SaleDiscountApplierService.java:32-36`
 - **Problema:** el descuento manual del request no tiene tope, ni motivo obligatorio, ni límite por comercio, ni requiere aprobación del dueño. `validateFixedAmountNotGreaterThanTotal` solo impide que supere el subtotal, así que un CASHIER puede dejar la venta en 0. Además el descuento se **descarta silenciosamente** si el método de pago tiene una oferta activa (`SaleCreatorService:64-69`), con lo que el comportamiento difiere según la configuración.
 - **Por qué importa:** regalar stock es decisión del dueño, no del cajero.
 - **Estado:** verificado.
 - **Fix:** restringir el descuento manual a OWNER, o acotarlo por un máximo configurable por comercio, y exigir un motivo que se guarde con la venta.
+- **Pendiente:** requiere una decisión de producto (¿solo OWNER? ¿tope por comercio? ¿motivo
+  obligatorio?) antes de escribir código.
 
 ---
 
 ## P2 — Conviene arreglarlo
 
-| # | Ubicación | Problema | Fix |
-|---|---|---|---|
-| P2-11 | `controller/sale/SaleWithDetailsGetController.java` | Único endpoint **sin `@PreAuthorize`** (los otros tres sin guard son los de auth, que es lo correcto). Hoy está scopeado por comercio, así que no es explotable, pero un SUDO recibe un 404 confuso y cualquier cambio futuro que afloje el filtro lo vuelve cross-tenant | Agregar `@PreAuthorize("hasRole('OWNER') or hasRole('CASHIER')")` |
-| P2-12 | `service/user/UserUpdaterService.java:17, 20` | Resuelve el user con `findById` **sin scope de comercio** → `PUT /api/commerces/{commerceId}/user/{userId}` actualiza un user de otro commerce. Además inyecta `PasswordEncoder` y **nunca cambia la contraseña** (dependencia muerta + capacidad faltante) | Nuevo `UserFinderByIdAndCommerceIdService` con `findByIdAndCommerceIdAndRole(id, commerceId, Role.OWNER)`; agregar el setter de password |
-| P2-13 | `service/commerce/CommerceUpdaterService.java:26-27` | Sin validación de unicidad de cuit/address al actualizar (existen `CommerceValidatorByCuitService`/`ByAddressService`, usados solo en el create) → 409 `DATA_INTEGRITY_VIOLATION` en vez de `COMMERCE_CUIT_ALREADY_EXISTS` / `COMMERCE_ADDRESS_ALREADY_EXISTS` | Métodos `...AndIdNot` en el repository + checks en el updater |
-| P2-14 | `service/user/UserUpdaterService.java:24` | Sin chequeo de unicidad de email al actualizar (existe `UserValidatorByEmailService`, sin usar) → mismo desvío de código de error que P2-13 | Llamar al validator con exclusión del propio id |
-| P2-15 | `SaleCreatorService:43`, `CategoryCreatorService:25`, `CashierCreatorService:29`, `CashierUpdaterService:25`, `ClientCreatorService:23`, `SellPointCreatorService:26` | `AccessDeniedException` de Spring usada como error de negocio; el handler devuelve `exception.getMessage()` crudo al cliente (`"Commerce ID is null"`, `"Authenticated user does not have a commerce associated"`) | Nuevo `ErrorCode` + subclase de `BusinessException`; el handler debe usar el mensaje por defecto del código |
-| P2-16 | `controller/category/CategoryGetController.java:29` + `mappers/CategoryMapper.java:21-26` | `toResponse(category)` delega en `toResponse(category, 0)` → **`productCount` siempre 0** en `GET /categories/{id}`, mientras el listado sí da el valor real. Mismo campo, dos significados | Que el finder por id devuelva la `CategoryResponse` con el conteo real, como hace el searcher |
-| P2-17 | `service/client/FindPendingSaleWithDetailsByClientIdService.java:29, 43` | `Pageable.unpaged()`: devuelve **todas** las ventas pendientes del cliente con todos sus detalles en una sola respuesta. Además N+1: `findAllBySaleId` se llama **dentro** del `.map()`, y `SaleMapper` lee `sellPoint`/`user`, que el finder no trae | Paginar el endpoint; traer todos los detalles en una query (`d.sale.id IN :saleIds`) y agregar `sellPoint`/`user` al `@EntityGraph` |
-| P2-18 | `service/tika/MimeTypeValidatorService.java:14` y `MimeTypeDetecterService.java:9` | Dos instancias de `Tika` distintas; el allow-list incluye `"image/jpg"`, un MIME que Tika nunca devuelve (da `image/jpeg`) | Un solo `Tika`, mover a `utils/`, sacar `"image/jpg"` |
-| P2-19 | `service/product/ProductFinderByIdsAndCommerceIdService.java:23` | `products.size() != ids.size()` trata un request con ids repetidos (`[3,3]`) como "productos no encontrados" → 404 espurio `PRODUCTS_OFFER_NOT_FOUND` | Comparar contra `Set.copyOf(ids).size()` |
-| P2-20 | `service/file/FileFinderService.java:28, 31-34` | Presigned URL de **5 horas**; errores tragados con `System.out.println` y `null` devuelto (los otros dos servicios de archivo lanzan `FileException` con `ErrorCode`). `ProductMapper:48` cae al nombre interno del objeto en el `imageUrl` público | Expiración ~10 min, `@Slf4j` en vez de `println`, y nunca exponer el nombre crudo del objeto |
+| # | Ubicación | Problema | Fix | Estado |
+|---|---|---|---|---|
+| P2-11 | `controller/sale/SaleWithDetailsGetController.java` | Único endpoint **sin `@PreAuthorize`** (los otros tres sin guard son los de auth, que es lo correcto). Hoy está scopeado por comercio, así que no es explotable, pero un SUDO recibe un 404 confuso y cualquier cambio futuro que afloje el filtro lo vuelve cross-tenant | Agregar `@PreAuthorize("hasRole('OWNER') or hasRole('CASHIER')")` | **RESUELTO** |
+| P2-12 | `service/user/UserUpdaterService.java:17, 20` | Resuelve el user con `findById` **sin scope de comercio** → `PUT /api/commerces/{commerceId}/user/{userId}` actualiza un user de otro commerce. Además inyecta `PasswordEncoder` y **nunca cambia la contraseña** (dependencia muerta + capacidad faltante) | Nuevo `UserFinderByIdAndCommerceIdService` con `findByIdAndCommerceIdAndRole(id, commerceId, Role.OWNER)`; agregar el setter de password | **RESUELTO** (scoping + `PasswordEncoder` muerto eliminado; el setter de password queda fuera de alcance) |
+| P2-13 | `service/commerce/CommerceUpdaterService.java:26-27` | Sin validación de unicidad de cuit/address al actualizar (existen `CommerceValidatorByCuitService`/`ByAddressService`, usados solo en el create) → 409 `DATA_INTEGRITY_VIOLATION` en vez de `COMMERCE_CUIT_ALREADY_EXISTS` / `COMMERCE_ADDRESS_ALREADY_EXISTS` | Métodos `...AndIdNot` en el repository + checks en el updater | **RESUELTO** |
+| P2-14 | `service/user/UserUpdaterService.java:24` | Sin chequeo de unicidad de email al actualizar (existe `UserValidatorByEmailService`, sin usar) → mismo desvío de código de error que P2-13 | Llamar al validator con exclusión del propio id | **RESUELTO** |
+| P2-15 | `SaleCreatorService:43`, `CategoryCreatorService:25`, `CashierCreatorService:29`, `CashierUpdaterService:25`, `ClientCreatorService:23`, `SellPointCreatorService:26` | `AccessDeniedException` de Spring usada como error de negocio; el handler devuelve `exception.getMessage()` crudo al cliente (`"Commerce ID is null"`, `"Authenticated user does not have a commerce associated"`) | Nuevo `ErrorCode` + subclase de `BusinessException`; el handler debe usar el mensaje por defecto del código | Pendiente |
+| P2-16 | `controller/category/CategoryGetController.java:29` + `mappers/CategoryMapper.java:21-26` | `toResponse(category)` delega en `toResponse(category, 0)` → **`productCount` siempre 0** en `GET /categories/{id}`, mientras el listado sí da el valor real. Mismo campo, dos significados | Que el finder por id devuelva la `CategoryResponse` con el conteo real, como hace el searcher | Pendiente |
+| P2-17 | `service/client/FindPendingSaleWithDetailsByClientIdService.java:29, 43` | `Pageable.unpaged()`: devuelve **todas** las ventas pendientes del cliente con todos sus detalles en una sola respuesta. Además N+1: `findAllBySaleId` se llama **dentro** del `.map()`, y `SaleMapper` lee `sellPoint`/`user`, que el finder no trae | Paginar el endpoint; traer todos los detalles en una query (`d.sale.id IN :saleIds`) y agregar `sellPoint`/`user` al `@EntityGraph` | Pendiente |
+| P2-18 | `service/tika/MimeTypeValidatorService.java:14` y `MimeTypeDetecterService.java:9` | Dos instancias de `Tika` distintas; el allow-list incluye `"image/jpg"`, un MIME que Tika nunca devuelve (da `image/jpeg`) | Un solo `Tika`, mover a `utils/`, sacar `"image/jpg"` | Pendiente |
+| P2-19 | `service/product/ProductFinderByIdsAndCommerceIdService.java:23` | `products.size() != ids.size()` trata un request con ids repetidos (`[3,3]`) como "productos no encontrados" → 404 espurio `PRODUCTS_OFFER_NOT_FOUND` | Comparar contra `Set.copyOf(ids).size()` | Pendiente |
+| P2-20 | `service/file/FileFinderService.java:28, 31-34` | Presigned URL de **5 horas**; errores tragados con `System.out.println` y `null` devuelto (los otros dos servicios de archivo lanzan `FileException` con `ErrorCode`). `ProductMapper:48` cae al nombre interno del objeto en el `imageUrl` público | Expiración ~10 min, `@Slf4j` en vez de `println`, y nunca exponer el nombre crudo del objeto | Pendiente |
 
 ---
 
@@ -191,6 +235,25 @@ verificación individual** — es el punto de partida para una segunda pasada:
 
 ## Top 3 acciones
 
-1. **Cerrar el total negativo** (P0-1): capear la oferta `FIXED_AMOUNT` contra el `salePrice` del producto al asignarla, y llevar el guard `signum() < 0` a `ProductDiscountedPriceCalculatorService`, que es el calculador que realmente alimenta el subtotal. Es el único ítem que toca lógica de negocio y conviene cubrirlo con un test antes de tocar código.
-2. **Restaurar el contrato de error** (P0-3 + P0-4): agregar `@ExceptionHandler(BindException.class)` y `@ExceptionHandler(HandlerMethodValidationException.class)` al `GlobalExceptionHandler`, devolviendo el mismo `fields[]` con `VALIDATION_ERROR` que ya usa `handleValidationException`.
-3. **Arreglar el borrado de archivos** (P0-2): pasar `subDir + "/" + objectName` al deleter, o persistir la object key completa en la entidad y usar esa.
+1. **Cerrar el total negativo** (P0-1): capear la oferta `FIXED_AMOUNT` contra el `salePrice` del producto al asignarla, y llevar el guard `signum() < 0` a `ProductDiscountedPriceCalculatorService`, que es el calculador que realmente alimenta el subtotal. Es el único ítem que toca lógica de negocio y conviene cubrirlo con un test antes de tocar código. — **RESUELTO**
+2. **Restaurar el contrato de error** (P0-3 + P0-4): agregar `@ExceptionHandler(BindException.class)` y `@ExceptionHandler(HandlerMethodValidationException.class)` al `GlobalExceptionHandler`, devolviendo el mismo `fields[]` con `VALIDATION_ERROR` que ya usa `handleValidationException`. — **RESUELTO**
+3. **Arreglar el borrado de archivos** (P0-2): pasar `subDir + "/" + objectName` al deleter, o persistir la object key completa en la entidad y usar esa. — **RESUELTO** (con `FileObjectKey`, que centraliza la clave)
+
+### Wave 1 (hecha)
+
+| Commit | Cierra | Nota |
+|---|---|---|
+| `docs(offer)` | P0-1 (comentarios obsoletos) | El guard y los capeos ya estaban; faltaba corregir los comentarios que describían el comportamiento viejo |
+| `feat(auth)` | P1-5, P2-11 | Opción (c): una query mínima por request |
+| `fix(pagination)` | P1-6 | Rechazo con 400 en vez de clampeo silencioso |
+| `fix(security)` | P2-12, P2-13, P2-14 | Scoping por comercio + unicidad con exclusión del propio id |
+| `chore(config)` | P1-9 (parcial) | Lectura por variables de entorno + `.env` / `.env.example` |
+
+### Pendiente de decidir
+
+- **P1-10**: ¿el descuento manual queda solo para OWNER, o tiene un tope configurable por comercio
+  y un motivo obligatorio?
+- **P1-9**: rotación de los cuatro valores reales y limpieza del historial de git (tarea manual).
+- **P1-8**: `@Version` en `Product` o lock pesimista — cambia el esquema y la semántica de las
+  transacciones, conviene tratarlo aparte.
+- **P1-7**: N+1 de productos y ofertas — optimización, conviene medir queries antes.

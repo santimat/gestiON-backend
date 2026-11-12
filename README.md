@@ -51,7 +51,9 @@ parámetro de un método del controller no cumple sus restricciones (por ejemplo
    en el navegador). La cookie es `HttpOnly`, `Path=/` y vive 24 horas (`Max-Age=86400`).
 2. El JWT dura 24 horas y lleva los claims `sub` (email), `name`, `userId`, `commerceId`, `role`,
    `active` y `sellPointId` (este último es `null` para OWNER/SUDO). El backend confía en ese
-   contenido sin volver a consultar la base.
+   contenido **salvo el flag `active`**: en cada request autenticado se revalida contra la base
+   (una query mínima que trae el `active` del usuario y del comercio), así que desactivar un
+   usuario le corta el acceso de inmediato, sin esperar a que expire su token.
 3. `POST /api/auth/logout` expira la cookie. **No hay revocación del token en el servidor**: un JWT
    ya emitido sigue siendo válido hasta su expiración, así que el logout es efectivamente local.
    Como tampoco es un endpoint público, requiere una cookie válida (`401` si no la hay).
@@ -62,10 +64,9 @@ Códigos de estado de autenticación:
   para no filtrar si el email existe).
 - `401 UNAUTHORIZED`: no hay cookie `token`, o el token es inválido o expiró.
 - `403 ACCESS_DENIED`: el rol del usuario no alcanza para el endpoint.
-- `403 ACCOUNT_DISABLED`: el **comercio** del usuario está deshabilitado (también lo devuelve
-  `GET /api/auth/me` y el login de un comercio deshabilitado). Ojo: un usuario dado de baja
-  individualmente —el flag `active` de un cajero— **sigue pudiendo autenticarse**, porque ese flag
-  no se valida en el login.
+- `403 ACCOUNT_DISABLED`: el **usuario** está desactivado (su `toggle-active`) o el **comercio**
+  del usuario está deshabilitado. Un usuario desactivado no puede iniciar sesión, y un token que
+  se emitió antes de desactivarlo deja de servir en el siguiente request.
 
 CORS: el origen habilitado es `http://localhost:5173` (el front de desarrollo), con credenciales y
 `Set-Cookie` expuesto. Solo `POST /api/auth/login` y los preflight `OPTIONS` son públicos; el resto
@@ -127,6 +128,27 @@ Defaults de paginación y orden por recurso:
 2. `GET /api/cashiers` bindea el `Pageable` de Spring Data, así que el orden se pasa con
    **`sort=campo,direccion`** (ej.: `?sort=name,asc`) y no con `sortBy`/`sortDir` — enviarle esos
    parámetros no falla, pero el orden se ignora.
+
+### Validación de la paginación
+
+Los listados que arman el `Pageable` a mano (`/api/clients`, `/api/categories`, `/api/products`,
+`/api/products/with-offer`, `/api/sell-points`, `/api/sell-points/{id}/cashiers`, `/api/sales`,
+`/api/offers`, `/api/commerces`) validan sus parámetros:
+
+| Parámetro | Valores válidos | Si viene inválido |
+|---|---|---|
+| `page` | `>= 0` | `400 INVALID_PARAMETER` |
+| `size` | `1` a `100` | `400 INVALID_PARAMETER` |
+| `sortBy` | una propiedad del recurso (allow-list) | `400 INVALID_PARAMETER` |
+| `sortDir` / `sortOrder` | `asc` / `desc` | `400 INVALID_PARAMETER` |
+
+Los parámetros fuera de rango **se rechazan, no se clampean**: si pedís `size=1000` recibís un
+`400` y no una página de 100 elementos. El `size` tiene un tope porque la query agregada del
+resumen de cuenta de los clientes expande `IN :clientIds` a un placeholder por id y MySQL corta en
+65.535 placeholders.
+
+`GET /api/cashiers` no pasa por esta validación: bindea el `Pageable` de Spring Data, que ya
+aplica su propio `max-page-size`.
 
 ## Endpoints
 
@@ -286,12 +308,12 @@ Defaults de paginación y orden por recurso:
 | Método | Ruta | Roles | Request | Response |
 |---|---|---|---|---|
 | GET | `/api/sales` | CASHIER/OWNER | — | `Page<SaleSummaryResponse>` · filtros: `clientId`, `status`, `paymentMethod`, `searchText` (observaciones o nombre del cliente) |
-| GET | `/api/sales/{saleId}` | Auth | — | `SaleResponse` (detalle con todas las líneas) |
+| GET | `/api/sales/{saleId}` | CASHIER/OWNER | — | `SaleResponse` (detalle con todas las líneas) |
 | POST | `/api/sales` | CASHIER/OWNER | `SaleRequest` (JSON) | `SaleSummaryResponse` (201) |
 | PATCH | `/api/sales/{id}/mark-paid` | CASHIER/OWNER | — | `SaleUpdateStatusResponse` |
 
-- `GET /api/sales/{saleId}` no exige un rol concreto: alcanza con estar autenticado. Está scopeado
-  al comercio del JWT, así que un usuario sin comercio (el SUDO) obtiene `404 SALE_NOT_FOUND`.
+- `GET /api/sales/{saleId}` está scopeado al comercio del JWT, así que un usuario sin comercio (el
+  SUDO) obtiene `404 SALE_NOT_FOUND`.
 - Una venta sin `clientId` queda registrada como "Consumidor final".
 
 `SaleRequest`:
@@ -374,6 +396,15 @@ Lo incorporado respecto de la versión anterior de este documento:
 - Resumen de cuenta corriente en la respuesta de clientes (`salesCount`, `pendingSalesCount`,
   `totalSpent`, `totalPending`), también en el detalle, el alta y la edición.
 - Filtro de texto en el listado de clientes y en el de cajeros.
+- Validación de los parámetros de paginación: `page`, `size`, `sortBy` y `sortDir` fuera de rango
+  devuelven `400 INVALID_PARAMETER` en vez de `500` o de una página gigante.
+- Revalidación de la sesión en cada request: desactivar un usuario le corta el acceso de
+  inmediato, sin esperar a que expire su token.
+- `PUT /api/commerces/{commerceId}/user/{userId}` ya no actualiza usuarios de otro comercio, y
+  la unicidad de email, cuit y dirección se reporta con su código específico (`409`) y no con un
+  `DATA_INTEGRITY_VIOLATION` genérico.
+- Las credenciales se leen de variables de entorno (`.env`), con los valores de desarrollo como
+  default.
 
 ## Códigos de error
 
@@ -382,7 +413,7 @@ Lo incorporado respecto de la versión anterior de este documento:
 | **Validación de request** | | |
 | `VALIDATION_ERROR` | 400 | Body o parámetros inválidos (incluye `fields[]` por campo) |
 | `INVALID_REQUEST_BODY` | 400 | Body malformado (JSON roto) |
-| `INVALID_PARAMETER` | 400 | Un parámetro tiene un valor inválido |
+| `INVALID_PARAMETER` | 400 | Un parámetro tiene un valor inválido (incluye `page`, `size`, `sortBy` y `sortDir` fuera de rango) |
 | `MISSING_PARAMETER` | 400 | Falta un parámetro requerido |
 | `METHOD_NOT_ALLOWED` | 405 | Verbo HTTP no soportado para la ruta |
 | `UNSUPPORTED_MEDIA_TYPE` | 415 | Content type no soportado |
@@ -442,6 +473,9 @@ Lo incorporado respecto de la versión anterior de este documento:
 # infraestructura: MySQL en localhost:3306 (base "gestion", root/admin) y MinIO (solo para imágenes)
 docker compose up -d   # solo levanta MinIO
 
+# credenciales: copiá .env.example a .env y completá los valores
+cp .env.example .env
+
 ./mvnw spring-boot:run # requiere JDK 25
 ```
 
@@ -450,3 +484,9 @@ docker compose up -d   # solo levanta MinIO
 - **MinIO** (solo necesario para uploads de imágenes/logos): API en `localhost:9000`, consola web en
   `localhost:9001`, credenciales `admin` / `admin123`, bucket `gestionbucket`.
 - Al iniciar la app se crea automáticamente el usuario SUDO `admin@admin.com` / `admin123`.
+- **Credenciales**: `application.properties` lee las credenciales de variables de entorno
+  (`MYSQL_*`, `JWT_*`, `MINIO_*`, `ADMIN_*`) y, si no están, usa los valores de desarrollo que
+  están hardcodeados como default. El archivo `.env` **no** lo lee Spring Boot solo: hay que
+  exportarlo al shell antes de arrancar la app, por ejemplo con
+  `set -a; source .env; set +a` (bash) o `$env:SPRING_APPLICATION_JSON` (PowerShell). El `.env`
+  está en `.gitignore`: no lo commitees.
