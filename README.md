@@ -40,7 +40,9 @@ Request → Controller → Service → Repository → MySQL
 ```
 
 `code` es una key estable para manejar el error en el cliente (los mensajes son en inglés, para
-logs). `fields` solo aparece en errores de validación (`VALIDATION_ERROR`).
+logs). `fields` solo aparece en errores de validación (`VALIDATION_ERROR`), y también cuando un
+parámetro de un método del controller no cumple sus restricciones (por ejemplo `limit` con un
+`@Min(1)`): se reporta igual, con el nombre del parámetro en `field`.
 
 ## Autenticación
 
@@ -163,8 +165,8 @@ Defaults de paginación y orden por recurso:
   `409 COMMERCE_CUIT_ALREADY_EXISTS`, `409 COMMERCE_ADDRESS_ALREADY_EXISTS`).
 - `PATCH /api/commerces` **nuevo**: actualización parcial del comercio del OWNER autenticado. Todos
   los campos son opcionales y solo se actualizan los que llegan: `name` (2–100 caracteres),
-  `profitMultiplier` (positivo), `image`. Si mandás `image`, **reemplaza** el logo anterior (el
-  archivo viejo se borra de MinIO). Devuelve el comercio tal como lo ve `GET /api/commerces/current`.
+  `profitMultiplier` (positivo), `image`. Si mandás `image`, **reemplaza** el logo anterior.
+  Devuelve el comercio tal como lo ve `GET /api/commerces/current`.
 - `PATCH /api/commerces/profit-multiplier` solo cambia el multiplicador de ganancia del comercio.
 
 ### Dashboard y estadísticas
@@ -207,7 +209,8 @@ Defaults de paginación y orden por recurso:
 
 - `CategoryRequest`: `name` (hasta 50), `description` (hasta 200). El nombre es único **por
   comercio** (`409 CATEGORY_NAME_ALREADY_EXISTS`). El listado acepta `?categoryName=` (búsqueda
-  parcial, case-insensitive) y cada `CategoryResponse` trae `productCount`.
+  parcial, case-insensitive) y calcula `productCount` (productos de la categoría); el detalle por id
+  devuelve `productCount` en `0`.
 - `ProductRequest` / `ProductUpdateRequest`: `name` (hasta 100), `description` (hasta 255),
   `costPrice`, `salePrice`, `profitMultiplier` (opcional), `image` (opcional), `categoryId`,
   `currentStock`, `minStock`. Ambos son `multipart` por la imagen; el resto de los campos viaja como
