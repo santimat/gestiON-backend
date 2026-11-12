@@ -5,12 +5,14 @@ Docs and comments are mostly Spanish; commit messages are English.
 
 ## Commands
 
-- No global Maven/Gradle: always use the wrapper — `.\mvnw.cmd <goal>` (Windows) / `./mvnw <goal>` (bash). Java 25 required.
+- No global Maven/Gradle: always use the wrapper — `.\mvnw.cmd <goal>` (Windows) / `./mvnw <goal>` (bash). Java 25
+  required.
 - Typecheck = compile (no linter, formatter, static analysis, or CI config exists):
   `.\mvnw.cmd -q -DskipTests compile`
 - Tests: `.\mvnw.cmd test`; single test: `.\mvnw.cmd test -Dtest=ProyectoFinalApplicationTests`
 - Run app: `.\mvnw.cmd spring-boot:run`
 - Verify in order: compile -> test. Compile failures block everything else.
+- No commits without my explicit instruction.
 
 ## Infrastructure (must be running manually)
 
@@ -45,8 +47,8 @@ Docs and comments are mostly Spanish; commit messages are English.
   example is `service/sale/SaleCreatorService.java` (README's claim that it is used in
   `ProductCreatorService` is stale). Only safe when the id already comes from a validated JWT.
 - Cross-tenant scoping: entity-by-id lookups that serve an endpoint go through a
-  `XFinderByIdAndCommerceIdService` using a `findByIdAndCommerceId` query (derived or JPQL) and answer
-  **404** (never 403) when the row belongs to another commerce. Live examples:
+  `XFinderByIdAndCommerceIdService` using a `findByIdAndCommerceId` query (derived or JPQL) and answer **404** (never
+  403) when the row belongs to another commerce. Live examples:
   `service/sale/SaleFinderByIdAndCommerceIdService`, `service/sellpoint/SellPointFinderByIdAndCommerceIdService`.
   Do not reuse unscoped finders (e.g. `SaleFinderByIdService`) in controllers.
 - When a finder feeds a response that maps several relations, use `@EntityGraph(attributePaths = ...)`
@@ -57,8 +59,8 @@ Docs and comments are mostly Spanish; commit messages are English.
 
 - JWT is read from a **`token` cookie**, not an `Authorization` header (`config/JwtFilter.java`).
   Testing with curl/browser requires the cookie; there is no bearer-token path.
-- Default is deny-all: only `OPTIONS /**` and `POST /api/auth/login` are public
-  (`config/SecurityConfig.java`). New public endpoints must be added there explicitly.
+- Default is deny-all: only `OPTIONS /**` and `POST /api/auth/login` are public (`config/SecurityConfig.java`). New
+  public endpoints must be added there explicitly.
 - Roles: `SUDO`, `OWNER`, `CASHIER` (`enums/Role.java`). Per-endpoint rules are
   `@PreAuthorize("hasRole('...')")` on the controller (`@EnableMethodSecurity` is active).
 - The JWT carries userId/commerceId/role; controllers take `@AuthenticationPrincipal UserPrincipal`
@@ -66,6 +68,5 @@ Docs and comments are mostly Spanish; commit messages are English.
 
 ## Workflow
 
-- Conventional commits with scopes, e.g. `feat(offer): ...`, `refactor(services): ...`.
 - Working tree often carries in-progress changes across model/mapper/response in one feature;
   recompile after any mapper signature change — call sites live in many services.
