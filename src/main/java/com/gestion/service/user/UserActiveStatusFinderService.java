@@ -12,13 +12,7 @@ public class UserActiveStatusFinderService {
 
     private final JpaUserRepository userRepository;
 
-    /**
-     * Revalida el estado del usuario (y de su comercio) contra la base.
-     *
-     * El JWT lleva 24 horas de vida y el flag active del usuario no se mira despues del login,
-     * asi que un usuario desactivado conservaba acceso hasta que expiraba su token.
-     */
-    @Transactional(readOnly = true)
+    @Transactional()
     public UserActiveStatus findActiveStatusByUserId(Long userId) {
         return userRepository.findActiveStatusById(userId).orElse(null);
     }

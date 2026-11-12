@@ -8,13 +8,7 @@ import com.gestion.repository.JpaUserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-/**
- * Resuelve un usuario por id exigiendo que pertenezca al comercio indicado.
- *
- * Un finder por id sin scope permite tocar un usuario de otro comercio: el id viene del path y
- * no de un token, asi que hay que verificar que el usuario pertenezca al comercio del path antes
- * de modificarlo.
- */
+
 @Service
 @AllArgsConstructor
 public class UserFinderByIdAndCommerceIdService {
