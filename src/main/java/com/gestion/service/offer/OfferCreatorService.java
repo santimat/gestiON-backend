@@ -38,8 +38,11 @@ public class OfferCreatorService {
         Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
 
         // el valor de la oferta depende del tipo: en porcentaje no puede pasar el 100%.
-        // en monto fijo no se valida un máximo porque todavía no existe contra qué total
-        // compararlo (las ofertas aún no se aplican a la venta).
+        // en monto fijo no se valida un máximo acá porque la oferta se crea todavía sin
+        // productos asociados: no hay contra qué salePrice compararlo. el capeo contra el
+        // precio de venta de cada producto se hace al asignarle los productos
+        // (OfferAssignerProductService) y también al actualizar el valor de una oferta que
+        // ya tiene productos (OfferUpdaterService).
         if (request.discountType() == DiscountType.PERCENTAGE) {
             discountRangeValidatorService.validatePercentageNotGreaterThan100(request.value());
         }

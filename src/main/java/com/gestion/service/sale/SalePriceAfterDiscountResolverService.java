@@ -26,9 +26,9 @@ public class SalePriceAfterDiscountResolverService {
         }
 
         // red de seguridad: un total negativo nunca debe persistirse.
-        // la validación de rango vive en SaleDiscountApplierService, pero este
-        // calculador no debe poder devolver un total negativo si se usa de nuevo
-        // desde otro flujo (por ejemplo, cuando las ofertas se apliquen a la venta).
+        // este calculador aplica el descuento de la venta (manual o el de la oferta vigente del
+        // metodo de pago) sobre el subtotal; el descuento de la oferta de producto ya se aplico
+        // al precio de cada linea antes de armar el subtotal.
         if (totalAfterDiscount.signum() < 0) {
             throw new InvalidDiscountException(ErrorCode.INVALID_DISCOUNT,
                     "The discount cannot be greater than the sale subtotal");
