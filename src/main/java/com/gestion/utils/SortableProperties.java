@@ -2,14 +2,6 @@ package com.gestion.utils;
 
 import java.util.Set;
 
-/**
- * Allow-list de las propiedades por las que se puede ordenar cada recurso.
- *
- * Sin esta lista, un sortBy desconocido lo resuelve Hibernate contra la entidad y lanza
- * PropertyReferenceException, que terminaba en un 500 INTERNAL_ERROR. Ademas, ordenar por una
- * relacion (por ejemplo "client") no es una columna y no se puede resolver con un ORDER BY
- * simple, asi que la lista solo contiene propiedades propias de la entidad.
- */
 public final class SortableProperties {
 
     public static final Set<String> CLIENT = Set.of(
