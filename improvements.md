@@ -153,15 +153,20 @@ Tres afirmaciones de los subagentes no resistieron la verificación y se ajustar
   historial de git. El default hardcodeado sigue siendo el valor de desarrollo, así que la
   rotación no es opcional antes de exponer el servicio.
 
-### P1-10 · Un CASHIER puede aplicar cualquier descuento manual — **PENDIENTE (decisión de producto)**
+### P1-10 · Un CASHIER puede aplicar cualquier descuento manual — **RESUELTO**
 
-- **Ubicación:** `controller/sale/SalePostController.java:25` (`@PreAuthorize` cubre OWNER y CASHIER), `dto/request/sale/SaleRequest.java:24-27`, `service/sale/SaleDiscountApplierService.java:32-36`
+- **Ubicación original:** `controller/sale/SalePostController.java:25` (`@PreAuthorize` cubre OWNER y CASHIER), `dto/request/sale/SaleRequest.java:24-27`, `service/sale/SaleDiscountApplierService.java:32-36`
 - **Problema:** el descuento manual del request no tiene tope, ni motivo obligatorio, ni límite por comercio, ni requiere aprobación del dueño. `validateFixedAmountNotGreaterThanTotal` solo impide que supere el subtotal, así que un CASHIER puede dejar la venta en 0. Además el descuento se **descarta silenciosamente** si el método de pago tiene una oferta activa (`SaleCreatorService:64-69`), con lo que el comportamiento difiere según la configuración.
 - **Por qué importa:** regalar stock es decisión del dueño, no del cajero.
-- **Estado:** verificado.
-- **Fix:** restringir el descuento manual a OWNER, o acotarlo por un máximo configurable por comercio, y exigir un motivo que se guarde con la venta.
-- **Pendiente:** requiere una decisión de producto (¿solo OWNER? ¿tope por comercio? ¿motivo
-  obligatorio?) antes de escribir código.
+- **Decisión de producto:** el descuento manual **se elimina**. Los descuentos salen **solo de las ofertas** (de producto o de método de pago). No hay descuento por rol ni por comercio: la noción de "descuento manual" desaparece del sistema.
+- **Fix aplicado:**
+  - `SaleRequest` ya no expone `discount` ni `discountType` (el front deja de mandarlos; un body que los mande se ignora sin error, porque Jackson ignora las propiedades desconocidas).
+  - `Sale.discount` / `Sale.discount_type` → `payment_method_discount` / `payment_method_discount_type` (columnas renombradas en la base). Guardan el descuento de la **oferta de método de pago** aplicado en el momento de la venta; se persisten, así que el histórico no se altera cuando la oferta vence.
+  - `SaleDiscountApplierService` sin ramas de descuento manual: sin oferta el total es el subtotal.
+  - `DiscountRangeValidatorService.validateFixedAmountNotGreaterThanTotal` eliminado (quedó muerto).
+  - `ErrorCode`: se borran `DISCOUNT_WITHOUT_TYPE`, `TYPE_WITHOUT_DISCOUNT`, `DISCOUNT_EXCEEDS_SUBTOTAL` e `INVALID_DISCOUNT_PREFIX_ZERO` (los cuatro muertos), y se agrega `PAYMENT_METHOD_OFFER_EXCEEDS_SALE_SUBTOTAL` (409) para el guard de total negativo, que antes decía "descuento" y ahora dice "oferta de método de pago".
+  - El descarte silencioso desaparece: ya no hay un descuento manual que la oferta pueda pisar.
+- **Fuera de alcance:** la auditoría del motivo (eje 3) no aplica al descuento manual porque ya no existe. Queda como feature aparte para el caso de "regalar un producto", que no es un descuento.
 
 ---
 
@@ -202,7 +207,7 @@ Tres afirmaciones de los subagentes no resistieron la verificación y se ajustar
 | P3-34 | `repository/JpaSaleRepository.java:135` | Rama `default` inalcanzable (los 3 constantes de `PeriodGranularity` están cubiertos) y único `IllegalArgumentException` crudo del proyecto → 500 si se alcanzara |
 | P3-35 | `controller/category/CategoryGetController.java:29` | Único controller que mapea la entidad JPA (`CategoryMapper.toResponse(category)`, importando `com.gestion.model.Category`); todos los demás reciben un DTO listo |
 | P3-36 | varios | Campos inyectados sin `final` (`ProductToggleAtivePatchController:20`, `ProductSearcherService:20`, `CashierSearcherService:16`, `CategorySearcherService:22`) |
-| P3-37 | ~20 tipos | Código muerto: `mappers/UserUpdateMapper:16`, `mappers/AuthenticatedUserMapper:21`, `mappers/SaleDetailMapper:11`, `dto/response/commerce/CommerceResponse:3`, `dto/request/file/FileRequest:6`, 7 queries derivadas sin uso en `JpaOfferRepository:21-56`, `JpaUserRepository:27`, `JpaCategoryRepository:14`, y el `ErrorCode.INVALID_DISCOUNT_PREFIX_ZERO` que nunca se lanza |
+| P3-37 | ~20 tipos | Código muerto: `mappers/UserUpdateMapper:16`, `mappers/AuthenticatedUserMapper:21`, `mappers/SaleDetailMapper:11`, `dto/response/commerce/CommerceResponse:3`, `dto/request/file/FileRequest:6`, 7 queries derivadas sin uso en `JpaOfferRepository:21-56`, `JpaUserRepository:27`, `JpaCategoryRepository:14`, y el `ErrorCode.INVALID_DISCOUNT_PREFIX_ZERO` que nunca se lanza (ya eliminado en P1-10) |
 
 ---
 
@@ -251,9 +256,9 @@ verificación individual** — es el punto de partida para una segunda pasada:
 
 ### Pendiente de decidir
 
-- **P1-10**: ¿el descuento manual queda solo para OWNER, o tiene un tope configurable por comercio
-  y un motivo obligatorio?
 - **P1-9**: rotación de los cuatro valores reales y limpieza del historial de git (tarea manual).
 - **P1-8**: `@Version` en `Product` o lock pesimista — cambia el esquema y la semántica de las
   transacciones, conviene tratarlo aparte.
 - **P1-7**: N+1 de productos y ofertas — optimización, conviene medir queries antes.
+- **Regalar un producto**: quedó anotado como feature aparte (no es un descuento). Cuando se
+ retome, la auditoría con motivo (eje 3 de P1-10) es el requisito natural.

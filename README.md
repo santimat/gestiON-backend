@@ -323,8 +323,6 @@ aplica su propio `max-page-size`.
   "paymentMethod": "CASH",
   "details": [{ "productId": 3, "quantity": 2 }],
   "clientId": 7,
-  "discountType": "PERCENTAGE",
-  "discount": 10,
   "observations": "..."
 }
 ```
@@ -334,16 +332,20 @@ aplica su propio `max-page-size`.
   sumando cantidades. `details` no puede venir vacío y `observations` admite hasta 200 caracteres.
 - Valores de `paymentMethod`: `CASH`, `CARD`, `TRANSFER`, `CREDIT_ACCOUNT`. El fiado
   (`CREDIT_ACCOUNT`) genera la venta con status `PENDING`; el resto, `PAYED`.
-- `discountType` (`PERCENTAGE` / `FIXED_AMOUNT`) y `discount` van juntos; `discount` debe ser mayor
-  que cero, un descuento fijo no puede superar el subtotal (`400 DISCOUNT_EXCEEDS_SUBTOTAL`) y un
-  descuento porcentual no puede superar el 100% (`400 DISCOUNT_PERCENTAGE_EXCEEDS_100`).
-- **Si el método de pago de la venta tiene una oferta vigente, el descuento de esa oferta prevalece
-  sobre el descuento manual del request** (el manual se ignora).
+- **No hay descuento manual**: el request no acepta ningún campo de descuento. Los descuentos salen
+  **solo de las ofertas** (de producto o de método de pago). Un body que encore mande `discount` /
+  `discountType` se ignora sin error, pero tampoco aplica descuento.
+- Las respuestas exponen `paymentMethodDiscount` y `paymentMethodDiscountType`: el descuento y su
+  tipo **aplicados por la oferta vigente del método de pago** en el momento de la venta (`null` /
+  `0` si no había oferta). Se guardan con la venta, así que el histórico no cambia aunque la oferta
+  después venza.
 - **Las dos ofertas se acumulan**: la oferta de producto baja el precio unitario de la línea y el
   subtotal ya sale de esos precios descontados; el descuento del método de pago se aplica después,
   sobre ese subtotal.
-- El descuento de stock es todo-o-nada: si algún ítem no pasa la validación (producto inactivo o
-  sin stock), no se descuenta ni se registra nada (`409 PRODUCT_INACTIVE`, `409 INSUFFICIENT_STOCK`).
+- Una oferta de método de pago de monto fijo no puede superar el subtotal de la venta
+  (`409 PAYMENT_METHOD_OFFER_EXCEEDS_SALE_SUBTOTAL`); el descuento de stock es todo-o-nada: si algún
+  ítem no pasa la validación (producto inactivo o sin stock), no se descuenta ni se registra nada
+  (`409 PRODUCT_INACTIVE`, `409 INSUFFICIENT_STOCK`).
 - El punto de venta sale del JWT (`sellPointId`) y puede ser `null`; nunca se envía en el request.
 - `mark-paid` solo admite la transición `PENDING → PAYED` (`409 SALE_NOT_PENDING` en otro caso).
 
@@ -447,11 +449,8 @@ Lo incorporado respecto de la versión anterior de este documento:
 | `DATA_INTEGRITY_VIOLATION` | 409 | La operación viola una restricción de integridad |
 | **Descuentos** | | |
 | `INVALID_DISCOUNT` | 400 | Descuento inválido |
-| `INVALID_DISCOUNT_PREFIX_ZERO` | 400 | Descuento igual a cero (el backend no llega a emitirlo hoy) |
-| `DISCOUNT_WITHOUT_TYPE` | 400 | Monto de descuento sin `discountType` |
-| `TYPE_WITHOUT_DISCOUNT` | 400 | `discountType` sin monto de descuento |
-| `DISCOUNT_EXCEEDS_SUBTOTAL` | 400 | Descuento fijo mayor al subtotal de la venta |
-| `DISCOUNT_PERCENTAGE_EXCEEDS_100` | 400 | Descuento porcentual mayor al 100% (venta u oferta) |
+| `DISCOUNT_PERCENTAGE_EXCEEDS_100` | 400 | Descuento porcentual mayor al 100% (oferta) |
+| `PAYMENT_METHOD_OFFER_EXCEEDS_SALE_SUBTOTAL` | 409 | La oferta de método de pago supera el subtotal de la venta |
 | `PRODUCT_SALE_PRICE_BELOW_COST` | 400 | Precio de venta menor que el costo |
 | **Ofertas** | | |
 | `INVALID_DATE` | 400 | Fecha de oferta en el pasado o fin anterior al inicio |
