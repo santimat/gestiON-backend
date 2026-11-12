@@ -45,7 +45,7 @@ public class FileUploaderService {
                             // en que bucket queremos guardarlo
                             .bucket(minioProperties.bucket())
                             // el nombre que tendrá
-                            .object(subDir + "/" + objectName)
+                            .object(FileObjectKey.of(subDir, objectName))
                             // le pasamos los bytes en forma de flujo de datos
                             .stream(file.getInputStream(), file.getSize(), -1L)
                             .contentType(fileMimeType)
