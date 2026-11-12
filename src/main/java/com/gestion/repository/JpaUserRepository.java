@@ -25,8 +25,6 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User as u JOIN FETCH u.commerce WHERE u.role = :userRole")
     Page<User> findAllByRoleWithCommerce(@Param("userRole") Role userRole, Pageable pageable);
 
-    Page<User> findAllByRole(Role role, Pageable pageable);
-
     // join fetch trae el commerce del cajero evitando el n+1
     @Query("""
             SELECT u FROM User u
@@ -38,18 +36,11 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
                    OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchText, '%')))
             """)
     Page<User> findAllCashiersWithFilters(@Param("commerceId") Long commerceId,
-                                           @Param("searchText") String searchText,
-                                           Pageable pageable);
+                                          @Param("searchText") String searchText,
+                                          Pageable pageable);
 
     Page<User> findAllBySellPointIdAndCommerceId(Long sellPointId, Long commerceId, Pageable pageable);
 
-    /**
-     * Revalida el estado de la sesion con una sola consulta minima: no carga la entidad User
-     * ni sus relaciones, solo los dos flags que deciden si la sesion sigue viva.
-     *
-     * El JwtFilter corre en cada request autenticado, asi que la consulta tiene que ser barata:
-     * es un lookup por primary key sobre dos columnas.
-     */
     @Query("""
             SELECT new com.gestion.dto.project.UserActiveStatus(
                 u.active,

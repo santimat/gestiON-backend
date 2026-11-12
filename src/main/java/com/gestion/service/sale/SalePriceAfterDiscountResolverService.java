@@ -25,10 +25,7 @@ public class SalePriceAfterDiscountResolverService {
                     "Unsupported discount type");
         }
 
-        // red de seguridad: un total negativo nunca debe persistirse.
-        // este calculador aplica el descuento de la venta (manual o el de la oferta vigente del
-        // metodo de pago) sobre el subtotal; el descuento de la oferta de producto ya se aplico
-        // al precio de cada linea antes de armar el subtotal.
+        // si el total con descuento queda negativo, se rechaza
         if (totalAfterDiscount.signum() < 0) {
             throw new InvalidDiscountException(ErrorCode.INVALID_DISCOUNT,
                     "The discount cannot be greater than the sale subtotal");

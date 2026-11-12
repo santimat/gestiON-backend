@@ -16,10 +16,6 @@ public class CommerceValidatorByCuitService {
             throw new DuplicateResourceException(ErrorCode.COMMERCE_CUIT_ALREADY_EXISTS, "Commerce with cuit " + cuit + " already exists");
     }
 
-    /**
-     * Al actualizar, el comercio ya tiene ese cuit: el chequeo tiene que excluirlo, si no el
-     * comercio no podria guardar sus propios datos sin cambiar el cuit.
-     */
     public void checkExistingCommerceByCuitAndIdNot(String cuit, Long id) {
         if (commerceRepository.existsByCuitAndIdNot(cuit, id))
             throw new DuplicateResourceException(ErrorCode.COMMERCE_CUIT_ALREADY_EXISTS, "Commerce with cuit " + cuit + " already exists");
