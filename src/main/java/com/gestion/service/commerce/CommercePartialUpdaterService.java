@@ -38,7 +38,7 @@ public class CommercePartialUpdaterService {
 
         if (request.image() != null) {
             if (commerce.getLogoName() != null) {
-                fileDeleterService.deleteFile(commerce.getLogoName());
+                fileDeleterService.deleteFile(commerce.getLogoName(), minioProperties.dir().businessLogos());
             }
             String newLogoName = fileUploaderService.uploadFile(request.image(), minioProperties.dir().businessLogos());
             commerce.setLogoName(newLogoName);

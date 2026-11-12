@@ -32,7 +32,7 @@ public class CommerceUpdaterService {
 
         if (request.logo() != null) {
             if (commerceToUpdate.getLogoName() != null) {
-                fileDeleterService.deleteFile(commerceToUpdate.getLogoName());
+                fileDeleterService.deleteFile(commerceToUpdate.getLogoName(), minioDirProperties.dir().businessLogos());
             }
             String newLogoName = fileUploaderService.uploadFile(request.logo(), minioDirProperties.dir().businessLogos());
             commerceToUpdate.setLogoName(newLogoName);
