@@ -40,11 +40,8 @@ public enum ErrorCode {
     VALIDATION_ERROR(400, "Request validation failed"),
 
     INVALID_DISCOUNT(400, "Discount is not valid"),
-    INVALID_DISCOUNT_PREFIX_ZERO(400, "Discount cannot be zero"),
     OFFER_EXCEEDS_PRODUCT_PRICE(409, "The offer's discount cannot be greater than the product's sale price"),
-    DISCOUNT_WITHOUT_TYPE(400, "Discount amount requires a discount type"),
-    TYPE_WITHOUT_DISCOUNT(400, "Discount type requires a discount amount"),
-    DISCOUNT_EXCEEDS_SUBTOTAL(400, "Fixed amount discount cannot be greater than the sale subtotal"),
+    PAYMENT_METHOD_OFFER_EXCEEDS_SALE_SUBTOTAL(409, "The payment method offer's discount cannot be greater than the sale subtotal"),
     DISCOUNT_PERCENTAGE_EXCEEDS_100(400, "Percentage discount cannot be greater than 100"),
 
     INVALID_DATE(400, "Date is not valid"),

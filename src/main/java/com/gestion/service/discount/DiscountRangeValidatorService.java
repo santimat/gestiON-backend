@@ -23,18 +23,6 @@ public class DiscountRangeValidatorService {
         }
     }
 
-    public void validateFixedAmountNotGreaterThanTotal(BigDecimal amount, BigDecimal total) {
-        if (amount == null || total == null) {
-            throw new InvalidDiscountException(ErrorCode.INVALID_DISCOUNT,
-                    "Fixed amount discount and total are required");
-        }
-
-        if (amount.compareTo(total) > 0) {
-            throw new InvalidDiscountException(ErrorCode.DISCOUNT_EXCEEDS_SUBTOTAL,
-                    "Fixed amount discount cannot be greater than the sale subtotal");
-        }
-    }
-
     public void validateOfferValueNotGreaterThanProductSalePrice(BigDecimal offerValue,
                                                                  BigDecimal productSalePrice) {
         if (offerValue == null || productSalePrice == null) {
