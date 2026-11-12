@@ -47,12 +47,13 @@ public class Sale {
     private PaymentMethod paymentMethod;
 
 
+    // descuento aplicado por la oferta vigente del metodo de pago (null si no hay oferta)
     @Enumerated(EnumType.STRING)
-    @Column(name = "discount_type")
-    private DiscountType discountType;
+    @Column(name = "payment_method_discount_type")
+    private DiscountType paymentMethodDiscountType;
 
-    @Column(precision = 12, scale = 2)
-    private BigDecimal discount;
+    @Column(name = "payment_method_discount", precision = 12, scale = 2)
+    private BigDecimal paymentMethodDiscount;
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal subtotal;

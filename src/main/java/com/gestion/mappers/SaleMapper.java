@@ -18,8 +18,6 @@ public class SaleMapper {
 
         sale.setPaymentMethod(request.paymentMethod());
         sale.setObservations(request.observations());
-        sale.setDiscountType(request.discountType());
-        sale.setDiscount(request.discount());
         return sale;
     }
 
@@ -40,8 +38,8 @@ public class SaleMapper {
                 sale.getUser().getName(),
                 sale.getPaymentMethod(),
                 sale.getSubtotal(),
-                sale.getDiscountType(),
-                sale.getDiscount() != null ? sale.getDiscount() : BigDecimal.ZERO,
+                sale.getPaymentMethodDiscountType(),
+                sale.getPaymentMethodDiscount() != null ? sale.getPaymentMethodDiscount() : BigDecimal.ZERO,
                 sale.getTotal(),
                 sale.getCreatedAt(),
                 sale.getObservations(),
@@ -62,8 +60,8 @@ public class SaleMapper {
                 sale.getPaymentMethod(),
                 sale.getCreatedAt(),
                 sale.getSubtotal(),
-                sale.getDiscount(),
-                sale.getDiscountType(),
+                sale.getPaymentMethodDiscount(),
+                sale.getPaymentMethodDiscountType(),
                 sale.getTotal()
         );
     }

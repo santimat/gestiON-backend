@@ -58,18 +58,17 @@ public class SaleCreatorService {
         sale.setCommerce(entityManager.getReference(Commerce.class, commerceId));
         sale.setSubtotal(subtotal);
 
-        // si el metodo de pago de la venta esta asociado a una oferta activa, el descuento
-        // de la oferta prevalece sobre el descuento manual (decay en request); en caso
-        // contrario queda el descuento manual del request (puede ser null/null -> sin descuento)
+        // el descuento de la venta sale exclusivamente de la oferta vigente del metodo de pago;
+        // si no hay oferta, la venta queda sin descuento
         offerFinderByPaymentMethodAndCommerceIdService
                 .findActiveByPaymentMethodAndCommerceId(sale.getPaymentMethod(), commerceId)
                 .ifPresent(offer -> {
-                    sale.setDiscountType(offer.getDiscountType());
-                    sale.setDiscount(offer.getValue());
+                    sale.setPaymentMethodDiscountType(offer.getDiscountType());
+                    sale.setPaymentMethodDiscount(offer.getValue());
                 });
 
         BigDecimal totalAfterDiscount = saleDiscountApplierService.applyDiscount(
-                subtotal, sale.getDiscountType(), sale.getDiscount());
+                subtotal, sale.getPaymentMethodDiscountType(), sale.getPaymentMethodDiscount());
 
         sale.setTotal(totalAfterDiscount);
         sale.setStatus(saleStatusResolverService.resolveStatus(request));

@@ -15,8 +15,8 @@ public record SaleSummaryResponse(
         PaymentMethod paymentMethod,
         Instant createdAt,
         BigDecimal subtotal,
-        BigDecimal discount,
-        DiscountType discountType,
+        BigDecimal paymentMethodDiscount,
+        DiscountType paymentMethodDiscountType,
         BigDecimal total
 ) {
 }
