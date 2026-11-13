@@ -259,7 +259,7 @@ aplica su propio `max-page-size`.
 | GET | `/api/clients/{dni}` | CASHIER/OWNER | — | `ClientResponse` (por DNI dentro del comercio) |
 | POST | `/api/clients` | CASHIER/OWNER | `ClientRequest` (JSON) | `ClientResponse` (201) |
 | PUT | `/api/clients/{id}` | CASHIER/OWNER | `ClientRequest` (JSON) | `ClientResponse` |
-| GET | `/api/clients/{clientId}/pending-sales-with-details` | CASHIER/OWNER | — | `PendingSalesWithDetailsResponse` **nuevo** |
+| GET | `/api/clients/{clientId}/pending-sales-with-details` | CASHIER/OWNER | — | `PendingSalesWithDetailsResponse` · `page`, `size`, `sortBy`, `sortDir` |
 
 - **Ojo con los identificadores**: el detalle por cliente usa el **DNI** (`/api/clients/{dni}`), la
   actualización usa el **id de cliente** (`/api/clients/{id}`) y las ventas pendientes también
@@ -274,11 +274,13 @@ aplica su propio `max-page-size`.
 - El resumen de cuenta corriente (`salesCount`, `pendingSalesCount`, `totalSpent`, `totalPending`)
   viene calculado en **todos** los endpoints que devuelven un cliente (listado, detalle, alta y
   edición). Un cliente sin ventas devuelve `0` en los contadores y `0.00` en los montos.
-- `GET /api/clients/{clientId}/pending-sales-with-details` **nuevo** devuelve `pendingSalesCount`,
-  `totalPending` y `pendingSales` (lista de `SaleResponse`), ordenadas por fecha de creación
-  (ascendente). Ojo:
+- `GET /api/clients/{clientId}/pending-sales-with-details` devuelve `pendingSalesCount`,
+  `totalPending` y `pendingSales`, que ahora es una **página** de `SaleResponse` (`content` + `page`),
+  ordenadas por fecha de creación (ascendente, es el orden por defecto). `pendingSalesCount` y
+  `totalPending` cubren **todas** las ventas pendientes del cliente, sin importar la página que se
+  pida. Ojo:
   **no valida que el cliente exista** — si no tiene ventas pendientes (o no existe) responde
-  `pendingSalesCount: 0`, `totalPending: 0` y `pendingSales: []`, no `404`.
+  `pendingSalesCount: 0`, `totalPending: 0` y `pendingSales.content` vacío, no `404`.
 - El DNI es único **por comercio** (`409 CLIENT_DNI_ALREADY_EXISTS`).
 
 ### Equipo: cajeros y puntos de venta
@@ -347,6 +349,14 @@ aplica su propio `max-page-size`.
 - **Las dos ofertas se acumulan**: la oferta de producto baja el precio unitario de la línea y el
   subtotal ya sale de esos precios descontados; el descuento del método de pago se aplica después,
   sobre ese subtotal.
+- Cada línea de venta expone `discountApplied` y `discountTypeApplied`: el **valor** de la oferta de
+  producto que se aplicó (`offer.value`) y su tipo (`PERCENTAGE` / `FIXED_AMOUNT`), congelados en el
+  momento de la venta. Sin oferta de producto ambos van en `null`. Se guardan junto a la línea, así
+  que el histórico no cambia aunque la oferta después se edite o venza (no hay link a la oferta:
+  `sale_details` no tiene columna `offer_id`).
+- `price` es el precio unitario **ya descontado**. Para reconstruir el precio de lista de la línea:
+  con `FIXED_AMOUNT`, `price + discountApplied`; con `PERCENTAGE`,
+  `price / (1 - discountApplied / 100)`.
 - Una oferta de método de pago de monto fijo no puede superar el subtotal de la venta
   (`409 PAYMENT_METHOD_OFFER_EXCEEDS_SALE_SUBTOTAL`); el descuento de stock es todo-o-nada: si algún
   ítem no pasa la validación (producto inactivo o sin stock), no se descuenta ni se registra nada
@@ -429,6 +439,7 @@ Lo incorporado respecto de la versión anterior de este documento:
 | `UNAUTHORIZED` | 401 | Sin cookie `token` o token inválido |
 | `ACCOUNT_DISABLED` | 403 | Comercio del usuario deshabilitado |
 | `ACCESS_DENIED` | 403 | Rol insuficiente para el endpoint |
+| `COMMERCE_NOT_AVAILABLE` | 403 | El usuario autenticado no tiene un comercio asociado |
 | **Recurso inexistente (404)** | | |
 | `USER_NOT_FOUND` | 404 | Usuario inexistente |
 | `CLIENT_NOT_FOUND` | 404 | Cliente inexistente (o de otro comercio) |
