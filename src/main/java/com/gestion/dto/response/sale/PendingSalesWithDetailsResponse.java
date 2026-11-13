@@ -1,11 +1,12 @@
 package com.gestion.dto.response.sale;
 
+import org.springframework.data.domain.Page;
+
 import java.math.BigDecimal;
-import java.util.List;
 
 public record PendingSalesWithDetailsResponse(
         Long pendingSalesCount,
         BigDecimal totalPending,
-        List<SaleResponse> pendingSales
+        Page<SaleResponse> pendingSales
 ) {
 }
