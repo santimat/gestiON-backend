@@ -36,7 +36,8 @@ public class FileFinderService {
                             .build()
             );
         } catch (Exception e) {
-            log.error("Error retrieving object URL from MinIO: {}", e.getMessage(), e);
+            log.warn("Could not build the presigned URL for object '{}': {}", objectKey, e.getMessage());
+            // retorna null para que el front no intente descargar el archivo y muestre un error 404
             return null;
         }
     }

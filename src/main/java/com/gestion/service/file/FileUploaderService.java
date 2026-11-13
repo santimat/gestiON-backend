@@ -3,8 +3,7 @@ package com.gestion.service.file;
 import com.gestion.enums.ErrorCode;
 import com.gestion.exception.FileException;
 import com.gestion.properties.MinioProperties;
-import com.gestion.service.tika.MimeTypeDetecterService;
-import com.gestion.service.tika.MimeTypeValidatorService;
+import com.gestion.service.tika.MimeTypeService;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import lombok.AllArgsConstructor;
@@ -20,11 +19,13 @@ public class FileUploaderService {
 
     private final MinioClient minioClient;
     private final MinioProperties minioProperties;
+    private final MimeTypeService mimeTypeService;
 
 
     public String uploadFile(MultipartFile file, String subDir) {
-        // 1. Validar tipo de archivo
-        if (!MimeTypeValidatorService.isValidMimeType(file))
+        // 1. Detectar el tipo de archivo y validar que este permitido
+        String fileMimeType = mimeTypeService.detect(file);
+        if (!mimeTypeService.isAllowed(fileMimeType))
             throw new FileException(ErrorCode.INVALID_FILE_TYPE, "File's MimeType is invalid");
 
         // 2. validar tamaño del archivo
@@ -34,11 +35,8 @@ public class FileUploaderService {
         // 3. Crear nombre único para el archivo
         String objectName = UUID.randomUUID() + "-" + file.getOriginalFilename();
 
-        // 4. Detectar el tipo de archivo
-        String fileMimeType = MimeTypeDetecterService.detectMimeType(file);
-
         try {
-            // 5. Subir el archivo
+            // 4. Subir el archivo
             minioClient.putObject(
                     // constructor para los argumentos
                     PutObjectArgs.builder()
