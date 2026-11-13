@@ -1,5 +1,6 @@
 package com.gestion.service.product;
 
+import com.gestion.dto.response.product.ProductUpdateActiveResponse;
 import com.gestion.model.Product;
 import com.gestion.repository.JpaProductRepository;
 import jakarta.transaction.Transactional;
