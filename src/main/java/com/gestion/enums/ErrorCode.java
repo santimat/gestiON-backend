@@ -29,6 +29,7 @@ public enum ErrorCode {
     COMMERCE_CUIT_ALREADY_EXISTS(409, "Commerce CUIT is already registered"),
 
     INSUFFICIENT_STOCK(409, "Not enough stock for the requested quantity"),
+    CONCURRENT_STOCK_UPDATE(409, "Stock was modified by another transaction, please retry"),
     PRODUCT_INACTIVE(409, "Product is not available for sale"),
     PRODUCT_SALE_PRICE_BELOW_COST(400, "Sale price cannot be lower than cost price"),
     SALE_NOT_PENDING(409, "Only pending sales can be marked as paid"),
