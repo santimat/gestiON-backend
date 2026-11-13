@@ -9,6 +9,7 @@ public enum ErrorCode {
     ACCOUNT_DISABLED(403, "The account is disabled"),
     UNAUTHORIZED(401, "Authentication is required"),
     ACCESS_DENIED(403, "Access denied"),
+    COMMERCE_NOT_AVAILABLE(403, "The authenticated user has no commerce associated"),
 
     USER_NOT_FOUND(404, "User not found"),
     CLIENT_NOT_FOUND(404, "Client not found"),

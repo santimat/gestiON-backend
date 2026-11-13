@@ -67,7 +67,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ExceptionResponse> handleAccessDeniedException(AccessDeniedException exception) {
-        return buildResponse(ErrorCode.ACCESS_DENIED, exception.getMessage());
+        // el mensaje crudo de Spring puede filtrar detalles internos: se usa el del codigo
+        return buildResponse(ErrorCode.ACCESS_DENIED, ErrorCode.ACCESS_DENIED.getDefaultMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
