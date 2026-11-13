@@ -232,7 +232,9 @@ aplica su propio `max-page-size`.
 - `CategoryRequest`: `name` (hasta 50), `description` (hasta 200). El nombre es único **por
   comercio** (`409 CATEGORY_NAME_ALREADY_EXISTS`). El listado acepta `?categoryName=` (búsqueda
   parcial, case-insensitive) y calcula `productCount` (productos de la categoría); el detalle por id
-  devuelve `productCount` en `0`.
+  devuelve el mismo `productCount` real. Cuando la categoría viene **anidada en un producto**
+  (`category` dentro de `ProductResponse`), `productCount` vale `0`: contarla por producto sería una
+  consulta por fila en el listado.
 - `ProductRequest` / `ProductUpdateRequest`: `name` (hasta 100), `description` (hasta 255),
   `costPrice`, `salePrice`, `profitMultiplier` (opcional), `image` (opcional), `categoryId`,
   `currentStock`, `minStock`. Ambos son `multipart` por la imagen; el resto de los campos viaja como
@@ -245,6 +247,9 @@ aplica su propio `max-page-size`.
   profitMultiplier` (el del producto o, si no viene, el del comercio).
 - Los archivos suben a MinIO con un tope de 10 MB (`413 FILE_TOO_LARGE`); solo se aceptan imágenes
   `jpg`, `jpeg`, `png` y `webp` (detección por contenido, `400 INVALID_FILE_TYPE` en otro caso).
+- `imageUrl` es una URL presignada de MinIO, válida por 1 hora. Viene en `null` si el producto no
+  tiene imagen **o si MinIO no está disponible**: en ese caso el resto del catálogo sigue
+  respondiendo con normalidad, solo sin imágenes. El front debe mostrar su placeholder.
 
 ### Clientes y cuentas corrientes
 
