@@ -15,7 +15,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class ClientSearcherService {
     private final JpaClientRepository jpaClientRepository;
-    private final ClientResponseAssembler clientResponseAssembler;
+    private final ClientResponseAssemblerService clientResponseAssembler;
 
     @Transactional(readOnly = true)
     public Page<ClientResponse> searchClients(Long commerceId,

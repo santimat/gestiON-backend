@@ -12,25 +12,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Construye el {@link ClientResponse} de un cliente con el resumen de cuenta corriente siempre
- * calculado (salesCount, pendingSalesCount, totalSpent, totalPending). Todos los endpoints que
- * devuelven un cliente pasan por aca, para que el shape de la respuesta sea el mismo en todos lados.
- */
+
 @Service
 @AllArgsConstructor
 public class ClientResponseAssemblerService {
 
     private final ClientAccountSummaryService clientAccountSummaryService;
 
-    /** Un cliente: una sola query de resumen. */
     public ClientResponse toResponse(Client client, Long commerceId) {
         Map<Long, ClientAccountSummary> summaries = clientAccountSummaryService
                 .findByClientIds(List.of(client.getId()), commerceId);
         return toResponse(client, summaries);
     }
 
-    /** Una pagina entera de clientes: una sola query de resumen para todos. */
     public Map<Long, ClientResponse> toResponses(List<Client> clients, Long commerceId) {
         List<Long> clientIds = clients.stream().map(Client::getId).toList();
         Map<Long, ClientAccountSummary> summaries = clientAccountSummaryService

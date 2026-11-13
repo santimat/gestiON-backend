@@ -11,20 +11,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Resumen de cuenta corriente de los clientes (ventas pagadas y pendientes, con sus totales).
- * Todos los clientes pedidos se resuelven con una sola query de agregacion.
- */
+
 @Service
 @AllArgsConstructor
 public class ClientAccountSummaryService {
 
     private final JpaSaleRepository jpaSaleRepository;
 
-    /**
-     * Devuelve el resumen indexado por clientId. Los clientes sin ventas no aparecen en la query
-     * (GROUP BY), asi que se completan con ceros.
-     */
     public Map<Long, ClientAccountSummary> findByClientIds(Collection<Long> clientIds, Long commerceId) {
         if (clientIds == null || clientIds.isEmpty()) {
             return Map.of();
