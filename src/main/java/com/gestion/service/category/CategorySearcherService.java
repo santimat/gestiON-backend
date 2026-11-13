@@ -4,7 +4,6 @@ import com.gestion.dto.response.category.CategoryResponse;
 import com.gestion.mappers.CategoryMapper;
 import com.gestion.model.Category;
 import com.gestion.repository.JpaCategoryRepository;
-import com.gestion.service.product.ProductCounterByCategoryIds;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +18,7 @@ import java.util.Objects;
 @AllArgsConstructor
 public class CategorySearcherService {
     private final JpaCategoryRepository jpaCategoryRepository;
-    private ProductCounterByCategoryIds productCounterByCategoryIds;
+    private final CategoryProductCounterService categoryProductCounterService;
 
     @Transactional(readOnly = true)
     public Page<CategoryResponse> searchCategories(Long commerceId, String categoryName, Pageable pageable) {
@@ -31,7 +30,7 @@ public class CategorySearcherService {
                 .toList();
 
 
-        Map<Long, Long> productCountsByCategoryId = productCounterByCategoryIds.countProductsByCategoryIds(commerceId
+        Map<Long, Long> productCountsByCategoryId = categoryProductCounterService.countProductsByCategoryIds(commerceId
                 , categoryIds);
 
         return categories.map(category -> CategoryMapper.toResponse(category,

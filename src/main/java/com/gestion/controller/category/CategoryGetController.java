@@ -2,10 +2,8 @@ package com.gestion.controller.category;
 
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.category.CategoryResponse;
-import com.gestion.mappers.CategoryMapper;
-import com.gestion.model.Category;
-import com.gestion.service.category.CategoryFinderByIdAndCommerceIdService;
-import lombok.RequiredArgsConstructor;
+import com.gestion.service.category.CategoryDetailsService;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,16 +14,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/categories")
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class CategoryGetController {
-    private final CategoryFinderByIdAndCommerceIdService categoryFinderByIdAndCommerceIdService;
+    private final CategoryDetailsService categoryDetailsService;
 
     @GetMapping("/{categoryId}")
     @PreAuthorize("hasRole('OWNER') or hasRole('CASHIER')")
     public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable Long categoryId,
                                                             @AuthenticationPrincipal UserPrincipal authenticatedUser) {
-        Category category = categoryFinderByIdAndCommerceIdService
+        CategoryResponse response = categoryDetailsService
                 .findCategoryByIdAndCommerceId(categoryId, authenticatedUser.getCommerceId());
-        return ResponseEntity.ok(CategoryMapper.toResponse(category));
+        return ResponseEntity.ok(response);
     }
 }
