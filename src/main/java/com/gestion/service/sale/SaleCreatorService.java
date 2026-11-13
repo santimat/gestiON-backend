@@ -7,6 +7,7 @@ import com.gestion.model.Commerce;
 import com.gestion.model.Sale;
 import com.gestion.model.SaleDetail;
 import com.gestion.repository.JpaSaleRepository;
+import com.gestion.service.commerce.CommerceAvailabilityValidatorService;
 import com.gestion.service.offer.OfferFinderByPaymentMethodAndCommerceIdService;
 import com.gestion.service.saleDetails.SaleDetailCreatorService;
 import com.gestion.service.saleDetails.SaleDetailsMergerService;
@@ -15,7 +16,6 @@ import com.gestion.service.saleDetails.SaleDetailsValidatorService;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -35,13 +35,12 @@ public class SaleCreatorService {
     private final SaleStockUpdaterService saleStockUpdaterService;
     private final SaleDetailCreatorService saleDetailCreatorService;
     private final OfferFinderByPaymentMethodAndCommerceIdService offerFinderByPaymentMethodAndCommerceIdService;
+    private final CommerceAvailabilityValidatorService commerceAvailabilityValidatorService;
     private final EntityManager entityManager;
 
     @Transactional
     public SaleSummaryResponse createSale(SaleRequest request, Long userId, Long commerceId, Long sellPointId) {
-        if (commerceId == null) {
-            throw new AccessDeniedException("Authenticated user does not have a commerce associated");
-        }
+        commerceAvailabilityValidatorService.checkCommerceIsAvailable(commerceId);
 
         // merge de items repetidos del mismo produto sumando cantidades
         Map<Long, Integer> quantitiesByProductId = saleDetailsMergerService.mergeDetails(request.details());

@@ -7,11 +7,11 @@ import com.gestion.mappers.CashierMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.User;
 import com.gestion.repository.JpaUserRepository;
+import com.gestion.service.commerce.CommerceAvailabilityValidatorService;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import com.gestion.service.user.UserValidatorByEmailService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,12 +22,11 @@ public class CashierCreatorService {
     private final UserValidatorByEmailService userValidatorByEmailService;
     private final PasswordEncoder passwordEncoder;
     private final CommerceFinderByIdService commerceFinderByIdService;
+    private final CommerceAvailabilityValidatorService commerceAvailabilityValidatorService;
 
     @Transactional
     public UserResponse createCashier(CashierRequest request, Long commerceId) {
-        if (commerceId == null) {
-            throw new AccessDeniedException("Authenticated user does not have a commerce associated");
-        }
+        commerceAvailabilityValidatorService.checkCommerceIsAvailable(commerceId);
 
         userValidatorByEmailService.checkExistingUserByEmail(request.email());
 

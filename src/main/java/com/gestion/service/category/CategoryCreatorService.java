@@ -6,10 +6,10 @@ import com.gestion.mappers.CategoryMapper;
 import com.gestion.model.Category;
 import com.gestion.model.Commerce;
 import com.gestion.repository.JpaCategoryRepository;
+import com.gestion.service.commerce.CommerceAvailabilityValidatorService;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,12 +18,11 @@ public class CategoryCreatorService {
     private final JpaCategoryRepository categoryRepository;
     private final CommerceFinderByIdService commerceFinderByIdService;
     private final CategoryValidatorByNameService categoryValidatorByNameService;
+    private final CommerceAvailabilityValidatorService commerceAvailabilityValidatorService;
 
     @Transactional
     public CategoryResponse createCategory(CategoryRequest request, Long commerceId) {
-        if (commerceId == null) {
-            throw new AccessDeniedException("Commerce ID is null");
-        }
+        commerceAvailabilityValidatorService.checkCommerceIsAvailable(commerceId);
 
         CategoryRequest parsedRequest = new CategoryRequest(request.name().strip(), request.description());
         categoryValidatorByNameService.checkExistingCategoryByName(commerceId, parsedRequest);

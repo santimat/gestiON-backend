@@ -5,9 +5,9 @@ import com.gestion.dto.response.user.UserResponse;
 import com.gestion.mappers.CashierMapper;
 import com.gestion.model.User;
 import com.gestion.repository.JpaUserRepository;
+import com.gestion.service.commerce.CommerceAvailabilityValidatorService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,12 +18,11 @@ public class CashierUpdaterService {
     private final CashierFinderByIdAndCommerceIdService cashierFinderByIdAndCommerceIdService;
     private final CashierValidatorByEmailService cashierValidatorByEmailService;
     private final PasswordEncoder passwordEncoder;
+    private final CommerceAvailabilityValidatorService commerceAvailabilityValidatorService;
 
     @Transactional
     public UserResponse updateCashier(Long cashierId, CashierUpdateRequest request, Long commerceId) {
-        if (commerceId == null) {
-            throw new AccessDeniedException("Authenticated user does not have a commerce associated");
-        }
+        commerceAvailabilityValidatorService.checkCommerceIsAvailable(commerceId);
 
         User cashier = cashierFinderByIdAndCommerceIdService.findCashierByIdAndCommerceId(
                 cashierId, commerceId);
