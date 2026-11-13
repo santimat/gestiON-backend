@@ -1,7 +1,6 @@
 package com.gestion.service.offer;
 
 import com.gestion.dto.response.offer.OfferPaymentMethodResponse;
-import com.gestion.enums.OfferStatus;
 import com.gestion.enums.OfferType;
 import com.gestion.enums.PaymentMethod;
 import com.gestion.model.Offer;
@@ -11,8 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,8 +21,6 @@ public class OfferPaymentMethodsFinderService {
     private final JpaOfferRepository jpaOfferRepository;
 
     public List<OfferPaymentMethodResponse> findActivePaymentMethodOffers(Long commerceId) {
-        Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
-
         List<Offer> offers = jpaOfferRepository
                 .findByCommerceIdAndOfferType(commerceId, OfferType.PAYMENT_METHOD, Pageable.unpaged())
                 .getContent();
