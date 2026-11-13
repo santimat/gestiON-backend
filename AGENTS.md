@@ -16,14 +16,18 @@ Docs and comments are mostly Spanish; commit messages are English.
 
 ## Infrastructure (must be running manually)
 
-- MySQL at `localhost:3306`, database `gestion`, user `root`/`admin` — hardcoded in
-  `src/main/resources/application.properties`. No profiles, no env-var wiring, no H2/Testcontainers.
+- MySQL at `localhost:3306`, database `gestion`, user `root`/`admin`. Credentials are read from
+  environment variables (`MYSQL_URL`, `MYSQL_USERNAME`, `MYSQL_PASSWORD`) with dev defaults in
+  `src/main/resources/application.properties`. No profiles, no H2/Testcontainers.
 - `docker compose up -d` starts **only** MinIO (console `http://localhost:9001`, `admin`/`admin123`,
-  bucket `gestionbucket`). Needed only for file uploads (product images, commerce logos).
+  bucket `gestionbucket`). MinIO credentials via `MINIO_URL`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`
+  (dev defaults in `application.properties`). Needed only for file uploads (product images, commerce logos).
 - The only test is `@SpringBootTest contextLoads`; it boots the full context, so it **requires MySQL**
   (`ddl-auto=update` connects at startup). It does not require MinIO.
 - Schema comes from JPA entities via `spring.jpa.hibernate.ddl-auto=update`; there is no Flyway/Liquibase,
   and the database must already exist.
+- Copy `.env.example` to `.env` and fill in values, then export to shell before running
+  (e.g. `set -a; source .env; set +a` in bash, or `$env:SPRING_APPLICATION_JSON` in PowerShell).
 
 ## Architecture
 
@@ -54,6 +58,12 @@ Docs and comments are mostly Spanish; commit messages are English.
 - When a finder feeds a response that maps several relations, use `@EntityGraph(attributePaths = ...)`
   on the repository method to eager-load them (see `JpaSaleRepository.findByIdAndCommerceId`): lazy
   proxies would blow up outside the transaction/session.
+- **Transactional annotations**: all services use `org.springframework.transaction.annotation.Transactional`
+  (not `jakarta.transaction.Transactional`). Spring's annotation supports `readOnly`, propagation
+  and rollback rules; Jakarta's does not.
+- **Pagination validation**: list endpoints that build `Pageable` manually validate `page >= 0`,
+  `1 <= size <= 100`, `sortBy` against an allow-list, and `sortDir` ∈ {`asc`, `desc`}. Invalid values
+  return `400 INVALID_PARAMETER` (rejected, not clamped). See `PageableFactory` and `SortableProperties`.
 
 ## Security
 
@@ -65,6 +75,11 @@ Docs and comments are mostly Spanish; commit messages are English.
   `@PreAuthorize("hasRole('...')")` on the controller (`@EnableMethodSecurity` is active).
 - The JWT carries userId/commerceId/role; controllers take `@AuthenticationPrincipal UserPrincipal`
   and services trust it instead of re-querying the database.
+- **Session revalidation**: on every authenticated request, `JwtFilter` runs a lightweight query
+  (`UserActiveStatus` projection) to check the `active` flag of both the user and their commerce.
+  If either is deactivated, the request is rejected with `403 ACCOUNT_DISABLED` (or `401 UNAUTHORIZED`
+  if the user no longer exists). This means deactivating a user cuts access immediately, without
+  waiting for the JWT to expire.
 
 ## Workflow
 

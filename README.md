@@ -12,6 +12,7 @@ errores — para quien la consume.
 - **MinIO** (S3 compatible) para el almacenamiento de imágenes de productos y logos de comercio
 - **Lombok** para reducir boilerplate, **Maven Wrapper** para el build
 - Autenticación por **JWT en cookie `token`** (no se usa header `Authorization`)
+- **Credenciales por variables de entorno**: `MYSQL_*`, `JWT_*`, `MINIO_*`, `ADMIN_*` (con defaults de desarrollo en `application.properties`; copiá `.env.example` a `.env` y exportalo antes de arrancar)
 
 ## Arquitectura
 
