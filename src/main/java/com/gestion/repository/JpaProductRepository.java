@@ -31,7 +31,7 @@ public interface JpaProductRepository extends JpaRepository<Product, Long> {
               AND (:searchText IS NULL
                    OR LOWER(p.name) LIKE LOWER(CONCAT('%', :searchText, '%'))
                    OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchText, '%'))
-                   OR LOWER(p.id) LIKE LOWER(CONCAT('%', :searchText, '%')))
+                   OR LOWER(p.category.name) LIKE LOWER(CONCAT('%', :searchText, '%')))
               AND (:active IS NULL OR p.active = :active)
             """)
     Page<Product> findAllWithFilters(@Param("commerceId") Long commerceId,
