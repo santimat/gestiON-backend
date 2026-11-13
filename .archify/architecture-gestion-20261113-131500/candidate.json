@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "gestiON — Stock & Sales Management System",
+    "locale": "en",
+    "output": "docs/gestion-architecture.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {"id": "sudo", "type": "external", "label": "SUDO Admin", "sublabel": "Global admin", "pos": [40, 60], "size": [130, 60]},
+    {"id": "owner", "type": "external", "label": "Owner", "sublabel": "Commerce owner", "pos": [40, 180], "size": [130, 60]},
+    {"id": "cashier", "type": "external", "label": "Cashier", "sublabel": "Point-of-sale user", "pos": [40, 300], "size": [130, 60]},
+    {"id": "browser", "type": "frontend", "label": "Browser", "sublabel": "Frontend client", "pos": [240, 180], "size": [130, 60]},
+    {"id": "jwt-filter", "type": "security", "label": "JWT Filter", "sublabel": "Cookie-based auth", "pos": [440, 180], "size": [130, 60], "tag": "HttpOnly cookie"},
+    {"id": "controllers", "type": "backend", "label": "Controllers", "sublabel": "One class per endpoint", "pos": [640, 180], "size": [140, 60]},
+    {"id": "services", "type": "backend", "label": "Services", "sublabel": "Business logic", "pos": [850, 180], "size": [130, 60]},
+    {"id": "repositories", "type": "backend", "label": "Repositories", "sublabel": "Spring Data JPA", "pos": [1050, 180], "size": [130, 60]},
+    {"id": "global-ex", "type": "backend", "label": "Error Handler", "sublabel": "Global exception", "pos": [745, 300], "size": [130, 60]},
+    {"id": "mysql", "type": "database", "label": "MySQL 8", "sublabel": "gestion DB :3306", "pos": [1250, 180], "size": [130, 60]},
+    {"id": "minio", "type": "cloud", "label": "MinIO", "sublabel": "S3-compatible :9000", "pos": [1250, 300], "size": [130, 60], "tag": "gestionbucket"}
+  ],
+  "boundaries": [
+    {"kind": "region", "label": "Spring Boot Application", "wraps": ["jwt-filter", "controllers", "services", "repositories", "global-ex"]},
+    {"kind": "security-group", "label": "Authenticated (deny-all default)", "wraps": ["jwt-filter", "controllers"]}
+  ],
+  "connections": [
+    {"id": "sudo-to-browser", "from": "sudo", "to": "browser", "label": "HTTPS", "variant": "emphasis"},
+    {"id": "owner-to-browser", "from": "owner", "to": "browser"},
+    {"id": "cashier-to-browser", "from": "cashier", "to": "browser"},
+    {"id": "browser-to-jwt", "from": "browser", "to": "jwt-filter", "label": "token cookie"},
+    {"id": "jwt-to-controllers", "from": "jwt-filter", "to": "controllers", "label": "UserPrincipal"},
+    {"id": "controllers-to-services", "from": "controllers", "to": "services", "label": "use case"},
+    {"id": "services-to-repositories", "from": "services", "to": "repositories", "label": "JPA queries"},
+    {"id": "repositories-to-mysql", "from": "repositories", "to": "mysql", "label": "SQL"},
+    {"id": "services-to-minio", "from": "services", "to": "minio", "label": "upload / presign", "variant": "dashed"},
+    {"id": "controllers-to-error", "from": "controllers", "to": "global-ex", "label": "exceptions", "variant": "dashed", "fromSide": "bottom", "toSide": "top"},
+    {"id": "error-to-browser", "from": "global-ex", "to": "browser", "label": "JSON errors", "variant": "dashed"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Users & Roles", "items": ["SUDO — manages commerces globally", "OWNER — manages catalog, cashiers, sales, offers", "CASHIER — views catalog and registers sales"]},
+    {"dot": "emerald", "title": "Primary Path", "items": ["Login (public) → JWT cookie → authenticated request", "Controller → Service → Repository → MySQL", "File uploads route through MinIO (S3-compatible)"]},
+    {"dot": "rose", "title": "Security & Boundaries", "items": ["JWT in HttpOnly cookie (not Authorization header)", "Deny-all default; only OPTIONS and login are public", "Cross-tenant scoping: 404 for other commerce, never 403", "Session revalidated on each request against DB"]}
+  ]
+}
