@@ -24,11 +24,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
@@ -53,10 +49,18 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
                                   @Param("searchText") String searchText,
                                   Pageable pageable);
 
-    /**
-     * Resumen de cuenta corriente de varios clientes en una sola query: cantidad de ventas pagadas y
-     * pendientes, y suma de sus totales. Los clientes sin ventas no aparecen en el resultado.
-     */
+
+    @EntityGraph(attributePaths = {"client", "sellPoint", "user"})
+    @Query("""
+            SELECT s FROM Sale s
+            WHERE s.commerce.id = :commerceId
+              AND s.client.id = :clientId
+              AND s.status = com.gestion.enums.SaleStatus.PENDING
+            """)
+    Page<Sale> findPendingByClientIdAndCommerceId(@Param("commerceId") Long commerceId,
+                                                  @Param("clientId") Long clientId,
+                                                  Pageable pageable);
+
     @Query("""
             SELECT new com.gestion.dto.project.ClientAccountSummary(
                 s.client.id,

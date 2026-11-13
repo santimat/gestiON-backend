@@ -14,6 +14,9 @@ public interface JpaSaleDetailRepository extends JpaRepository<SaleDetail, Long>
     @EntityGraph(attributePaths = "product")
     List<SaleDetail> findAllBySaleId(Long saleId);
 
+    @EntityGraph(attributePaths = "product")
+    List<SaleDetail> findAllBySaleIdIn(List<Long> saleIds);
+
     @Query("""
             SELECT d.sale.id AS saleId, SUM(d.quantity) AS itemCount
             FROM SaleDetail d
