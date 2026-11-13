@@ -19,6 +19,8 @@ public record SaleRequest(
         Long clientId,
 
         @Length(max = 200, message = "Observations's length must be 200 characters or fewer")
-        String observations
+        String observations,
+
+        Boolean gift
 ) {
 }

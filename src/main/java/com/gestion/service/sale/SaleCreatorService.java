@@ -2,6 +2,10 @@ package com.gestion.service.sale;
 
 import com.gestion.dto.request.sale.SaleRequest;
 import com.gestion.dto.response.sale.SaleSummaryResponse;
+import com.gestion.enums.Role;
+import com.gestion.enums.SaleStatus;
+import com.gestion.exception.GiftOnlyForOwnerException;
+import com.gestion.exception.ObservationRequiredForGiftException;
 import com.gestion.mappers.SaleMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.Sale;
@@ -39,7 +43,7 @@ public class SaleCreatorService {
     private final EntityManager entityManager;
 
     @Transactional
-    public SaleSummaryResponse createSale(SaleRequest request, Long userId, Long commerceId, Long sellPointId) {
+    public SaleSummaryResponse createSale(SaleRequest request, Long userId, Long commerceId, Long sellPointId, Role role) {
         commerceAvailabilityValidatorService.checkCommerceIsAvailable(commerceId);
 
         // merge de items repetidos del mismo produto sumando cantidades
@@ -57,20 +61,37 @@ public class SaleCreatorService {
         sale.setCommerce(entityManager.getReference(Commerce.class, commerceId));
         sale.setSubtotal(subtotal);
 
-        // el descuento de la venta sale exclusivamente de la oferta vigente del metodo de pago;
-        // si no hay oferta, la venta queda sin descuento
-        offerFinderByPaymentMethodAndCommerceIdService
-                .findActiveByPaymentMethodAndCommerceId(sale.getPaymentMethod(), commerceId)
-                .ifPresent(offer -> {
-                    sale.setPaymentMethodDiscountType(offer.getDiscountType());
-                    sale.setPaymentMethodDiscount(offer.getValue());
-                });
+        boolean isGift = Boolean.TRUE.equals(request.gift());
 
-        BigDecimal totalAfterDiscount = saleDiscountApplierService.applyDiscount(
-                subtotal, sale.getPaymentMethodDiscountType(), sale.getPaymentMethodDiscount());
+        if (isGift) {
+            // solo OWNER puede marcar como gift
+            if (role != Role.OWNER) {
+                throw new GiftOnlyForOwnerException();
+            }
+            // gift requiere observación
+            if (request.observations() == null || request.observations().isBlank()) {
+                throw new ObservationRequiredForGiftException();
+            }
+            // gift: status GIFTED, subtotal = precio real, total = 0, sin descuentos
+            sale.setStatus(SaleStatus.GIFTED);
+            sale.setTotal(BigDecimal.ZERO);
+            // no aplicamos descuento de método de pago
+        } else {
+            // el descuento de la venta sale exclusivamente de la oferta vigente del metodo de pago;
+            // si no hay oferta, la venta queda sin descuento
+            offerFinderByPaymentMethodAndCommerceIdService
+                    .findActiveByPaymentMethodAndCommerceId(sale.getPaymentMethod(), commerceId)
+                    .ifPresent(offer -> {
+                        sale.setPaymentMethodDiscountType(offer.getDiscountType());
+                        sale.setPaymentMethodDiscount(offer.getValue());
+                    });
 
-        sale.setTotal(totalAfterDiscount);
-        sale.setStatus(saleStatusResolverService.resolveStatus(request));
+            BigDecimal totalAfterDiscount = saleDiscountApplierService.applyDiscount(
+                    subtotal, sale.getPaymentMethodDiscountType(), sale.getPaymentMethodDiscount());
+
+            sale.setTotal(totalAfterDiscount);
+            sale.setStatus(saleStatusResolverService.resolveStatus(request));
+        }
 
         sale.setSellPoint(saleSellPointResolverService.resolveSellPoint(sellPointId));
 
