@@ -3,10 +3,6 @@ package com.gestion.exception.handler;
 import com.gestion.dto.response.exception.ExceptionResponse;
 import com.gestion.enums.ErrorCode;
 import com.gestion.exception.BusinessException;
-import com.gestion.exception.InvalidDateException;
-import com.gestion.exception.InvalidProductPriceException;
-import com.gestion.exception.OfferHasProductsException;
-import com.gestion.exception.OfferOverlapException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -37,26 +33,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ExceptionResponse> handleBusinessException(BusinessException exception) {
-        return buildResponse(exception.getCode(), exception.getMessage());
-    }
-
-    @ExceptionHandler(InvalidDateException.class)
-    public ResponseEntity<ExceptionResponse> handleInvalidDateException(InvalidDateException exception) {
-        return buildResponse(exception.getCode(), exception.getMessage());
-    }
-
-    @ExceptionHandler(InvalidProductPriceException.class)
-    public ResponseEntity<ExceptionResponse> handleInvalidProductPriceException(InvalidProductPriceException exception) {
-        return buildResponse(exception.getCode(), exception.getMessage());
-    }
-
-    @ExceptionHandler(OfferOverlapException.class)
-    public ResponseEntity<ExceptionResponse> handleOfferOverlapException(OfferOverlapException exception) {
-        return buildResponse(exception.getCode(), exception.getMessage());
-    }
-
-    @ExceptionHandler(OfferHasProductsException.class)
-    public ResponseEntity<ExceptionResponse> handleOfferHasProductsException(OfferHasProductsException exception) {
         return buildResponse(exception.getCode(), exception.getMessage());
     }
 
