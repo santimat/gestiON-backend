@@ -20,7 +20,7 @@ import java.util.Objects;
 @AllArgsConstructor
 public class SaleSearcherService {
     private final JpaSaleRepository jpaSaleRepository;
-    private final SaleItemQuantitiesMapperService saleItemQuantitiesMapperService;
+    private final SaleItemQuantitiesService saleItemQuantitiesService;
 
     @Transactional(readOnly = true)
     public Page<SaleSummaryResponse> searchSales(Long commerceId, Long clientId,
@@ -32,7 +32,7 @@ public class SaleSearcherService {
                 commerceId, clientId, status, paymentMethod, normalizedSearchText, pageable);
 
         List<Long> saleIds = sales.getContent().stream().map(Sale::getId).filter(Objects::nonNull).toList();
-        Map<Long, Long> itemCountsBySaleId = saleItemQuantitiesMapperService.mapSaleItemQuantities(saleIds);
+        Map<Long, Long> itemCountsBySaleId = saleItemQuantitiesService.mapSaleItemQuantities(saleIds);
 
         return sales.map(sale -> SaleMapper.toSummaryResponse(sale,
                 itemCountsBySaleId.getOrDefault(sale.getId(), 0L).intValue()));

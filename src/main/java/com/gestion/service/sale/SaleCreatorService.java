@@ -9,10 +9,10 @@ import com.gestion.model.SaleDetail;
 import com.gestion.repository.JpaSaleRepository;
 import com.gestion.service.commerce.CommerceAvailabilityValidatorService;
 import com.gestion.service.offer.OfferFinderByPaymentMethodAndCommerceIdService;
-import com.gestion.service.saleDetails.SaleDetailCreatorService;
-import com.gestion.service.saleDetails.SaleDetailsMergerService;
-import com.gestion.service.saleDetails.SaleDetailsValidationResult;
-import com.gestion.service.saleDetails.SaleDetailsValidatorService;
+import com.gestion.service.saledetail.SaleDetailCreatorService;
+import com.gestion.service.saledetail.SaleDetailMergerService;
+import com.gestion.service.saledetail.SaleDetailValidationResult;
+import com.gestion.service.saledetail.SaleDetailValidatorService;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -29,8 +29,8 @@ public class SaleCreatorService {
     private final SaleClientResolverService saleClientResolverService;
     private final SaleStatusResolverService saleStatusResolverService;
     private final SaleDiscountApplierService saleDiscountApplierService;
-    private final SaleDetailsMergerService saleDetailsMergerService;
-    private final SaleDetailsValidatorService saleDetailsValidatorService;
+    private final SaleDetailMergerService saleDetailMergerService;
+    private final SaleDetailValidatorService saleDetailValidatorService;
     private final SaleSellPointResolverService saleSellPointResolverService;
     private final SaleStockUpdaterService saleStockUpdaterService;
     private final SaleDetailCreatorService saleDetailCreatorService;
@@ -43,11 +43,11 @@ public class SaleCreatorService {
         commerceAvailabilityValidatorService.checkCommerceIsAvailable(commerceId);
 
         // merge de items repetidos del mismo produto sumando cantidades
-        Map<Long, Integer> quantitiesByProductId = saleDetailsMergerService.mergeDetails(request.details());
+        Map<Long, Integer> quantitiesByProductId = saleDetailMergerService.mergeDetails(request.details());
 
         // validaciones previas: si algo falla, no se descuenta stock ni se persiste nada
-        SaleDetailsValidationResult validation =
-                saleDetailsValidatorService.validate(commerceId, quantitiesByProductId);
+        SaleDetailValidationResult validation =
+                saleDetailValidatorService.validate(commerceId, quantitiesByProductId);
         List<SaleDetail> details = validation.details();
         BigDecimal subtotal = validation.subtotal();
 
