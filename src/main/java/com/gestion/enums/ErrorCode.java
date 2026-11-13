@@ -56,6 +56,9 @@ public enum ErrorCode {
     METHOD_NOT_ALLOWED(405, "HTTP method is not supported for this endpoint"),
     UNSUPPORTED_MEDIA_TYPE(415, "Content type is not supported"),
 
+    OBSERVATION_REQUIRED_FOR_GIFT(400, "Observation is required when marking a sale as gift"),
+    GIFT_ONLY_FOR_OWNER(403, "Only owners can mark a sale as gift"),
+
     DATA_INTEGRITY_VIOLATION(409, "The operation violates data integrity constraints"),
     INTERNAL_ERROR(500, "An unexpected internal error occurred");
 
