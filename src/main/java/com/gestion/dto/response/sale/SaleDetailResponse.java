@@ -1,5 +1,7 @@
 package com.gestion.dto.response.sale;
 
+import com.gestion.enums.DiscountType;
+
 import java.math.BigDecimal;
 
 public record SaleDetailResponse(
@@ -7,6 +9,8 @@ public record SaleDetailResponse(
         Long productId,
         String productName,
         BigDecimal price,
-        Integer quantity
+        Integer quantity,
+        BigDecimal discountApplied,
+        DiscountType discountTypeApplied
 ) {
 }

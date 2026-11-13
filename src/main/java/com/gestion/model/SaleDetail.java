@@ -1,5 +1,6 @@
 package com.gestion.model;
 
+import com.gestion.enums.DiscountType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,13 +28,16 @@ public class SaleDetail {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "offer_id")
-    private Offer offer;
-
     @Column(nullable = false)
     private Integer quantity;
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
+
+    @Column(name = "discount_applied", precision = 12, scale = 2)
+    private BigDecimal discountApplied;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "discount_type_applied")
+    private DiscountType discountTypeApplied;
 }

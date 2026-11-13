@@ -12,7 +12,6 @@ public class SaleDetailMapper {
         SaleDetail saleDetail = new SaleDetail();
         saleDetail.setSale(sale);
         saleDetail.setProduct(product);
-        // el precio queda registrado tal como estaba publicado al momento de la venta
         saleDetail.setPrice(product.getSalePrice());
         saleDetail.setQuantity(request.quantity());
         return saleDetail;
@@ -24,7 +23,9 @@ public class SaleDetailMapper {
                 saleDetail.getProduct().getId(),
                 saleDetail.getProduct().getName(),
                 saleDetail.getPrice(),
-                saleDetail.getQuantity()
+                saleDetail.getQuantity(),
+                saleDetail.getDiscountApplied(),
+                saleDetail.getDiscountTypeApplied()
         );
     }
 }

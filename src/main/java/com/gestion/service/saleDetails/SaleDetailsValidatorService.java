@@ -46,11 +46,17 @@ public class SaleDetailsValidatorService {
             BigDecimal unitPrice = (activeOffer != null)
                     ? productDiscountedPriceCalculatorService.calculateDiscountedPrice(product.getSalePrice(), activeOffer)
                     : product.getSalePrice();
-            
+
             SaleDetail detail = new SaleDetail();
             detail.setProduct(product);
             detail.setPrice(unitPrice);
             detail.setQuantity(entry.getValue());
+
+            // snapshot de la oferta para historial
+            if (activeOffer != null) {
+                detail.setDiscountApplied(activeOffer.getValue());
+                detail.setDiscountTypeApplied(activeOffer.getDiscountType());
+            }
 
             details.add(detail);
             subtotal = subtotal.add(unitPrice.multiply(BigDecimal.valueOf(entry.getValue())));
