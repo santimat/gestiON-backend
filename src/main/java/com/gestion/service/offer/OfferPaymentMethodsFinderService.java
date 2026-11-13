@@ -9,6 +9,7 @@ import com.gestion.repository.JpaOfferRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @Service
 @AllArgsConstructor
+@Transactional(readOnly = true)
 public class OfferPaymentMethodsFinderService {
 
     private final JpaOfferRepository jpaOfferRepository;
@@ -25,7 +27,7 @@ public class OfferPaymentMethodsFinderService {
         Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
         List<Offer> offers = jpaOfferRepository
-                .findAllWithFilters(commerceId, OfferStatus.ACTIVE, null, OfferType.PAYMENT_METHOD, now, Pageable.unpaged())
+                .findByCommerceIdAndOfferType(commerceId, OfferType.PAYMENT_METHOD, Pageable.unpaged())
                 .getContent();
 
         List<OfferPaymentMethodResponse> result = new ArrayList<>();
