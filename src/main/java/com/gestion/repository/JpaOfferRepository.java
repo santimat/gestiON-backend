@@ -8,6 +8,7 @@ import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
@@ -18,42 +19,14 @@ import java.util.Optional;
 
 public interface JpaOfferRepository extends JpaRepository<Offer, Long>, JpaSpecificationExecutor<Offer> {
 
-    Page<Offer> findByCommerceId(Long commerceId, Pageable pageable);
-
     Optional<Offer> findByIdAndCommerceId(Long id, Long commerceId);
-
-    Page<Offer> findByCommerceIdAndEndDateBefore(Long commerceId, Instant threshold, Pageable pageable);
-
-    Page<Offer> findByCommerceIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(Long commerceId,
-                                                                                    Instant startDate,
-                                                                                    Instant endDate,
-                                                                                    Pageable pageable);
 
     List<Offer> findOverlappingByCommerceIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(Long commerceId,
                                                                                                Instant startDate,
                                                                                                Instant endDate);
 
-    Page<Offer> findByCommerceIdAndPaymentMethodsContaining(Long commerceId,
-                                                            PaymentMethod paymentMethod,
-                                                            Pageable pageable);
-
-    Page<Offer> findByCommerceIdAndPaymentMethodsContainingAndEndDateBefore(Long commerceId,
-                                                                            PaymentMethod paymentMethod,
-                                                                            Instant threshold,
-                                                                            Pageable pageable);
-
-    Page<Offer> findByCommerceIdAndPaymentMethodsContainingAndStartDateLessThanEqualAndEndDateGreaterThanEqual(Long commerceId,
-                                                                                                                PaymentMethod paymentMethod,
-                                                                                                                Instant startDate,
-                                                                                                                Instant endDate,
-                                                                                                                Pageable pageable);
-
-    Page<Offer> findByCommerceIdAndPaymentMethodsContainingAndStartDateAfter(Long commerceId,
-                                                                            PaymentMethod paymentMethod,
-                                                                            Instant threshold,
-                                                                            Pageable pageable);
-
-    Page<Offer> findByCommerceIdAndStartDateAfter(Long commerceId, Instant threshold, Pageable pageable);
+    @EntityGraph(attributePaths = "paymentMethods")
+    Page<Offer> findByCommerceIdAndOfferType(Long commerceId, OfferType offerType, Pageable pageable);
 
     default Page<Offer> findAllWithFilters(Long commerceId, OfferStatus status, PaymentMethod paymentMethod,
                                            OfferType offerType, Instant now, Pageable pageable) {
