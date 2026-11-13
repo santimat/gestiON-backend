@@ -4,7 +4,7 @@ import com.gestion.dto.request.user.UserUpdateRequest;
 import com.gestion.enums.Role;
 import com.gestion.model.User;
 import com.gestion.repository.JpaUserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

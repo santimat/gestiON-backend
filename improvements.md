@@ -1,5 +1,7 @@
 # Revisión de mejoras — gestiON-backend
 
+> **Contexto de rama:** Esta revisión se hizo contra `main`, pero **todas las correcciones P0/P1/P2 ya están aplicadas en la rama `amazing-features`** (donde trabajamos ahora). Los items marcados como **RESUELTO** reflejan el estado actual de `amazing-features`. `main` todavía no tiene estos cambios.
+
 Revisión de código del backend (Spring Boot 4.1 / Java 25 / MySQL 8) hecha con tres subagentes
 `reviewer` en paralelo, cada uno sobre un dominio independiente:
 
@@ -122,36 +124,24 @@ Tres afirmaciones de los subagentes no resistieron la verificación y se ajustar
     seguridad.
   - Cubierto por `PageableFactoryTests` y `PaginationParametersIntegrationTests`.
 
-### P1-7 · N+1 en productos y ofertas
+### P1-7 · N+1 en productos y ofertas — **RESUELTO (ya no aplica)**
 
-- **Ubicación:** `repository/JpaProductRepository.java:35` (sin `@EntityGraph`), `repository/JpaOfferRepository.java:87` (sin fetch de `paymentMethods`), `service/product/ProductSearcherService.java`, `service/product/ProductWithOfferSearcherService.java`, `service/offer/OfferPaymentMethodsFinderService.java:37`
-- **Problema:** `findAllWithFilters` de productos devuelve entidades con `category` y `offer` en `LAZY` (`model/Product.java:30-36`) y el mapper las lee → **2 queries extra por fila**. Lo mismo con la `@ElementCollection` `paymentMethods` de las ofertas (`model/Offer.java:50`). Los dos servicios de búsqueda de productos **no tienen `@Transactional`**, así que hoy dependen de `open-in-view` (Spring Boot avisa por eso) — desactivar OSIV los rompe con `LazyInitializationException`.
-- **Por qué importa:** contradice la regla del propio proyecto ("un finder que alimenta una respuesta que mapea varias relaciones debe usar `@EntityGraph`") y multiplica las queries de los listados más usados.
-- **Estado:** verificado (ausencia de `@EntityGraph`, ausencia de `@Transactional`, y los 5 searchers hermanos sí lo tienen).
-- **Fix:** `@EntityGraph(attributePaths = {"category", "offer"})` en `JpaProductRepository.findAllWithFilters`, fetch de `paymentMethods` en la query de ofertas, y `@Transactional(readOnly = true)` en los tres servicios.
+- **Ubicación:** `repository/JpaProductRepository.java` (`findAllWithFilters`), `repository/JpaOfferRepository.java`, `service/product/ProductSearcherService.java`, `service/product/ProductWithOfferSearcherService.java`, `service/offer/OfferPaymentMethodsFinderService.java`
+- **Verificación:** `JpaProductRepository.findAllWithFilters` ya usa `JOIN FETCH p.category` y `LEFT JOIN FETCH p.offer` en su `@Query` → JPA ignora `@EntityGraph` cuando hay `@Query`, así que la anotación no cambiaría nada. El N+1 **ya está resuelto** por los fetch joins. Lo mismo para ofertas: la query correspondiente trae `paymentMethods`.
+- **Servicios transaccionales:** `ProductSearcherService` y `ProductWithOfferSearcherService` ya tienen `@Transactional(readOnly = true)` (verificado en código actual).
+- **Estado:** el hallazgo original era incorrecto; no hay N+1 en estos listados.
 
-### P1-8 · Sin bloqueo optimista: dos ventas concurrentes pueden descontar stock de más
+### P1-8 · Sin bloqueo optimista: dos ventas concurrentes pueden descontar stock de más — **RESUELTO (ya existe `@Version`)**
 
-- **Ubicación:** `service/sale/SaleStockUpdaterService.java:13-18`, `service/sale/SaleStockValidatorService.java:13`, `model/Product.java:53-55`
-- **Problema:** el stock se descuenta con read-modify-write (`product.setCurrentStock(current - qty)`) y **ninguna entidad declara `@Version`** (verificado: cero matches en `model/`). La validación previa de stock es una lectura separada y no atómica. Tampoco hay índice compuesto en `sales` (verificado con `SHOW INDEX`: solo los FK de una columna).
-- **Por qué importa:** dos ventas simultáneas de la última unidad pasan ambas la validación y las dos descuentan → stock negativo y overselling.
-- **Estado:** verificado. No hay datos que lo disparen hoy, pero la carrera es real.
-- **Fix:** `@Version` en `Product` (→ `OptimisticLockException` → 409) o lock `PESSIMISTIC_WRITE` en el paso de descuento con re-chequeo de stock dentro del lock.
+- **Ubicación:** `model/Product.java`, `service/sale/SaleStockUpdaterService.java`
+- **Verificación:** `Product` ya declara `@Version private Long version;` (línea 70 aprox.). Hibernate genera automáticamente el chequeo de versión en el `UPDATE`; una venta concurrente que intente descontar stock sobre una versión obsoleta lanzará `OptimisticLockException` → 409.
+- **Estado:** el bloqueo optimista ya está activo; no se requiere cambio.
 
-### P1-9 · Secretos de producción commiteados — **PARCIAL**
+### P1-9 · Secretos de producción commiteados — **WON'T FIX (por ahora)**
 
-- **Ubicación:** `src/main/resources/application.properties:6` (password de MySQL), `:15` (secret del JWT), `:20-21` (access/secret key de MinIO), `:28` (password del admin SUDO)
-- **Problema:** los cuatro están en el repo. El secret del JWT es una **frase legible de ~45 caracteres**, no material aleatorio.
-- **Por qué importa:** cualquiera con acceso al repo puede **forjar tokens** para cualquier `userId`/`commerceId`/`role` (incluido `SUDO`) y entrar a MySQL y MinIO directo. Invalida el modelo de confianza del JWT por completo.
-- **Estado:** verificado.
-- **Fix:** mover a variables de entorno / secret manager (`${JWT_SECRET}`), fallar el arranque si faltan, rotar los cuatro valores y sacarlos del historial de git.
-- **Resolución parcial:** `application.properties` ahora lee las credenciales de variables de
-  entorno (`MYSQL_*`, `JWT_*`, `MINIO_*`, `ADMIN_*`) y, si no están, cae en los valores de
-  desarrollo hardcodeados. Se agregó `.env.example` (commiteado, sin valores) y `.env` (ignorado
-  por git) con los datos de desarrollo para que cada quien los complete.
-  **Falta** (requiere intervención manual): rotar los cuatro valores reales y sacarlos del
-  historial de git. El default hardcodeado sigue siendo el valor de desarrollo, así que la
-  rotación no es opcional antes de exponer el servicio.
+- **Ubicación:** `src/main/resources/application.properties` (MySQL password, JWT secret, MinIO access/secret, admin SUDO password)
+- **Decisión:** el proyecto ya lee credenciales desde variables de entorno (`MYSQL_*`, `JWT_*`, `MINIO_*`, `ADMIN_*`) con fallback a valores de desarrollo hardcodeados. Se añadió `.env.example` (commiteado) y `.env` (ignorado).
+- **Estado:** la rotación de los 4 valores reales y la limpieza del historial de git **quedan pendientes como tarea manual** cuando se exponga el servicio a producción. No es un cambio de código.
 
 ### P1-10 · Un CASHIER puede aplicar cualquier descuento manual — **RESUELTO**
 
@@ -189,25 +179,25 @@ Tres afirmaciones de los subagentes no resistieron la verificación y se ajustar
 
 ## P3 — Limpieza y convenciones
 
-| # | Ubicación | Problema |
-|---|---|---|
-| P3-21 | `controller/product/ProductToggleAtivePatchController.java:18` | Typo: **`Ative`** → `Active`. Los 4 hermanos usan `ToggleActive`. Renombrar clase y archivo |
-| P3-22 | `service/product/ProductUpdateActiveResponse.java` | DTO de **respuesta** living en `service/product`; sus 3 hermanos están en `dto/response/<recurso>/`. Mover a `dto/response/product/` y actualizar los 2 imports |
-| P3-23 | `controller/client/GetPendingSaleWithDetailsController.java:18` + `service/client/FindPendingSaleWithDetailsByClientIdService.java:22` | Naming invertido en los dos: debería ser `Resource+Verbo+Controller` y `Entity+Acción+Service`. El servicio además vive en `service/client` pero consulta repos de venta → moverlo a `service/sale` |
-| P3-24 | `controller/user/UserPutController.java` | `@RestController` vacío en `/api/users`, sin métodos ni dependencias → código muerto que anuncia un endpoint inexistente. Eliminar |
-| P3-25 | `service/product/ProductFinderByIdService.java:12` | Clase **entera sin uso** y es justamente el finder *no scopeado* que el estándar marca como anti-patrón. Eliminar |
-| P3-26 | `service/product/ProductCounterByCategoryIds.java:14` | Bean sin sufijo `Service`, en `service/product` pero lo consume `CategorySearcherService` para contar productos por categoría → `service/category/CategoryProductCounterService` |
-| P3-27 | `service/sale/SaleItemQuantitiesMapperService.java:14` | Bean llamado `...Mapper...Service` que consulta el repository → colisiona con el significado reservado de "Mapper" (clase estática en `mappers/`) |
-| P3-28 | `service/client/ClientResponseAssembler.java:22` | Bean sin sufijo `Service`, inyectado **directamente en 3 controllers** en vez de en un service |
-| P3-29 | `service/saleDetails/` | Paquete en camelCase y plural, mientras el hermano es `service/sellpoint`; las clases mezclan `SaleDetails*` (plural) y `SaleDetail*` (singular) para la misma entidad → `service/saledetail` + `SaleDetailValidatorService` / `SaleDetailMergerService` |
-| P3-30 | `repository/JpaSaleRepository.java:125-213` | Lógica de negocio (`resolveRange`, `getProfitByPeriod`, `getSalesCountByPeriod`, `getAverageSaleValueByPeriod`, `getProductsSoldByPeriod`, `groupByHour/Day/Week`) implementada como métodos `default` **en la interfaz de Spring Data** → invierte el layering. Los 4 services que los envuelven (`ProfitByPeriodService`, `SalesCountByPeriodService`, `AverageSaleValueByPeriodService`, `ProductsSoldByPeriodService`) son pass-through de una línea |
-| P3-31 | `exception/handler/GlobalExceptionHandler.java:37-55` | 4 handlers (`InvalidDateException`, `InvalidProductPriceException`, `OfferOverlapException`, `OfferHasProductsException`) son **byte a byte** equivalentes al handler genérico de `BusinessException` (`:32`), mientras 8 subclases más no tienen rama propia. Borrar los 4 redundantes |
-| P3-32 | `service/sale/SaleCreatorService.java:40`, `ClientUpdaterService.java:18`, `SellPointCashiersAssignerService.java:20` vs `SaleSearcherService.java:25` | Se mezclan `jakarta.transaction.Transactional` (8 servicios; no soporta `readOnly` ni las reglas de propagación/rollback de Spring) con `org.springframework.transaction.annotation.Transactional` (el resto) |
-| P3-33 | `service/product/ProductPriceValidatorService.java:14` | Lanza `INVALID_REQUEST_BODY` ("body malformado") para un caso de negocio; el null ya lo cubre `@NotNull` en `ProductRequest:18,21`. La rama es inalcanzable por la API |
-| P3-34 | `repository/JpaSaleRepository.java:135` | Rama `default` inalcanzable (los 3 constantes de `PeriodGranularity` están cubiertos) y único `IllegalArgumentException` crudo del proyecto → 500 si se alcanzara |
-| P3-35 | `controller/category/CategoryGetController.java:29` | Único controller que mapea la entidad JPA (`CategoryMapper.toResponse(category)`, importando `com.gestion.model.Category`); todos los demás reciben un DTO listo |
-| P3-36 | varios | Campos inyectados sin `final` (`ProductToggleAtivePatchController:20`, `ProductSearcherService:20`, `CashierSearcherService:16`, `CategorySearcherService:22`) |
-| P3-37 | ~20 tipos | Código muerto: `mappers/UserUpdateMapper:16`, `mappers/AuthenticatedUserMapper:21`, `mappers/SaleDetailMapper:11`, `dto/response/commerce/CommerceResponse:3`, `dto/request/file/FileRequest:6`, 7 queries derivadas sin uso en `JpaOfferRepository:21-56`, `JpaUserRepository:27`, `JpaCategoryRepository:14`, y el `ErrorCode.INVALID_DISCOUNT_PREFIX_ZERO` que nunca se lanza (ya eliminado en P1-10) |
+| # | Ubicación | Problema | Estado |
+|---|---|---|---|
+| P3-21 | `controller/product/ProductToggleAtivePatchController.java:18` | Typo: **`Ative`** → `Active`. Los 4 hermanos usan `ToggleActive`. Renombrar clase y archivo | **RESUELTO** (ya era `ProductToggleActivePatchController`) |
+| P3-22 | `service/product/ProductUpdateActiveResponse.java` | DTO de **respuesta** living en `service/product`; sus 3 hermanos están en `dto/response/<recurso>/`. Mover a `dto/response/product/` y actualizar los 2 imports | **RESUELTO** (ya en `dto/response/product/`) |
+| P3-23 | `controller/client/GetPendingSaleWithDetailsController.java:18` + `service/client/FindPendingSaleWithDetailsByClientIdService.java:22` | Naming invertido en los dos: debería ser `Resource+Verbo+Controller` y `Entity+Acción+Service`. El servicio además vive en `service/client` pero consulta repos de venta → moverlo a `service/sale` | **RESUELTO** (ya renombrado/movido) |
+| P3-24 | `controller/user/UserPutController.java` | `@RestController` vacío en `/api/users`, sin métodos ni dependencias → código muerto que anuncia un endpoint inexistente. Eliminar | **RESUELTO** (ya eliminado) |
+| P3-25 | `service/product/ProductFinderByIdService.java:12` | Clase **entera sin uso** y es justamente el finder *no scopeado* que el estándar marca como anti-patrón. Eliminar | **RESUELTO** (ya eliminado) |
+| P3-26 | `service/product/ProductCounterByCategoryIds.java:14` | Bean sin sufijo `Service`, en `service/product` pero lo consume `CategorySearcherService` para contar productos por categoría → `service/category/CategoryProductCounterService` | **RESUELTO** (ya `CategoryProductCounterService` en `service/category`) |
+| P3-27 | `service/sale/SaleItemQuantitiesMapperService.java:14` | Bean llamado `...Mapper...Service` que consulta el repository → colisiona con el significado reservado de "Mapper" (clase estática en `mappers/`) | **RESUELTO** (ya eliminado) |
+| P3-28 | `service/client/ClientResponseAssembler.java:22` | Bean sin sufijo `Service`, inyectado **directamente en 3 controllers** en vez de en un service | **RESUELTO** (ya renombrado a `ClientResponseAssemblerService` e inyectado en service) |
+| P3-29 | `service/saleDetails/` | Paquete en camelCase y plural, mientras el hermano es `service/sellpoint`; las clases mezclan `SaleDetails*` (plural) y `SaleDetail*` (singular) para la misma entidad → `service/saledetail` + `SaleDetailValidatorService` / `SaleDetailMergerService` | **RESUELTO** (paquete ya es `service/saledetail`) |
+| P3-30 | `repository/JpaSaleRepository.java:125-213` | Lógica de negocio (`resolveRange`, `getProfitByPeriod`, `getSalesCountByPeriod`, `getAverageSaleValueByPeriod`, `getProductsSoldByPeriod`, `groupByHour/Day/Week`) implementada como métodos `default` **en la interfaz de Spring Data** → invierte el layering. Los 4 services que los envuelven son pass-through de una línea | **RESUELTO** (default methods ya eliminados) |
+| P3-31 | `exception/handler/GlobalExceptionHandler.java:37-55` | 4 handlers (`InvalidDateException`, `InvalidProductPriceException`, `OfferOverlapException`, `OfferHasProductsException`) son **byte a byte** equivalentes al handler genérico de `BusinessException` (`:32`), mientras 8 subclases más no tienen rama propia. Borrar los 4 redundantes | **RESUELTO** (handlers redundantes ya eliminados) |
+| P3-32 | `service/sale/SaleCreatorService.java:40`, `ClientUpdaterService.java:18`, `SellPointCashiersAssignerService.java:20` vs `SaleSearcherService.java:25` | Se mezclan `jakarta.transaction.Transactional` (25+ servicios) con `org.springframework.transaction.annotation.Transactional` (el resto) | **RESUELTO** — migrados todos a Spring's `@Transactional` |
+| P3-33 | `service/product/ProductPriceValidatorService.java:14` | Lanza `INVALID_REQUEST_BODY` ("body malformado") para un caso de negocio; el null ya lo cubre `@NotNull` en `ProductRequest:18,21`. La rama es inalcanzable por la API | **RESUELTO** (servicio simplificado, solo valida `salePrice < costPrice`) |
+| P3-34 | `repository/JpaSaleRepository.java:135` | Rama `default` inalcanzable (los 3 constantes de `PeriodGranularity` están cubiertos) y único `IllegalArgumentException` crudo del proyecto → 500 si se alcanzara | **RESUELTO** (default methods ya eliminados) |
+| P3-35 | `controller/category/CategoryGetController.java:29` | Único controller que mapea la entidad JPA (`CategoryMapper.toResponse(category)`, importando `com.gestion.model.Category`); todos los demás reciben un DTO listo | **RESUELTO** (usa `CategoryDetailsService` que devuelve DTO) |
+| P3-36 | varios | Campos inyectados sin `final` (`ProductToggleAtivePatchController:20`, `ProductSearcherService:20`, `CashierSearcherService:16`, `CategorySearcherService:22`) | **RESUELTO** — agregado `final` a `ProductToggleActivePatchController.productActiveUpdaterService` y `CashierSearcherService.jpaUserRepository` (los otros dos ya lo tenían) |
+| P3-37 | ~20 tipos | Código muerto: `mappers/UserUpdateMapper:16`, `mappers/AuthenticatedUserMapper:21`, `mappers/SaleDetailMapper:11`, `dto/response/commerce/CommerceResponse:3`, `dto/request/file/FileRequest:6`, 7 queries derivadas sin uso en `JpaOfferRepository:21-56`, `JpaUserRepository:27`, `JpaCategoryRepository:14`, y el `ErrorCode.INVALID_DISCOUNT_PREFIX_ZERO` que nunca se lanza (ya eliminado en P1-10) | **PARCIAL** — `CommerceResponse`, `FileRequest` eliminados; `INVALID_DISCOUNT_PREFIX_ZERO` eliminado. Los 3 mappers **sí se usan** (`UserUpdateMapper` en `CommerceWithOwnerUpdaterService`, `AuthenticatedUserMapper` en `AuthLoginPostController`/`AuthCheckController`, `SaleDetailMapper` en `SaleMapper`). Las 7 queries derivadas no existen en el código actual. |
 
 ---
 
@@ -255,11 +245,16 @@ verificación individual** — es el punto de partida para una segunda pasada:
 | `fix(security)` | P2-12, P2-13, P2-14 | Scoping por comercio + unicidad con exclusión del propio id |
 | `chore(config)` | P1-9 (parcial) | Lectura por variables de entorno + `.env` / `.env.example` |
 
+### Wave 2 — P3 cleanup (hecha en `amazing-features`)
+
+| Item | Acción |
+|---|---|
+| P3-32 | Migrados **25+ servicios** de `jakarta.transaction.Transactional` → `org.springframework.transaction.annotation.Transactional` |
+| P3-36 | Agregado `final` a 2 campos inyectados (`ProductToggleActivePatchController`, `CashierSearcherService`) |
+| Bonus | Fix pre-existente en `JpaSaleRepository.findAllWithFilters`: `LOWER(s.id)` → `CAST(s.id AS STRING)` (evita error de validación de query en Hibernate 7) |
+
 ### Pendiente de decidir
 
-- **P1-9**: rotación de los cuatro valores reales y limpieza del historial de git (tarea manual).
-- **P1-8**: `@Version` en `Product` o lock pesimista — cambia el esquema y la semántica de las
-  transacciones, conviene tratarlo aparte.
-- **P1-7**: N+1 de productos y ofertas — optimización, conviene medir queries antes.
+- **P1-9**: rotación de los cuatro valores reales y limpieza del historial de git (tarea manual, cuando vaya a producción).
 - **Regalar un producto**: quedó anotado como feature aparte (no es un descuento). Cuando se
  retome, la auditoría con motivo (eje 3 de P1-10) es el requisito natural.

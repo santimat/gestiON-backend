@@ -8,7 +8,7 @@ import com.gestion.mappers.UserMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.User;
 import com.gestion.repository.JpaUserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

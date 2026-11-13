@@ -4,7 +4,7 @@ import com.gestion.enums.Role;
 import com.gestion.model.User;
 import com.gestion.properties.AdminProperties;
 import com.gestion.repository.JpaUserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.boot.ApplicationArguments;

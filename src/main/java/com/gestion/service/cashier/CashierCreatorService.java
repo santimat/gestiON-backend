@@ -10,7 +10,7 @@ import com.gestion.repository.JpaUserRepository;
 import com.gestion.service.commerce.CommerceAvailabilityValidatorService;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import com.gestion.service.user.UserValidatorByEmailService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

@@ -4,7 +4,7 @@ import com.gestion.dto.response.sale.SaleUpdateStatusResponse;
 import com.gestion.enums.SaleStatus;
 import com.gestion.exception.SaleNotPendingException;
 import com.gestion.model.Sale;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

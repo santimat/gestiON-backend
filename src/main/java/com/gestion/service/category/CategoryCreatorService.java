@@ -8,7 +8,7 @@ import com.gestion.model.Commerce;
 import com.gestion.repository.JpaCategoryRepository;
 import com.gestion.service.commerce.CommerceAvailabilityValidatorService;
 import com.gestion.service.commerce.CommerceFinderByIdService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

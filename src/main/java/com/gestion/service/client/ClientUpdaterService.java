@@ -5,7 +5,7 @@ import com.gestion.enums.ErrorCode;
 import com.gestion.exception.ResourceNotFoundException;
 import com.gestion.model.Client;
 import com.gestion.repository.JpaClientRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

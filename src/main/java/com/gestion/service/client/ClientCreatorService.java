@@ -6,7 +6,7 @@ import com.gestion.model.Client;
 import com.gestion.repository.JpaClientRepository;
 import com.gestion.service.commerce.CommerceAvailabilityValidatorService;
 import com.gestion.service.commerce.CommerceFinderByIdService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

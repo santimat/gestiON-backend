@@ -14,7 +14,7 @@ import com.gestion.service.saledetail.SaleDetailMergerService;
 import com.gestion.service.saledetail.SaleDetailValidationResult;
 import com.gestion.service.saledetail.SaleDetailValidatorService;
 import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class ProductToggleActivePatchController {
 
-    private ProductActiveUpdaterService productActiveUpdaterService;
+    private final ProductActiveUpdaterService productActiveUpdaterService;
 
     @PatchMapping("/{id}/toggle-active")
     @PreAuthorize("hasRole('OWNER')")

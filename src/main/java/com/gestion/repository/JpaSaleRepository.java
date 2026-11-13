@@ -29,7 +29,7 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
               AND (:status IS NULL OR s.status = :status)
               AND (:paymentMethod IS NULL OR s.paymentMethod = :paymentMethod)
               AND (:searchText IS NULL
-                   OR LOWER(s.id) LIKE LOWER(CONCAT('%', :searchText, '%'))
+                   OR CAST(s.id AS STRING) LIKE CONCAT('%', :searchText, '%')
                    OR LOWER(s.observations) LIKE LOWER(CONCAT('%', :searchText, '%'))
                    OR LOWER(c.name) LIKE LOWER(CONCAT('%', :searchText, '%')))
             """)

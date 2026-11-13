@@ -6,7 +6,7 @@ import com.gestion.properties.MinioProperties;
 import com.gestion.repository.JpaCommerceRepository;
 import com.gestion.service.file.FileDeleterService;
 import com.gestion.service.file.FileUploaderService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

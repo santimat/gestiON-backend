@@ -3,7 +3,7 @@ package com.gestion.service.commerce;
 import com.gestion.dto.response.commerce.CommerceUpdateActiveResponse;
 import com.gestion.model.Commerce;
 import com.gestion.repository.JpaCommerceRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

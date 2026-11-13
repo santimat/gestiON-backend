@@ -10,7 +10,7 @@ import com.gestion.model.Offer;
 import com.gestion.repository.JpaOfferRepository;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import com.gestion.service.discount.DiscountRangeValidatorService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
