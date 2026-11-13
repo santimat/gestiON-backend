@@ -3,7 +3,6 @@ package com.gestion.controller.sale;
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.sale.SaleRequest;
 import com.gestion.dto.response.sale.SaleSummaryResponse;
-import com.gestion.enums.Role;
 import com.gestion.service.sale.SaleCreatorService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
