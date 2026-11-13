@@ -20,7 +20,9 @@ public class ProductFinderByIdsAndCommerceIdService {
         }
         List<Product> products = jpaProductRepository.findByIdInAndCommerceId(ids, commerceId);
 
-        if (products.size() != ids.size()) {
+        long distinctIds = ids.stream().distinct().count();
+
+        if (products.size() != distinctIds) {
             throw new ResourceNotFoundException(ErrorCode.PRODUCTS_OFFER_NOT_FOUND, "Some products were not found for the current commerce");
         }
 
