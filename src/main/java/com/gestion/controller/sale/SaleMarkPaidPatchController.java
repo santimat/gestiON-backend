@@ -19,7 +19,7 @@ public class SaleMarkPaidPatchController {
     private final SaleMarkPaidService saleMarkPaidService;
 
     @PatchMapping("/{id}/mark-paid")
-    @PreAuthorize("hasRole('CASHIER') or hasRole('OWNER')")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<SaleUpdateStatusResponse> markPaid(
             @PathVariable Long id,
             @AuthenticationPrincipal UserPrincipal authenticatedUser) {
