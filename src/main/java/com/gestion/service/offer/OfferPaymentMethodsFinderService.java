@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,8 +22,9 @@ public class OfferPaymentMethodsFinderService {
     private final JpaOfferRepository jpaOfferRepository;
 
     public List<OfferPaymentMethodResponse> findActivePaymentMethodOffers(Long commerceId) {
+        Instant now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS);
         List<Offer> offers = jpaOfferRepository
-                .findByCommerceIdAndOfferType(commerceId, OfferType.PAYMENT_METHOD, Pageable.unpaged())
+                .findByCommerceIdAndOfferType(commerceId, OfferType.PAYMENT_METHOD, now, Pageable.unpaged())
                 .getContent();
 
         List<OfferPaymentMethodResponse> result = new ArrayList<>();

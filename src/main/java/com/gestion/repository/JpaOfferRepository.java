@@ -11,6 +11,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -27,7 +29,17 @@ public interface JpaOfferRepository extends JpaRepository<Offer, Long>, JpaSpeci
                                                                                                Instant endDate);
 
     @EntityGraph(attributePaths = "paymentMethods")
-    Page<Offer> findByCommerceIdAndOfferType(Long commerceId, OfferType offerType, Pageable pageable);
+    @Query("""
+            SELECT o FROM Offer o
+            WHERE o.commerce.id = :commerceId
+              AND o.offerType = :offerType
+              AND o.startDate <= :now
+              AND o.endDate >= :now
+            """)
+    Page<Offer> findByCommerceIdAndOfferType(@Param("commerceId") Long commerceId,
+                                             @Param("offerType") OfferType offerType,
+                                             @Param("now") Instant now,
+                                             Pageable pageable);
 
     default Page<Offer> findAllWithFilters(Long commerceId, OfferStatus status, PaymentMethod paymentMethod,
                                            OfferType offerType, Instant now, Pageable pageable) {
