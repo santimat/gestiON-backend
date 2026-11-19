@@ -2,15 +2,11 @@ package com.gestion.service.transaction;
 
 import com.gestion.dto.request.transaction.TransactionRequest;
 import com.gestion.dto.response.transaction.TransactionResponse;
-import com.gestion.enums.ErrorCode;
-import com.gestion.exception.ResourceNotFoundException;
 import com.gestion.mappers.TransactionMapper;
 import com.gestion.model.Sale;
 import com.gestion.model.Transaction;
-import com.gestion.repository.JpaSaleRepository;
 import com.gestion.repository.JpaTransactionRepository;
 import com.gestion.service.sale.SaleFinderByIdAndCommerceIdService;
-import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
