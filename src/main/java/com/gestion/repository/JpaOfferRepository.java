@@ -51,7 +51,7 @@ public interface JpaOfferRepository extends JpaRepository<Offer, Long>, JpaSpeci
         // root -> entidad
         // query -> consulta (aplicar metodos de ordenamiento, paginación, etc)
         // criteriaBuilder -> constructor de criterios (equal, greaterThan, lessThan, etc)
-        Specification<Offer> specification = (root, query, criteriaBuilder) -> {
+        Specification<Offer> specification = (root, _, criteriaBuilder) -> {
 
             // Lista de condiciones para la query
             List<Predicate> predicates = new ArrayList<>();

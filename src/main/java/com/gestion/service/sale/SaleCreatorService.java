@@ -4,7 +4,6 @@ import com.gestion.dto.request.sale.SaleRequest;
 import com.gestion.dto.response.sale.SaleSummaryResponse;
 import com.gestion.enums.Role;
 import com.gestion.enums.SaleStatus;
-import com.gestion.exception.ClientRequiredForCreditAccountException;
 import com.gestion.exception.GiftOnlyForOwnerException;
 import com.gestion.exception.ObservationRequiredForGiftException;
 import com.gestion.mappers.SaleMapper;
