@@ -4,6 +4,7 @@ import com.gestion.dto.request.sale.SaleRequest;
 import com.gestion.dto.response.sale.SaleSummaryResponse;
 import com.gestion.enums.Role;
 import com.gestion.enums.SaleStatus;
+import com.gestion.exception.ClientRequiredForCreditAccountException;
 import com.gestion.exception.GiftOnlyForOwnerException;
 import com.gestion.exception.ObservationRequiredForGiftException;
 import com.gestion.mappers.SaleMapper;
@@ -40,11 +41,15 @@ public class SaleCreatorService {
     private final SaleDetailCreatorService saleDetailCreatorService;
     private final OfferFinderByPaymentMethodAndCommerceIdService offerFinderByPaymentMethodAndCommerceIdService;
     private final CommerceAvailabilityValidatorService commerceAvailabilityValidatorService;
+    private final SalePaymentMethodValidatorService salePaymentMethodValidatorService;
     private final EntityManager entityManager;
 
     @Transactional
     public SaleSummaryResponse createSale(SaleRequest request, Long userId, Long commerceId, Long sellPointId, Role role) {
         commerceAvailabilityValidatorService.checkCommerceIsAvailable(commerceId);
+
+        // Validación: CREDIT_ACCOUNT requiere clientId
+        salePaymentMethodValidatorService.validate(request);
 
         // merge de items repetidos del mismo produto sumando cantidades
         Map<Long, Integer> quantitiesByProductId = saleDetailMergerService.mergeDetails(request.details());

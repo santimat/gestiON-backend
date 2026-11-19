@@ -58,6 +58,7 @@ public enum ErrorCode {
 
     OBSERVATION_REQUIRED_FOR_GIFT(400, "Observation is required when marking a sale as gift"),
     GIFT_ONLY_FOR_OWNER(403, "Only owners can mark a sale as gift"),
+    CLIENT_REQUIRED_FOR_CREDIT_ACCOUNT(400, "Client is required for credit account payment method"),
 
     DATA_INTEGRITY_VIOLATION(409, "The operation violates data integrity constraints"),
     INTERNAL_ERROR(500, "An unexpected internal error occurred");
