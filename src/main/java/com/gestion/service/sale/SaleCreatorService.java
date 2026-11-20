@@ -56,7 +56,7 @@ public class SaleCreatorService {
         SalePersistenceResult persistence = persistenceService.persist(sale, validation.details());
 
         // 8. Create transaction if revenue/outflow > 0
-        transactionService.createIfNeeded(request, persistence.savedSale(), commerceId);
+        transactionService.createIfNeeded(request, persistence.savedSale());
 
         // 9. Build response
         return SaleMapper.toSummaryResponse(persistence.savedSale(), persistence.itemCount());

@@ -1,21 +1,21 @@
 package com.gestion.service.offer;
 
+import com.gestion.service.offer.OfferDateValidatorService;
 import lombok.AllArgsConstructor;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+
 @Service
-@Order(2)
 @AllArgsConstructor
-public class OfferDateValidator implements OfferValidationPipeline.OfferValidator {
+public class OfferDateValidator {
     private final OfferDateValidatorService delegate;
 
-    @Override
-    public void validate(OfferValidationContext ctx) {
-        if (ctx.offerId == null) {
-            delegate.validateOfferDates(ctx.startDate, ctx.endDate, ctx.now);
-        } else {
-            delegate.validateOfferDatesForUpdate(ctx.startDate, ctx.endDate, ctx.now, ctx.existingOffer.getStartDate());
-        }
+    public void validateForCreate(Instant startDate, Instant endDate, Instant now) {
+        delegate.validateOfferDates(startDate, endDate, now);
+    }
+
+    public void validateForUpdate(Instant startDate, Instant endDate, Instant now, Instant originalStartDate) {
+        delegate.validateOfferDatesForUpdate(startDate, endDate, now, originalStartDate);
     }
 }

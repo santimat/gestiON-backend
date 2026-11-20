@@ -18,7 +18,7 @@ public class SaleTransactionService {
     private final TransactionCreatorService transactionCreator;
     private final JpaTransactionRepository jpaTransactionRepository;
 
-    public void createIfNeeded(SaleRequest request, Sale savedSale, Long commerceId) {
+    public void createIfNeeded(SaleRequest request, Sale savedSale) {
         var result = calculator.calculate(savedSale);
         if (result.shouldCreateTransaction()) {
             // 1. Crear transacción VENTA (total de la venta)

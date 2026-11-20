@@ -1,24 +1,22 @@
 package com.gestion.service.offer;
 
+import com.gestion.enums.DiscountType;
+import com.gestion.enums.PaymentMethod;
+import com.gestion.service.offer.OfferOverlapValidatorService;
 import lombok.AllArgsConstructor;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Set;
+
 @Service
-@Order(3)
 @AllArgsConstructor
-public class OfferOverlapValidator implements OfferValidationPipeline.OfferValidator {
+public class OfferOverlapValidator {
     private final OfferOverlapValidatorService delegate;
 
-    @Override
-    public void validate(OfferValidationContext ctx) {
-        delegate.validateNoOverlap(
-                ctx.commerceId,
-                ctx.offerId,
-                ctx.startDate,
-                ctx.endDate,
-                ctx.value,
-                ctx.discountType,
-                ctx.paymentMethods);
+    public void validate(Long commerceId, Long offerId, Instant startDate, Instant endDate,
+                         BigDecimal value, DiscountType discountType, Set<PaymentMethod> paymentMethods) {
+        delegate.validateNoOverlap(commerceId, offerId, startDate, endDate, value, discountType, paymentMethods);
     }
 }

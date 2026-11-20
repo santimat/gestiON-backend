@@ -2,6 +2,7 @@ package com.gestion.service.offer;
 
 import com.gestion.dto.request.offer.OfferUpdateRequest;
 import com.gestion.dto.response.offer.OfferResponse;
+import com.gestion.enums.DiscountType;
 import com.gestion.enums.OfferStatus;
 import com.gestion.enums.OfferType;
 import com.gestion.enums.PaymentMethod;
@@ -21,45 +22,55 @@ import java.util.Set;
 @Service
 @AllArgsConstructor
 public class OfferUpdaterService {
-    private final OfferFinderByIdAndCommerceIdService finder;
-    private final CommerceFinderByIdService commerceFinder;
-    private final OfferValidationPipeline validationPipeline;
-    private final OfferStatusResolverService statusResolver;
-    private final JpaOfferRepository repo;
+
+    private final OfferFinderByIdAndCommerceIdService offerFinderByIdAndCommerceIdService;
+    private final CommerceFinderByIdService commerceFinderByIdService;
+    private final OfferDiscountValidator discountValidator;
+    private final OfferDateValidator dateValidator;
+    private final OfferOverlapValidator overlapValidator;
+    private final OfferPaymentMethodChangeValidator paymentMethodChangeValidator;
+    private final OfferProductPriceValidator productPriceValidator;
+    private final OfferStatusResolverService offerStatusResolverService;
+    private final JpaOfferRepository offerRepository;
 
     @Transactional
     public OfferResponse updateOffer(Long offerId, OfferUpdateRequest request, Long commerceId) {
-        Offer offer = finder.findOfferByIdAndCommerceId(offerId, commerceId);
-        commerceFinder.findCommerceById(commerceId);
+        Offer offer = offerFinderByIdAndCommerceIdService.findOfferByIdAndCommerceId(offerId, commerceId);
+        commerceFinderByIdService.findCommerceById(commerceId);
 
+        Instant normalizedStart = request.startDate().truncatedTo(ChronoUnit.MICROS);
+        Instant normalizedEnd = request.endDate().truncatedTo(ChronoUnit.MICROS);
         Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
-        Instant start = request.startDate().truncatedTo(ChronoUnit.MICROS);
-        Instant end = request.endDate().truncatedTo(ChronoUnit.MICROS);
-        Set<PaymentMethod> methods = request.paymentMethods() == null ? new HashSet<>() : new HashSet<>(request.paymentMethods());
 
-        OfferValidationContext ctx = new OfferValidationContext();
-        ctx.commerceId = commerceId;
-        ctx.offerId = offerId;
-        ctx.value = request.value();
-        ctx.discountType = request.discountType();
-        ctx.startDate = start;
-        ctx.endDate = end;
-        ctx.paymentMethods = request.paymentMethods() == null ? Set.of() : new HashSet<>(request.paymentMethods());
-        ctx.existingOffer = offer;
-        ctx.now = now;
-        ctx.normalizedPaymentMethods = methods;
+        discountValidator.validate(request.value(), request.discountType());
+        dateValidator.validateForUpdate(normalizedStart, normalizedEnd, now, offer.getStartDate());
 
-        validationPipeline.validate(ctx);
+        // Set.of() devuelve una coleccion inmutable: Hibernate la reemplaza al mergear la entidad
+        // y falla con UnsupportedOperationException al intentar limpiarla.
+        Set<PaymentMethod> normalizedPaymentMethods =
+                request.paymentMethods() == null ? new HashSet<>() : new HashSet<>(request.paymentMethods());
+
+        paymentMethodChangeValidator.validate(offerId, commerceId, normalizedPaymentMethods);
+
+        overlapValidator.validate(commerceId, offerId, normalizedStart, normalizedEnd,
+                request.value(), request.discountType(), request.paymentMethods());
 
         offer.setValue(request.value());
         offer.setDiscountType(request.discountType());
-        offer.setStartDate(start);
-        offer.setEndDate(end);
-        offer.setPaymentMethods(methods);
-        offer.setOfferType(methods.isEmpty() ? OfferType.PRODUCT : OfferType.PAYMENT_METHOD);
+        offer.setStartDate(normalizedStart);
+        offer.setEndDate(normalizedEnd);
+        offer.setPaymentMethods(normalizedPaymentMethods);
+        offer.setOfferType(normalizedPaymentMethods.isEmpty() ? OfferType.PRODUCT : OfferType.PAYMENT_METHOD);
 
-        Offer saved = repo.save(offer);
-        OfferStatus status = statusResolver.resolveOfferStatus(saved.getStartDate(), saved.getEndDate(), now);
-        return OfferMapper.toResponse(saved, status);
+        // si la oferta ya tiene productos asignados, el nuevo descuento no puede superar el precio
+        // de venta de ninguno de ellos.
+        productPriceValidator.validate(offerId, commerceId, offer);
+
+        Offer savedOffer = offerRepository.save(offer);
+
+        OfferStatus offerStatus = offerStatusResolverService.resolveOfferStatus(
+                savedOffer.getStartDate(), savedOffer.getEndDate(), now);
+
+        return OfferMapper.toResponse(savedOffer, offerStatus);
     }
 }
