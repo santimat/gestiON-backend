@@ -2,8 +2,8 @@
 
 **Date:** 2026-11-20  
 **Branch:** `amazing-features`  
-**Latest Commit:** `refactor: modularize ProductsSoldByPeriodService with Strategy pattern`  
-**Previous Commit:** `41b0f5d` - `refactor: modularize SaleCreatorService and OfferCreatorService/OfferUpdaterService`
+**Latest Commit:** `refactor: complete all 6 modularization phases`  
+**Previous Commit:** `39808be` - `refactor: modularize ProductsSoldByPeriodService with Strategy pattern`
 
 ---
 
@@ -218,20 +218,117 @@ docs/superpowers/plans/2026-11-20-sale-creator-simple-refactor.md
 
 ---
 
+## Phase 4: ProductUpdaterService Modularization
+
+### Before
+| Metric | Value |
+|--------|-------|
+| Lines | 65 |
+| Dependencies | 10 |
+| Responsibility | Mixed validation, entity update, image handling, response building |
+
+### After
+| Metric | Value |
+|--------|-------|
+| Lines | ~25 (orchestrator) |
+| Dependencies | 4 |
+| Responsibility | Thin orchestrator delegating to `ProductUpdateValidator` + `ProductImageUpdater` |
+
+### New Services Created (3 files)
+
+| File | Lines | Responsibility |
+|------|-------|----------------|
+| `ProductUpdateValidationResult.java` | 12 | Record: validated product + commerce + category |
+| `ProductUpdateValidator.java` | 30 | Finds entities, validates price rules, offer price limits |
+| `ProductImageUpdater.java` | 18 | Handles optional image upload + URL generation |
+
+### Modified Files
+- `ProductUpdaterService.java` — Injects validator + image updater + suggested price calculator + repository
+
+### Benefits
+- ✅ **Separation of concerns**: Validation separate from persistence/effects
+- ✅ **Testable**: Validator testable with mock entities; image updater testable in isolation
+- ✅ **Reusable**: Validator logic available for other use cases (e.g., create)
+
+---
+
+## Phase 5: SaleDetailValidatorService Modularization (Optional)
+
+### Before
+| Metric | Value |
+|--------|-------|
+| Lines | 55 |
+| Dependencies | 5 |
+| Responsibility | Product lookup, validation, price calculation with offers, detail building |
+
+### After
+| Metric | Value |
+|--------|-------|
+| Lines | ~35 (orchestrator) |
+| Dependencies | 4 |
+| Responsibility | Orchestrates validation + delegates price calculation |
+
+### New Service Created (1 file)
+
+| File | Lines | Responsibility |
+|------|-------|----------------|
+| `SaleDetailPriceCalculator.java` | 30 | Finds active offer, calculates discounted price, applies offer snapshot |
+
+### Modified Files
+- `SaleDetailValidatorService.java` — Delegates price calculation to `SaleDetailPriceCalculator`
+
+### Benefits
+- ✅ **Single responsibility**: Price logic (offer finding + discount calc) isolated
+- ✅ **Reusable**: `SaleDetailPriceCalculator` used by `SaleDetailValidatorService` and `SaleValidationService`
+- ✅ **Testable**: Price calculation testable in isolation with mock products
+
+---
+
+## Phase 6: ProductWithOfferSearcherService Modularization (Optional)
+
+### Before
+| Metric | Value |
+|--------|-------|
+| Lines | 54 |
+| Dependencies | 7 |
+| Responsibility | Search + price calculation with offers + response mapping |
+
+### After
+| Metric | Value |
+|--------|-------|
+| Lines | ~35 (orchestrator) |
+| Dependencies | 6 |
+| Responsibility | Search + delegates price-with-offer resolution |
+
+### New Service Created (1 file)
+
+| File | Lines | Responsibility |
+|------|-------|----------------|
+| `ProductPriceWithOfferResolver.java` | 22 | Finds active offer, calculates discounted price |
+
+### Modified Files
+- `ProductWithOfferSearcherService.java` — Delegates price resolution to `ProductPriceWithOfferResolver`
+
+### Benefits
+- ✅ **DRY**: Same price logic now shared with `SaleDetailPriceCalculator`
+- ✅ **Testable**: Price resolution testable in isolation
+- ✅ **Consistent**: Single source of truth for "active offer + discounted price"
+
+---
+
 ## Next Candidates for Modularization
 
-| Service | Lines | Deps | Suggested Approach |
-|---------|-------|------|-------------------|
-| `ProductUpdaterService` | 65 | 10 | Split validation (`ProductUpdateValidator`) from persistence/effects (`ProductImageUpdater`) |
-| `SaleDetailValidatorService` | 55 | 5 | Already cohesive; optional `SaleDetailPriceCalculator` extraction |
-| `ProductWithOfferSearcherService` | 54 | 7 | Cohesive; `map` logic with offers/prices extractable |
+| Service | Lines | Deps | Status |
+|---------|-------|------|--------|
+| *All major candidates completed* | — | — | ✅ Done |
 
 ---
 
 ## Files Changed Summary (All Phases)
 
-### Created (17)
+### Created (23)
 ```
+# Phase 1: SaleCreatorService (8)
 src/main/java/com/gestion/service/sale/SaleValidationResult.java
 src/main/java/com/gestion/service/sale/SaleValidationService.java
 src/main/java/com/gestion/service/sale/SaleEntityBuilderService.java
@@ -240,24 +337,42 @@ src/main/java/com/gestion/service/sale/SalePricingService.java
 src/main/java/com/gestion/service/sale/SalePersistenceResult.java
 src/main/java/com/gestion/service/sale/SalePersistenceService.java
 src/main/java/com/gestion/service/sale/SaleTransactionService.java
+
+# Phase 2: OfferCreator/Updater (5)
 src/main/java/com/gestion/service/offer/OfferDiscountValidator.java
 src/main/java/com/gestion/service/offer/OfferDateValidator.java
 src/main/java/com/gestion/service/offer/OfferOverlapValidator.java
 src/main/java/com/gestion/service/offer/OfferPaymentMethodChangeValidator.java
 src/main/java/com/gestion/service/offer/OfferProductPriceValidator.java
+
+# Phase 3: ProductsSoldByPeriod (4)
 src/main/java/com/gestion/service/sale/PeriodGroupingStrategy.java
 src/main/java/com/gestion/service/sale/HourlyGroupingStrategy.java
 src/main/java/com/gestion/service/sale/DailyGroupingStrategy.java
 src/main/java/com/gestion/service/sale/WeeklyGroupingStrategy.java
+
+# Phase 4: ProductUpdaterService (3)
+src/main/java/com/gestion/service/product/ProductUpdateValidationResult.java
+src/main/java/com/gestion/service/product/ProductUpdateValidator.java
+src/main/java/com/gestion/service/product/ProductImageUpdater.java
+
+# Phase 5: SaleDetailValidatorService (1)
+src/main/java/com/gestion/service/saledetail/SaleDetailPriceCalculator.java
+
+# Phase 6: ProductWithOfferSearcherService (1)
+src/main/java/com/gestion/service/product/ProductPriceWithOfferResolver.java
 ```
 
-### Modified (5)
+### Modified (8)
 ```
 src/main/java/com/gestion/service/sale/SaleCreatorService.java
 src/main/java/com/gestion/service/offer/OfferCreatorService.java
 src/main/java/com/gestion/service/offer/OfferUpdaterService.java
 src/main/java/com/gestion/service/sale/SaleTransactionService.java
 src/main/java/com/gestion/service/sale/ProductsSoldByPeriodService.java
+src/main/java/com/gestion/service/product/ProductUpdaterService.java
+src/main/java/com/gestion/service/saledetail/SaleDetailValidatorService.java
+src/main/java/com/gestion/service/product/ProductWithOfferSearcherService.java
 ```
 
 ### Deleted (4)

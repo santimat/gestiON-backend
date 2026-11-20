@@ -5,7 +5,6 @@ import com.gestion.dto.response.product.ProductWithOfferResponse;
 import com.gestion.mappers.CategoryMapper;
 import com.gestion.mappers.ProductMapper;
 import com.gestion.model.Commerce;
-import com.gestion.model.Offer;
 import com.gestion.model.Product;
 import com.gestion.properties.MinioProperties;
 import com.gestion.repository.JpaProductRepository;
@@ -18,20 +17,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 @Service
 @AllArgsConstructor
 @Transactional(readOnly = true)
 public class ProductWithOfferSearcherService {
     private final JpaProductRepository jpaProductRepository;
-    private final ProductSuggestedPriceCalculatorService productSuggestedPriceCalculatorService;
-    private final FileFinderService fileFinderService;
+    private final ProductSuggestedPriceCalculatorService suggestedPriceCalculator;
+    private final FileFinderService fileFinder;
     private final MinioProperties minioProperties;
-    private final CommerceFinderByIdService commerceFinderByIdService;
-    private final ProductActiveOfferFinderService productActiveOfferFinderService;
-    private final ProductDiscountedPriceCalculatorService productDiscountedPriceCalculatorService;
+    private final CommerceFinderByIdService commerceFinder;
+    private final ProductPriceWithOfferResolver priceWithOfferResolver;
 
     public Page<ProductWithOfferResponse> searchProductsWithOffer(Long commerceId, Long categoryId, String searchText,
                                                                   Boolean active, Pageable pageable) {
@@ -41,24 +37,20 @@ public class ProductWithOfferSearcherService {
 
         Page<Product> products = jpaProductRepository
                 .findAllWithFilters(commerceId, categoryId, searchText, active, pageable);
-        Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
-        Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
+        Commerce commerce = commerceFinder.findCommerceById(commerceId);
 
         return products.map(product -> {
-            String productImageUrl = fileFinderService.getObjectUrl(product.getImageName(),
+            String productImageUrl = fileFinder.getObjectUrl(product.getImageName(),
                     minioProperties.dir().productImages());
 
-            BigDecimal suggestedPrice = productSuggestedPriceCalculatorService.calculateSuggestedPrice(product, commerce);
+            BigDecimal suggestedPrice = suggestedPriceCalculator.calculateSuggestedPrice(product, commerce);
             CategoryResponse categoryResponse = CategoryMapper.toResponse(product.getCategory());
 
-            Offer activeOffer = productActiveOfferFinderService.findActiveProductOffer(product, now);
-            BigDecimal discountedPrice = activeOffer != null
-                    ? productDiscountedPriceCalculatorService.calculateDiscountedPrice(product.getSalePrice(), activeOffer)
-                    : product.getSalePrice();
+            ProductPriceWithOfferResolver.PriceWithOfferResult priceResult = priceWithOfferResolver.resolve(product);
 
             return ProductMapper.toWithOfferResponse(
-                    product, productImageUrl, suggestedPrice, categoryResponse, activeOffer, discountedPrice);
+                    product, productImageUrl, suggestedPrice, categoryResponse,
+                    priceResult.activeOffer(), priceResult.discountedPrice());
         });
     }
-
 }
