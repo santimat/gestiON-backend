@@ -1,5 +1,6 @@
 package com.gestion.model;
 
+import com.gestion.enums.TransactionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,13 +24,14 @@ public class Transaction {
     private Long id;
 
     @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal revenue;
+    private BigDecimal amount;
 
-    @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal outflow;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "transaction_type", nullable = false)
+    private TransactionType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sale_id", nullable = false)
+    @JoinColumn(name = "sale_id")
     private Sale sale;
 
     @CreationTimestamp

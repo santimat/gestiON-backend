@@ -11,8 +11,8 @@ public class TransactionMapper {
 
     public static Transaction toEntity(TransactionRequest request, Sale sale) {
         Transaction transaction = new Transaction();
-        transaction.setRevenue(request.revenue() != null ? request.revenue() : BigDecimal.ZERO);
-        transaction.setOutflow(request.outflow() != null ? request.outflow() : BigDecimal.ZERO);
+        transaction.setAmount(request.amount() != null ? request.amount() : BigDecimal.ZERO);
+        transaction.setType(request.type());
         transaction.setSale(sale);
         return transaction;
     }
@@ -20,8 +20,8 @@ public class TransactionMapper {
     public static TransactionResponse toResponse(Transaction transaction) {
         return new TransactionResponse(
                 transaction.getId(),
-                transaction.getRevenue(),
-                transaction.getOutflow(),
+                transaction.getAmount(),
+                transaction.getType(),
                 transaction.getSale() != null ? transaction.getSale().getId() : null,
                 transaction.getCreatedAt()
         );

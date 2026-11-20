@@ -1,5 +1,5 @@
 package com.gestion.enums;
 
 public enum SaleStatus {
-    PAYED, PENDING, GIFTED
+    PAYED, PENDING, PARTIAL_PAYED, GIFTED
 }

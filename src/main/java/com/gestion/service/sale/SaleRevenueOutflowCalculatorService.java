@@ -1,6 +1,5 @@
 package com.gestion.service.sale;
 
-import com.gestion.dto.request.sale.SaleRequest;
 import com.gestion.enums.PaymentMethod;
 import com.gestion.enums.SaleStatus;
 import com.gestion.model.Sale;
@@ -13,24 +12,14 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class SaleRevenueOutflowCalculatorService {
 
-    public record Result(BigDecimal revenue, BigDecimal outflow) {}
+    public record Result(BigDecimal amount, boolean shouldCreateTransaction) {}
 
-    public Result calculate(SaleRequest request, Sale sale) {
-        BigDecimal revenue;
-        BigDecimal outflow;
-
-        if (sale.getPaymentMethod() == PaymentMethod.CREDIT_ACCOUNT) {
-            BigDecimal paid = request.partiallyPaidAmount() != null ? request.partiallyPaidAmount() : BigDecimal.ZERO;
-            revenue = paid;
-            outflow = sale.getTotal().subtract(paid);
-        } else if (sale.getStatus() != SaleStatus.GIFTED) {
-            revenue = sale.getTotal();
-            outflow = BigDecimal.ZERO;
-        } else {
-            revenue = BigDecimal.ZERO;
-            outflow = BigDecimal.ZERO;
+    public Result calculate(Sale sale) {
+        // Solo crear transacción VENTA para ventas no GIFTED
+        if (sale.getStatus() == SaleStatus.GIFTED) {
+            return new Result(BigDecimal.ZERO, false);
         }
-
-        return new Result(revenue, outflow);
+        // Para todas las demás ventas (incluyendo CREDIT_ACCOUNT), crear VENTA con el total
+        return new Result(sale.getTotal(), true);
     }
 }

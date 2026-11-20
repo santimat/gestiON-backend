@@ -60,6 +60,8 @@ public enum ErrorCode {
     GIFT_ONLY_FOR_OWNER(403, "Only owners can mark a sale as gift"),
     CLIENT_REQUIRED_FOR_CREDIT_ACCOUNT(400, "Client is required for credit account payment method"),
     PARTIAL_PAYMENT_EXCEEDS_TOTAL(400, "Partially paid amount cannot exceed sale total"),
+    SALE_ALREADY_PAYED(409, "Sale is already fully paid"),
+    INVALID_PAYMENT_AMOUNT(400, "Payment amount must be greater than zero and not exceed pending amount"),
 
     DATA_INTEGRITY_VIOLATION(409, "The operation violates data integrity constraints"),
     INTERNAL_ERROR(500, "An unexpected internal error occurred");
