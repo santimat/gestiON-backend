@@ -4,6 +4,7 @@ import com.gestion.dto.response.client.ClientResponse;
 import com.gestion.model.Client;
 import com.gestion.repository.JpaClientRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class ClientSearcherService {
     private final JpaClientRepository jpaClientRepository;
     private final ClientResponseAssemblerService clientResponseAssembler;
@@ -21,10 +23,8 @@ public class ClientSearcherService {
     @Transactional(readOnly = true)
     public Page<ClientResponse> searchClients(Long commerceId,
                                              String searchText,
-                                             String name,
-                                             String lastName,
                                              Pageable pageable) {
-        String effectiveSearchText = clientSearchTextNormalizer.normalize(searchText, name, lastName);
+        String effectiveSearchText = clientSearchTextNormalizer.normalize(searchText);
 
         Page<Client> clients = jpaClientRepository
                 .findAllWithFilters(commerceId, effectiveSearchText, pageable);

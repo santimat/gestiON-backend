@@ -27,8 +27,6 @@ public class ClientsGetController {
     public ResponseEntity<Page<ClientResponse>> getAllClients(
             @AuthenticationPrincipal UserPrincipal authenticatedUser,
             @RequestParam(required = false) String searchText,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String lastName,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "updatedAt") String sortBy,
@@ -36,6 +34,6 @@ public class ClientsGetController {
         Pageable pageable = PageableFactory.create(page, size, sortBy, sortDir, SortableProperties.CLIENT);
 
         return ResponseEntity.ok(clientSearcherService.searchClients(
-                authenticatedUser.getCommerceId(), searchText, name, lastName, pageable));
+                authenticatedUser.getCommerceId(), searchText, pageable));
     }
 }

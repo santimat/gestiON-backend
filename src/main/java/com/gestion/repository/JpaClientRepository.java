@@ -23,6 +23,7 @@ public interface JpaClientRepository extends JpaRepository<Client, Long> {
             SELECT c FROM Client c
             WHERE c.commerce.id = :commerceId
               AND (:searchText IS NULL
+                   OR LOWER(CONCAT(c.name, ' ', c.lastName)) LIKE LOWER(CONCAT('%', :searchText, '%'))
                    OR LOWER(c.name) LIKE LOWER(CONCAT('%', :searchText, '%'))
                    OR LOWER(c.lastName) LIKE LOWER(CONCAT('%', :searchText, '%'))
                    OR LOWER(c.dni) LIKE LOWER(CONCAT('%', :searchText, '%')))

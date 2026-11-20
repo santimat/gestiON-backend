@@ -31,7 +31,9 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
               AND (:searchText IS NULL
                    OR CAST(s.id AS STRING) LIKE CONCAT('%', :searchText, '%')
                    OR LOWER(s.observations) LIKE LOWER(CONCAT('%', :searchText, '%'))
-                   OR LOWER(c.name) LIKE LOWER(CONCAT('%', :searchText, '%')))
+                   OR LOWER(CONCAT(c.name, ' ', c.lastName)) LIKE LOWER(CONCAT('%', :searchText, '%'))
+                   OR LOWER(c.name) LIKE LOWER(CONCAT('%', :searchText, '%'))
+                   OR LOWER(c.lastName) LIKE LOWER(CONCAT('%', :searchText, '%')))
             """)
     Page<Sale> findAllWithFilters(@Param("commerceId") Long commerceId,
                                   @Param("clientId") Long clientId,
