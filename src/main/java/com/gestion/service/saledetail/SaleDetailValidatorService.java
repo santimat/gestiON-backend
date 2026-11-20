@@ -64,6 +64,4 @@ public class SaleDetailValidatorService {
 
         return new SaleDetailValidationResult(details, subtotal);
     }
-
-
 }

@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-// redondeo HALF_UP a 2 decimales, igual que la precision de price en la DB
 @Service
 @AllArgsConstructor
 public class ProductDiscountedPriceCalculatorService {
