@@ -2,69 +2,55 @@ package com.gestion.service.offer;
 
 import com.gestion.dto.request.offer.OfferRequest;
 import com.gestion.dto.response.offer.OfferResponse;
-import com.gestion.enums.DiscountType;
 import com.gestion.enums.OfferStatus;
+import com.gestion.enums.PaymentMethod;
 import com.gestion.mappers.OfferMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.Offer;
 import com.gestion.repository.JpaOfferRepository;
 import com.gestion.service.commerce.CommerceFinderByIdService;
-import com.gestion.service.discount.DiscountRangeValidatorService;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @AllArgsConstructor
 public class OfferCreatorService {
-    private final JpaOfferRepository offerRepository;
-    private final CommerceFinderByIdService commerceFinderByIdService;
-    private final OfferDateValidatorService offerDateValidatorService;
-    private final OfferOverlapValidatorService offerOverlapValidatorService;
-    private final OfferStatusResolverService offerStatusResolverService;
-    private final DiscountRangeValidatorService discountRangeValidatorService;
+    private final CommerceFinderByIdService commerceFinder;
+    private final OfferValidationPipeline validationPipeline;
+    private final OfferStatusResolverService statusResolver;
+    private final JpaOfferRepository repo;
 
     @Transactional
     public OfferResponse createOffer(OfferRequest request, Long commerceId) {
-        Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
+        Commerce commerce = commerceFinder.findCommerceById(commerceId);
 
-        // porcentaje no mayor a 100% check con product.salePrice no se hace en creator porque no se pueden asignar
-        // productos desde acá.
-        if (request.discountType() == DiscountType.PERCENTAGE) {
-            discountRangeValidatorService.validatePercentageNotGreaterThan100(request.value());
-        }
-
-        Instant normalizedStart = request.startDate().truncatedTo(ChronoUnit.MICROS);
-        Instant normalizedEnd = request.endDate().truncatedTo(ChronoUnit.MICROS);
         Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
-        OfferRequest normalizedRequest = new OfferRequest(
-                request.value(),
-                request.discountType(),
-                normalizedStart,
-                normalizedEnd,
-                request.paymentMethods()
-        );
+        Instant start = request.startDate().truncatedTo(ChronoUnit.MICROS);
+        Instant end = request.endDate().truncatedTo(ChronoUnit.MICROS);
+        Set<PaymentMethod> methods = request.paymentMethods() == null ? Set.of() : new HashSet<>(request.paymentMethods());
 
-        offerDateValidatorService.validateOfferDates(normalizedStart, normalizedEnd, now);
+        OfferValidationContext ctx = new OfferValidationContext();
+        ctx.commerceId = commerceId;
+        ctx.offerId = null;
+        ctx.value = request.value();
+        ctx.discountType = request.discountType();
+        ctx.startDate = start;
+        ctx.endDate = end;
+        ctx.paymentMethods = methods;
+        ctx.now = now;
+        ctx.normalizedPaymentMethods = methods;
 
-        offerOverlapValidatorService.validateNoOverlap(
-                commerceId,
-                null,
-                normalizedStart,
-                normalizedEnd,
-                request.value(),
-                request.discountType(),
-                request.paymentMethods());
+        validationPipeline.validate(ctx);
 
-        Offer offerToSave = OfferMapper.toEntity(normalizedRequest, commerce);
-        Offer savedOffer = offerRepository.save(offerToSave);
-
-        OfferStatus offerStatus = offerStatusResolverService.resolveOfferStatus(
-                savedOffer.getStartDate(), savedOffer.getEndDate(), now);
-
-        return OfferMapper.toResponse(savedOffer, offerStatus);
+        Offer offer = OfferMapper.toEntity(request, commerce);
+        Offer saved = repo.save(offer);
+        OfferStatus status = statusResolver.resolveOfferStatus(saved.getStartDate(), saved.getEndDate(), now);
+        return OfferMapper.toResponse(saved, status);
     }
 }
