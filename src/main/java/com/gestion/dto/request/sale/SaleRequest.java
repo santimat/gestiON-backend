@@ -25,7 +25,7 @@ public record SaleRequest(
 
         Boolean gift,
 
-        @DecimalMin(value = "0.0", inclusive = true, message = "Partially paid amount must be zero or positive")
+        @DecimalMin(value = "0.0",  message = "Partially paid amount must be zero or positive")
         BigDecimal partiallyPaidAmount
 ) {
 }
