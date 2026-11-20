@@ -14,7 +14,6 @@ import java.util.Map;
 
 @Service
 @AllArgsConstructor
-@Slf4j
 public class ClientSearcherService {
     private final JpaClientRepository jpaClientRepository;
     private final ClientResponseAssemblerService clientResponseAssembler;

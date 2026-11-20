@@ -1,11 +1,11 @@
 package com.gestion.service.sale;
 
 import com.gestion.dto.request.sale.SaleRequest;
+import com.gestion.dto.request.transaction.TransactionRequest;
 import com.gestion.dto.response.sale.SaleSummaryResponse;
 import com.gestion.enums.Role;
 import com.gestion.enums.SaleStatus;
-import com.gestion.exception.GiftOnlyForOwnerException;
-import com.gestion.exception.ObservationRequiredForGiftException;
+import com.gestion.exception.PartialPaymentExceedsTotalException;
 import com.gestion.mappers.SaleMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.Sale;
@@ -17,6 +17,9 @@ import com.gestion.service.saledetail.SaleDetailCreatorService;
 import com.gestion.service.saledetail.SaleDetailMergerService;
 import com.gestion.service.saledetail.SaleDetailValidationResult;
 import com.gestion.service.saledetail.SaleDetailValidatorService;
+import com.gestion.service.sale.SaleGiftHandlerService;
+import com.gestion.service.sale.SaleRevenueOutflowCalculatorService;
+import com.gestion.service.transaction.TransactionCreatorService;
 import jakarta.persistence.EntityManager;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
@@ -41,6 +44,10 @@ public class SaleCreatorService {
     private final OfferFinderByPaymentMethodAndCommerceIdService offerFinderByPaymentMethodAndCommerceIdService;
     private final CommerceAvailabilityValidatorService commerceAvailabilityValidatorService;
     private final SalePaymentMethodValidatorService salePaymentMethodValidatorService;
+    private final SalePartialPaymentValidatorService salePartialPaymentValidatorService;
+    private final TransactionCreatorService transactionCreatorService;
+    private final SaleGiftHandlerService saleGiftHandler;
+    private final SaleRevenueOutflowCalculatorService saleRevenueOutflowCalculator;
     private final EntityManager entityManager;
 
     @Transactional
@@ -50,6 +57,7 @@ public class SaleCreatorService {
         // Validación: CREDIT_ACCOUNT requiere clientId
         salePaymentMethodValidatorService.validate(request);
 
+        // Validación: partiallyPaidAmount no puede exceder el total (se valida después de calcular total)
         // merge de items repetidos del mismo produto sumando cantidades
         Map<Long, Integer> quantitiesByProductId = saleDetailMergerService.mergeDetails(request.details());
 
@@ -65,22 +73,10 @@ public class SaleCreatorService {
         sale.setCommerce(entityManager.getReference(Commerce.class, commerceId));
         sale.setSubtotal(subtotal);
 
-        boolean isGift = Boolean.TRUE.equals(request.gift());
+        // Manejar gift (valida y setea status/total)
+        saleGiftHandler.handleIfGift(request, sale, role);
 
-        if (isGift) {
-            // solo OWNER puede marcar como gift
-            if (role != Role.OWNER) {
-                throw new GiftOnlyForOwnerException();
-            }
-            // gift requiere observación
-            if (request.observations() == null || request.observations().isBlank()) {
-                throw new ObservationRequiredForGiftException();
-            }
-            // gift: status GIFTED, subtotal = precio real, total = 0, sin descuentos
-            sale.setStatus(SaleStatus.GIFTED);
-            sale.setTotal(BigDecimal.ZERO);
-            // no aplicamos descuento de método de pago
-        } else {
+        if (sale.getStatus() != SaleStatus.GIFTED) {
             // el descuento de la venta sale exclusivamente de la oferta vigente del metodo de pago;
             // si no hay oferta, la venta queda sin descuento
             offerFinderByPaymentMethodAndCommerceIdService
@@ -95,6 +91,9 @@ public class SaleCreatorService {
 
             sale.setTotal(totalAfterDiscount);
             sale.setStatus(saleStatusResolverService.resolveStatus(request));
+
+            // Validación: partiallyPaidAmount no puede exceder el total
+            salePartialPaymentValidatorService.validate(request, sale.getTotal());
         }
 
         sale.setSellPoint(saleSellPointResolverService.resolveSellPoint(sellPointId));
@@ -106,6 +105,15 @@ public class SaleCreatorService {
 
         Sale savedSale = jpaSaleRepository.save(sale);
         saleDetailCreatorService.createDetails(savedSale, details);
+
+        // Calcular revenue/outflow y crear Transaction
+        SaleRevenueOutflowCalculatorService.Result revenueOutflow = saleRevenueOutflowCalculator.calculate(request, savedSale);
+        if (revenueOutflow.revenue().compareTo(BigDecimal.ZERO) > 0 || revenueOutflow.outflow().compareTo(BigDecimal.ZERO) > 0) {
+            TransactionRequest txRequest =
+                    new TransactionRequest(
+                            revenueOutflow.revenue(), revenueOutflow.outflow(), savedSale.getId());
+            transactionCreatorService.createTransaction(txRequest, commerceId);
+        }
 
         // el summary expone unidades vendidas (SUM quantity), igual que el listado
         int itemCount = details.stream().mapToInt(SaleDetail::getQuantity).sum();
