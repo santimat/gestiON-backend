@@ -36,7 +36,7 @@ public class ProductWithOfferSearcherService {
         }
 
         Page<Product> products = jpaProductRepository
-                .findAllWithFilters(commerceId, categoryId, searchText, active, pageable);
+                .findAllWithFilters(commerceId, categoryId, searchText, active, null, pageable);
         Commerce commerce = commerceFinder.findCommerceById(commerceId);
 
         return products.map(product -> {

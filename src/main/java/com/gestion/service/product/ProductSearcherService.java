@@ -2,6 +2,7 @@ package com.gestion.service.product;
 
 import com.gestion.dto.response.category.CategoryResponse;
 import com.gestion.dto.response.product.ProductResponse;
+import com.gestion.enums.StockStatus;
 import com.gestion.mappers.CategoryMapper;
 import com.gestion.mappers.ProductMapper;
 import com.gestion.model.Commerce;
@@ -29,13 +30,15 @@ public class ProductSearcherService {
     private final CommerceFinderByIdService commerceFinderByIdService;
 
     public Page<ProductResponse> searchProducts(Long commerceId, Long categoryId, String searchText,
-                                                Boolean active, Pageable pageable) {
+                                                Boolean active, StockStatus stockStatus, Pageable pageable) {
         if (searchText != null && searchText.isBlank()) {
             searchText = null;
         }
 
+        String stockStatusStr = stockStatus != null ? stockStatus.name() : null;
+
         Page<Product> products = jpaProductRepository
-                .findAllWithFilters(commerceId, categoryId, searchText,active, pageable);
+                .findAllWithFilters(commerceId, categoryId, searchText, active, stockStatusStr, pageable);
         Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
 
         return products.map(product -> {
