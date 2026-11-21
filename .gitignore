@@ -34,3 +34,8 @@ build/
 
 ### Credenciales locales ###
 .env
+
+*.log
+*.err
+*.txt
+.opencode
