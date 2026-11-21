@@ -23,6 +23,7 @@ public class SalePaymentService {
     private final JpaSaleRepository jpaSaleRepository;
     private final JpaTransactionRepository jpaTransactionRepository;
     private final SaleFinderByIdAndCommerceIdService saleFinderByIdAndCommerceIdService;
+    private final SalePendingCalculatorService salePendingCalculatorService;
 
     @Transactional
     public TransactionResponse registerPayment(Long saleId, Long commerceId, BigDecimal amount) {
@@ -34,9 +35,8 @@ public class SalePaymentService {
             throw new SaleAlreadyPayedException();
         }
 
-        // 3. Calcular pendiente = total - suma de pagos
-        BigDecimal totalPaid = jpaTransactionRepository.sumPaymentsBySaleId(saleId);
-        BigDecimal pending = sale.getTotal().subtract(totalPaid);
+        // 3. Calcular pendiente con servicio centralizado
+        BigDecimal pending = salePendingCalculatorService.calculateTotalPending(sale);
 
         // 4. Validar monto
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0 || amount.compareTo(pending) > 0) {

@@ -9,7 +9,6 @@ import com.gestion.model.Sale;
 import com.gestion.model.SaleDetail;
 import com.gestion.repository.JpaSaleDetailRepository;
 import com.gestion.repository.JpaSaleRepository;
-import com.gestion.repository.JpaTransactionRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +26,7 @@ public class PendingSalesWithDetailsFinderService {
 
     private final JpaSaleRepository jpaSaleRepository;
     private final JpaSaleDetailRepository jpaSaleDetailRepository;
-    private final JpaTransactionRepository jpaTransactionRepository;
+    private final SalePendingCalculatorService salePendingCalculatorService;
     private final ClientAccountSummaryService clientAccountSummaryService;
 
     @Transactional(readOnly = true)
@@ -44,24 +43,15 @@ public class PendingSalesWithDetailsFinderService {
                 : jpaSaleDetailRepository.findAllBySaleIdIn(saleIds).stream()
                         .collect(Collectors.groupingBy(detail -> detail.getSale().getId()));
 
-        // pagos en batch: una sola query para toda la página
-        Map<Long, BigDecimal> paymentsBySaleId = saleIds.isEmpty()
-                ? Map.of()
-                : jpaTransactionRepository.sumPaymentsBySaleIds(saleIds).stream()
-                        .collect(Collectors.toMap(
-                                row -> (Long) row[0],
-                                row -> (BigDecimal) row[1]
-                        ));
+        Map<Long, BigDecimal> pendingBySaleId = salePendingCalculatorService
+                .calculateTotalPendingMap(pendingSales.getContent());
 
-        Page<SaleResponse> saleResponses = pendingSales.map(sale -> {
-            BigDecimal totalPaid = paymentsBySaleId.getOrDefault(sale.getId(), BigDecimal.ZERO);
-            BigDecimal totalPending = sale.getTotal().subtract(totalPaid);
-            return SaleMapper.toResponse(
-                    sale,
-                    detailsBySaleId.getOrDefault(sale.getId(), List.of()),
-                    totalPending
-            );
-        });
+        Page<SaleResponse> saleResponses = pendingSales.map(sale ->
+                SaleMapper.toResponse(
+                        sale,
+                        detailsBySaleId.getOrDefault(sale.getId(), List.of()),
+                        pendingBySaleId.get(sale.getId())
+                ));
 
         // el conteo y el total son de TODAS las ventas pendientes del cliente, no de la pagina
         ClientAccountSummary summary = clientAccountSummaryService

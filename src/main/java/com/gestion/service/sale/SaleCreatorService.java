@@ -11,6 +11,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+
 @Service
 @AllArgsConstructor
 public class SaleCreatorService {
@@ -24,6 +26,7 @@ public class SaleCreatorService {
     private final SaleStockUpdaterService stockUpdater;
     private final SalePersistenceService persistenceService;
     private final SaleTransactionService transactionService;
+    private final SalePendingCalculatorService salePendingCalculatorService;
 
     @Transactional
     public SaleSummaryResponse createSale(SaleRequest request, Long userId, Long commerceId, Long sellPointId, Role role) {
@@ -59,6 +62,7 @@ public class SaleCreatorService {
         transactionService.createIfNeeded(request, persistence.savedSale());
 
         // 9. Build response
-        return SaleMapper.toSummaryResponse(persistence.savedSale(), persistence.itemCount());
+        BigDecimal totalPending = salePendingCalculatorService.calculateTotalPending(persistence.savedSale());
+        return SaleMapper.toSummaryResponse(persistence.savedSale(), persistence.itemCount(), totalPending);
     }
 }

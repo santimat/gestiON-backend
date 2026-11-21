@@ -49,7 +49,7 @@ public class SaleMapper {
         );
     }
 
-    public static SaleSummaryResponse toSummaryResponse(Sale sale, Integer itemCount) {
+    public static SaleSummaryResponse toSummaryResponse(Sale sale, Integer itemCount, BigDecimal totalPending) {
         String clientName = sale.getClient() != null
                 ? sale.getClient().getName() + " " + sale.getClient().getLastName()
                 : "Consumidor final";
@@ -63,7 +63,8 @@ public class SaleMapper {
                 sale.getSubtotal(),
                 sale.getPaymentMethodDiscount(),
                 sale.getPaymentMethodDiscountType(),
-                sale.getTotal()
+                sale.getTotal(),
+                totalPending
         );
     }
 }

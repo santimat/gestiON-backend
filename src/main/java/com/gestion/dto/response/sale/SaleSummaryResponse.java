@@ -17,6 +17,7 @@ public record SaleSummaryResponse(
         BigDecimal subtotal,
         BigDecimal paymentMethodDiscount,
         DiscountType paymentMethodDiscountType,
-        BigDecimal total
+        BigDecimal total,
+        BigDecimal totalPending
 ) {
 }
