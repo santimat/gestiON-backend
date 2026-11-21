@@ -4,7 +4,6 @@ import com.gestion.dto.response.transaction.TransactionResponse;
 import com.gestion.enums.SaleStatus;
 import com.gestion.enums.TransactionType;
 import com.gestion.exception.InvalidPaymentAmountException;
-import com.gestion.exception.ResourceNotFoundException;
 import com.gestion.exception.SaleAlreadyPayedException;
 import com.gestion.mappers.TransactionMapper;
 import com.gestion.model.Sale;
