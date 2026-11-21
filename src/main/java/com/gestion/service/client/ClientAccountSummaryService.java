@@ -1,6 +1,6 @@
 package com.gestion.service.client;
 
-import com.gestion.dto.project.ClientAccountSummary;
+import com.gestion.dto.project.client.ClientAccountSummary;
 import com.gestion.repository.JpaSaleRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;

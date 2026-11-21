@@ -1,6 +1,6 @@
 package com.gestion.repository;
 
-import com.gestion.dto.project.ClientAccountSummary;
+import com.gestion.dto.project.client.ClientAccountSummary;
 import com.gestion.dto.response.sale.TopProductsSoldResponse;
 import com.gestion.enums.PaymentMethod;
 import com.gestion.enums.SaleStatus;
@@ -55,7 +55,7 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
                                                   Pageable pageable);
 
     @Query("""
-            SELECT new com.gestion.dto.project.ClientAccountSummary(
+            SELECT new com.gestion.dto.project.client.ClientAccountSummary(
                 s.client.id,
                 SUM(CASE WHEN s.status = com.gestion.enums.SaleStatus.PAYED THEN 1 ELSE 0 END),
                 SUM(CASE WHEN s.status = com.gestion.enums.SaleStatus.PENDING THEN 1 ELSE 0 END),

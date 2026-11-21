@@ -1,6 +1,6 @@
 package com.gestion.repository;
 
-import com.gestion.dto.project.SaleItemCount;
+import com.gestion.dto.project.sale.SaleItemCount;
 import com.gestion.model.SaleDetail;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;

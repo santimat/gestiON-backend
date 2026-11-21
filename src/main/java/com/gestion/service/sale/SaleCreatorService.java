@@ -1,5 +1,8 @@
 package com.gestion.service.sale;
 
+import com.gestion.dto.project.sale.SalePersistenceResult;
+import com.gestion.dto.project.sale.SalePricingResult;
+import com.gestion.dto.project.sale.SaleValidationResult;
 import com.gestion.dto.request.sale.SaleRequest;
 import com.gestion.dto.response.sale.SaleSummaryResponse;
 import com.gestion.enums.Role;

@@ -1,6 +1,6 @@
 package com.gestion.config;
 
-import com.gestion.dto.project.UserActiveStatus;
+import com.gestion.dto.project.user.UserActiveStatus;
 import com.gestion.dto.response.exception.ExceptionResponse;
 import com.gestion.enums.ErrorCode;
 import com.gestion.mappers.UserPrincipalMapper;

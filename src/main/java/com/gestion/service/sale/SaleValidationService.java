@@ -1,8 +1,9 @@
 package com.gestion.service.sale;
 
+import com.gestion.dto.project.sale.SaleValidationResult;
 import com.gestion.dto.request.sale.SaleRequest;
 import com.gestion.service.saledetail.SaleDetailMergerService;
-import com.gestion.service.saledetail.SaleDetailValidationResult;
+import com.gestion.dto.project.sale.SaleDetailValidationResult;
 import com.gestion.service.saledetail.SaleDetailValidatorService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;

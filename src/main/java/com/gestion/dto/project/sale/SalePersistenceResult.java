@@ -1,4 +1,4 @@
-package com.gestion.service.sale;
+package com.gestion.dto.project.sale;
 
 import com.gestion.model.Sale;
 

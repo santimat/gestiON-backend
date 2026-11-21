@@ -1,5 +1,6 @@
 package com.gestion.service.saledetail;
 
+import com.gestion.dto.project.sale.SaleDetailValidationResult;
 import com.gestion.model.Product;
 import com.gestion.model.SaleDetail;
 import com.gestion.service.product.ProductFinderByIdAndCommerceIdService;

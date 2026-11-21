@@ -1,4 +1,4 @@
-package com.gestion.service.product;
+package com.gestion.dto.project.product;
 
 import com.gestion.model.Category;
 import com.gestion.model.Commerce;

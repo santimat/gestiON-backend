@@ -1,5 +1,6 @@
 package com.gestion.service.product;
 
+import com.gestion.dto.project.product.ProductUpdateValidationResult;
 import com.gestion.dto.request.product.ProductUpdateRequest;
 import com.gestion.model.Category;
 import com.gestion.model.Commerce;
@@ -8,7 +9,6 @@ import com.gestion.model.Product;
 import com.gestion.service.category.CategoryFinderByIdAndCommerceIdService;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import com.gestion.service.offer.OfferProductPriceValidatorService;
-import com.gestion.service.product.ProductPriceValidatorService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -1,5 +1,6 @@
 package com.gestion.service.sale;
 
+import com.gestion.dto.project.sale.SalePricingResult;
 import com.gestion.dto.request.sale.SaleRequest;
 import com.gestion.enums.SaleStatus;
 import com.gestion.model.Sale;

@@ -1,6 +1,6 @@
 package com.gestion.repository;
 
-import com.gestion.dto.project.CategoryProductCount;
+import com.gestion.dto.project.category.CategoryProductCount;
 import com.gestion.dto.response.product.ProductLowStockResponse;
 import com.gestion.model.Product;
 import org.springframework.data.domain.Page;

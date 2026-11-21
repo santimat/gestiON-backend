@@ -1,7 +1,7 @@
 package com.gestion.service.sale;
 
 import com.gestion.service.client.ClientAccountSummaryService;
-import com.gestion.dto.project.ClientAccountSummary;
+import com.gestion.dto.project.client.ClientAccountSummary;
 import com.gestion.dto.response.sale.PendingSalesWithDetailsResponse;
 import com.gestion.dto.response.sale.SaleResponse;
 import com.gestion.mappers.SaleMapper;

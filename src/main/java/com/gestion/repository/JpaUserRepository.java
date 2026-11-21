@@ -1,6 +1,6 @@
 package com.gestion.repository;
 
-import com.gestion.dto.project.UserActiveStatus;
+import com.gestion.dto.project.user.UserActiveStatus;
 import com.gestion.enums.Role;
 import com.gestion.model.User;
 import org.springframework.data.domain.Page;
@@ -42,7 +42,7 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
     Page<User> findAllBySellPointIdAndCommerceId(Long sellPointId, Long commerceId, Pageable pageable);
 
     @Query("""
-            SELECT new com.gestion.dto.project.UserActiveStatus(
+            SELECT new com.gestion.dto.project.user.UserActiveStatus(
                 u.active,
                 c.active
             )

@@ -1,5 +1,6 @@
 package com.gestion.service.product;
 
+import com.gestion.dto.project.product.ProductUpdateValidationResult;
 import com.gestion.dto.request.product.ProductUpdateRequest;
 import com.gestion.dto.response.product.ProductResponse;
 import com.gestion.mappers.CategoryMapper;
@@ -8,9 +9,6 @@ import com.gestion.model.Category;
 import com.gestion.model.Commerce;
 import com.gestion.model.Product;
 import com.gestion.repository.JpaProductRepository;
-import com.gestion.service.category.CategoryFinderByIdAndCommerceIdService;
-import com.gestion.service.commerce.CommerceFinderByIdService;
-import com.gestion.service.product.ProductSuggestedPriceCalculatorService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

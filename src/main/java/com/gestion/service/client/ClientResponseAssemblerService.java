@@ -1,6 +1,6 @@
 package com.gestion.service.client;
 
-import com.gestion.dto.project.ClientAccountSummary;
+import com.gestion.dto.project.client.ClientAccountSummary;
 import com.gestion.dto.response.client.ClientResponse;
 import com.gestion.mappers.ClientMapper;
 import com.gestion.model.Client;

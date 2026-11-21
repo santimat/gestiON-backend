@@ -1,4 +1,4 @@
-package com.gestion.dto.project;
+package com.gestion.dto.project.user;
 
 
 public record UserActiveStatus(

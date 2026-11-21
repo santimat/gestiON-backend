@@ -1,6 +1,6 @@
 package com.gestion.service.category;
 
-import com.gestion.dto.project.CategoryProductCount;
+import com.gestion.dto.project.category.CategoryProductCount;
 import com.gestion.repository.JpaProductRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;

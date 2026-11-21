@@ -1,6 +1,6 @@
 package com.gestion.service.sale;
 
-import com.gestion.dto.project.SalePaymentSum;
+import com.gestion.dto.project.sale.SalePaymentSum;
 import com.gestion.enums.SaleStatus;
 import com.gestion.model.Sale;
 import com.gestion.repository.JpaTransactionRepository;
@@ -25,6 +25,8 @@ public class SalePendingCalculatorService {
         return sale.getTotal().subtract(totalPaid != null ? totalPaid : BigDecimal.ZERO);
     }
 
+
+    // mapea id con total pendiente para listado de ventas, si la venta esta pagada o regalada el total pendiente es null
     public Map<Long, BigDecimal> calculateTotalPendingMap(Collection<Sale> sales) {
         if (sales == null || sales.isEmpty()) {
             return Map.of();

@@ -1,5 +1,6 @@
 package com.gestion.service.sale;
 
+import com.gestion.dto.project.sale.SalePersistenceResult;
 import com.gestion.model.Sale;
 import com.gestion.model.SaleDetail;
 import com.gestion.repository.JpaSaleRepository;
