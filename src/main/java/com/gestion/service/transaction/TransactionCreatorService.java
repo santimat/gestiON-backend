@@ -1,8 +1,6 @@
 package com.gestion.service.transaction;
 
-import com.gestion.dto.response.transaction.TransactionResponse;
 import com.gestion.enums.TransactionType;
-import com.gestion.mappers.TransactionMapper;
 import com.gestion.model.Sale;
 import com.gestion.model.Transaction;
 import com.gestion.repository.JpaTransactionRepository;
