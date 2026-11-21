@@ -2,6 +2,7 @@ package com.gestion.repository;
 
 import com.gestion.dto.project.category.CategoryProductCount;
 import com.gestion.dto.response.product.ProductLowStockResponse;
+import com.gestion.enums.StockStatus;
 import com.gestion.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,11 +34,15 @@ public interface JpaProductRepository extends JpaRepository<Product, Long> {
                    OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchText, '%'))
                    OR LOWER(p.category.name) LIKE LOWER(CONCAT('%', :searchText, '%')))
               AND (:active IS NULL OR p.active = :active)
+              AND (:stockStatus IS NULL
+                   OR (:stockStatus = 'LOW_STOCK' AND p.currentStock > 0 AND p.currentStock <= p.minStock)
+                   OR (:stockStatus = 'WITHOUT_STOCK' AND p.currentStock = 0))
             """)
     Page<Product> findAllWithFilters(@Param("commerceId") Long commerceId,
                                      @Param("categoryId") Long categoryId,
                                      @Param("searchText") String searchText,
                                      @Param("active") Boolean active,
+                                     @Param("stockStatus") String stockStatus,
                                      Pageable pageable);
 
     @Query("""
