@@ -25,8 +25,12 @@ public class SaleDetailValidatorService {
         List<SaleDetail> details = new ArrayList<>();
         BigDecimal subtotal = BigDecimal.ZERO;
 
+        // Batch fetch all products in a single query
+        List<Long> productIds = new ArrayList<>(quantitiesByProductId.keySet());
+        Map<Long, Product> productMap = productFinder.findProductsByIdsAndCommerceId(productIds, commerceId);
+
         for (Map.Entry<Long, Integer> entry : quantitiesByProductId.entrySet()) {
-            Product product = productFinder.findProductByIdAndCommerceId(entry.getKey(), commerceId);
+            Product product = productMap.get(entry.getKey());
 
             productValidator.validateProductIsAvailable(product);
             stockValidator.validateStock(product, entry.getValue());
