@@ -31,7 +31,7 @@ public class SaleTransactionService {
                 BigDecimal paid = request.partiallyPaidAmount();
                 Transaction payment = new Transaction();
                 payment.setAmount(paid);
-                payment.setType(TransactionType.PAGO);
+                payment.setType(TransactionType.PAYMENT);
                 payment.setSale(savedSale);
                 jpaTransactionRepository.save(payment);
 

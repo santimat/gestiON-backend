@@ -47,7 +47,7 @@ public class SalePaymentService {
         // 5. Crear transacción tipo PAGO
         Transaction payment = new Transaction();
         payment.setAmount(amount);
-        payment.setType(TransactionType.PAGO);
+        payment.setType(TransactionType.PAYMENT);
         payment.setSale(sale);
 
         Transaction savedPayment = jpaTransactionRepository.save(payment);

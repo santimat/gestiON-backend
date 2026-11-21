@@ -21,7 +21,7 @@ public class TransactionCreatorService {
         // Crear transacción tipo VENTA con el total de la venta
         Transaction transaction = new Transaction();
         transaction.setAmount(sale.getTotal());
-        transaction.setType(TransactionType.VENTA);
+        transaction.setType(TransactionType.SALE);
         transaction.setSale(sale);
 
         Transaction savedTransaction = jpaTransactionRepository.save(transaction);
