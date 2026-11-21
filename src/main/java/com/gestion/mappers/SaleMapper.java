@@ -21,7 +21,7 @@ public class SaleMapper {
         return sale;
     }
 
-    public static SaleResponse toResponse(Sale sale, List<SaleDetail> details) {
+    public static SaleResponse toResponse(Sale sale, List<SaleDetail> details, BigDecimal totalPending) {
         List<SaleDetailResponse> detailResponses = details.stream()
                 .map(SaleDetailMapper::toResponse)
                 .collect(Collectors.toList());
@@ -44,6 +44,7 @@ public class SaleMapper {
                 sale.getCreatedAt(),
                 sale.getObservations(),
                 sale.getStatus(),
+                totalPending,
                 detailResponses
         );
     }

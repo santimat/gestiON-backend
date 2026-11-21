@@ -22,6 +22,7 @@ public record SaleResponse(
         Instant createdAt,
         String observations,
         SaleStatus status,
+        BigDecimal totalPending,
         List<SaleDetailResponse> details
 ) {
 }
