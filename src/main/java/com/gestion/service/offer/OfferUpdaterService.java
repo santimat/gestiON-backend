@@ -26,7 +26,7 @@ public class OfferUpdaterService {
     private final OfferFinderByIdAndCommerceIdService offerFinderByIdAndCommerceIdService;
     private final CommerceFinderByIdService commerceFinderByIdService;
     private final OfferDiscountValidator discountValidator;
-    private final OfferDateValidator dateValidator;
+    private final OfferDateValidatorService dateValidator;
     private final OfferOverlapValidator overlapValidator;
     private final OfferPaymentMethodChangeValidator paymentMethodChangeValidator;
     private final OfferProductPriceValidator productPriceValidator;
@@ -43,7 +43,7 @@ public class OfferUpdaterService {
         Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
         discountValidator.validate(request.value(), request.discountType());
-        dateValidator.validateForUpdate(normalizedStart, normalizedEnd, now, offer.getStartDate());
+        dateValidator.validateOfferDatesForUpdate(normalizedStart, normalizedEnd, now, offer.getStartDate());
 
         // Set.of() devuelve una coleccion inmutable: Hibernate la reemplaza al mergear la entidad
         // y falla con UnsupportedOperationException al intentar limpiarla.

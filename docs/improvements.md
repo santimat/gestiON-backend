@@ -13,40 +13,6 @@ Two major modularization phases were completed following the same pattern: **ext
 
 ---
 
-## Phase 1: SaleCreatorService Modularization
-
-### Before
-| Metric | Value |
-|--------|-------|
-| Lines | 100 |
-| Dependencies | 16 |
-| Responsibility | Monolithic orchestrator doing validation, entity building, pricing, persistence, stock, transactions |
-
-### After
-| Metric | Value |
-|--------|-------|
-| Lines | 35 |
-| Dependencies | 10 |
-| Responsibility | Thin orchestrator delegating to 5 focused services |
-
-### New Services Created (8 files)
-
-| File | Lines | Responsibility | Replaces |
-|------|-------|----------------|----------|
-| `SaleValidationResult.java` | 12 | Record: merged quantities + validated details + subtotal | Local variables |
-| `SaleValidationService.java` | 20 | Payment method validation + detail merging + stock/price/offer validation | `SalePaymentMethodValidatorService`, `SaleDetailMergerService`, `SaleDetailValidatorService` |
-| `SaleEntityBuilderService.java` | 22 | Builds `Sale` entity with refs (user, commerce, subtotal) | `EntityManager`, `SaleMapper` (static) |
-| `SalePricingResult.java` | 10 | Record: total + status | Local variables |
-| `SalePricingService.java` | 35 | Finds active offer, applies discount, resolves status, validates partial payment | `OfferFinderByPaymentMethodAndCommerceIdService`, `SaleDiscountApplierService`, `SaleStatusResolverService`, `SalePartialPaymentValidatorService` |
-| `SalePersistenceResult.java` | 10 | Record: savedSale + itemCount | Local variables |
-| `SalePersistenceService.java` | 25 | Saves sale + details, returns savedSale + itemCount | `JpaSaleRepository`, `SaleDetailCreatorService` |
-| `SaleTransactionService.java` | 22 | Calculates revenue/outflow, creates Transaction if > 0 | `SaleRevenueOutflowCalculatorService`, `TransactionCreatorService` |
-
-### Modified Files
-- `SaleCreatorService.java` — Reduced from 100 to 35 lines, now delegates to 5 new services + existing `SaleGiftHandlerService`, `SaleSellPointResolverService`, `SaleClientResolverService`, `SaleStockUpdaterService`, `CommerceAvailabilityValidatorService`
-
----
-
 ## Phase 2: OfferCreatorService / OfferUpdaterService Modularization
 
 ### Before
@@ -71,7 +37,7 @@ Both are thin orchestrators delegating to 5 shared validator services.
 
 | File | Lines | Wraps | Used In |
 |------|-------|-------|---------|
-| `OfferDiscountValidator.java` | 18 | `DiscountRangeValidatorService` | Creator + Updater |
+| `OfferDiscountValidator.java` | 18 | `DiscountRangeValidatorService` | Creator + Updater | X
 | `OfferDateValidator.java` | 21 | `OfferDateValidatorService` | Creator + Updater |
 | `OfferOverlapValidator.java` | 22 | `OfferOverlapValidatorService` | Creator + Updater |
 | `OfferPaymentMethodChangeValidator.java` | 18 | `OfferPaymentMethodsValidatorService` | Updater only |

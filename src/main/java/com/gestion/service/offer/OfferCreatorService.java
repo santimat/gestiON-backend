@@ -22,7 +22,7 @@ public class OfferCreatorService {
     private final JpaOfferRepository offerRepository;
     private final CommerceFinderByIdService commerceFinderByIdService;
     private final OfferDiscountValidator discountValidator;
-    private final OfferDateValidator dateValidator;
+    private final OfferDateValidatorService dateValidator;
     private final OfferOverlapValidator overlapValidator;
     private final OfferStatusResolverService offerStatusResolverService;
 
@@ -35,7 +35,7 @@ public class OfferCreatorService {
         Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
         discountValidator.validate(request.value(), request.discountType());
-        dateValidator.validateForCreate(normalizedStart, normalizedEnd, now);
+        dateValidator.validateOfferDates(normalizedStart, normalizedEnd, now);
         overlapValidator.validate(commerceId, null, normalizedStart, normalizedEnd,
                 request.value(), request.discountType(), request.paymentMethods());
 
