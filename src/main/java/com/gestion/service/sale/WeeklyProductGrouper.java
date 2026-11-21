@@ -16,10 +16,10 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class WeeklyGroupingStrategy implements PeriodGroupingStrategy {
+public class WeeklyProductGrouper {
+
     private final ZoneId zoneId = ZoneId.of("America/Argentina/Buenos_Aires");
 
-    @Override
     public List<PeriodProductCount> group(List<SaleDetail> details, PeriodRange range) {
         Map<Long, Long> grouped = details.stream()
                 .collect(Collectors.groupingBy(

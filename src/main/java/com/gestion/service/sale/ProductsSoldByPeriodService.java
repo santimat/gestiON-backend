@@ -9,7 +9,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 @AllArgsConstructor
@@ -17,14 +16,19 @@ public class ProductsSoldByPeriodService {
 
     private final JpaSaleRepository jpaSaleRepository;
     private final PeriodRangeService periodRangeService;
-    private final Map<PeriodGranularity, PeriodGroupingStrategy> strategies;
+    private final HourlyProductGrouper hourlyGrouper;
+    private final DailyProductGrouper dailyGrouper;
+    private final WeeklyProductGrouper weeklyGrouper;
 
     public List<PeriodProductCount> getProductsSoldByPeriod(Long commerceId, PeriodGranularity granularity) {
         PeriodRange range = periodRangeService.resolveRange(granularity);
         List<SaleDetail> details = jpaSaleRepository.saleDetailsInPeriod(
                 commerceId, range.start(), range.end());
 
-        PeriodGroupingStrategy strategy = strategies.get(granularity);
-        return strategy.group(details, range);
+        return switch (granularity) {
+            case DAY -> hourlyGrouper.group(details);
+            case WEEK -> dailyGrouper.group(details, range);
+            case MONTH -> weeklyGrouper.group(details, range);
+        };
     }
 }
