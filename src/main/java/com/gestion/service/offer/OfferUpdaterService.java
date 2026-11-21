@@ -10,6 +10,7 @@ import com.gestion.mappers.OfferMapper;
 import com.gestion.model.Offer;
 import com.gestion.repository.JpaOfferRepository;
 import com.gestion.service.commerce.CommerceFinderByIdService;
+import com.gestion.service.discount.DiscountRangeValidatorService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,13 +26,13 @@ public class OfferUpdaterService {
 
     private final OfferFinderByIdAndCommerceIdService offerFinderByIdAndCommerceIdService;
     private final CommerceFinderByIdService commerceFinderByIdService;
-    private final OfferDiscountValidator discountValidator;
     private final OfferDateValidatorService dateValidator;
-    private final OfferOverlapValidator overlapValidator;
-    private final OfferPaymentMethodChangeValidator paymentMethodChangeValidator;
+    private final OfferOverlapValidatorService overlapValidator;
+    private final OfferPaymentMethodsValidatorService paymentMethodsValidator;
     private final OfferProductPriceValidator productPriceValidator;
     private final OfferStatusResolverService offerStatusResolverService;
     private final JpaOfferRepository offerRepository;
+    private final DiscountRangeValidatorService discountRangeValidatorService;
 
     @Transactional
     public OfferResponse updateOffer(Long offerId, OfferUpdateRequest request, Long commerceId) {
@@ -42,7 +43,10 @@ public class OfferUpdaterService {
         Instant normalizedEnd = request.endDate().truncatedTo(ChronoUnit.MICROS);
         Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
-        discountValidator.validate(request.value(), request.discountType());
+        if(request.discountType() == DiscountType.PERCENTAGE){
+            discountRangeValidatorService.validatePercentageNotGreaterThan100(request.value());
+        }
+
         dateValidator.validateOfferDatesForUpdate(normalizedStart, normalizedEnd, now, offer.getStartDate());
 
         // Set.of() devuelve una coleccion inmutable: Hibernate la reemplaza al mergear la entidad
@@ -50,9 +54,9 @@ public class OfferUpdaterService {
         Set<PaymentMethod> normalizedPaymentMethods =
                 request.paymentMethods() == null ? new HashSet<>() : new HashSet<>(request.paymentMethods());
 
-        paymentMethodChangeValidator.validate(offerId, commerceId, normalizedPaymentMethods);
+        paymentMethodsValidator.validateNoAssignedProducts(offerId, commerceId, normalizedPaymentMethods);
 
-        overlapValidator.validate(commerceId, offerId, normalizedStart, normalizedEnd,
+        overlapValidator.validateNoOverlap(commerceId, offerId, normalizedStart, normalizedEnd,
                 request.value(), request.discountType(), request.paymentMethods());
 
         offer.setValue(request.value());

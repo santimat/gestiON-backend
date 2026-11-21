@@ -13,6 +13,7 @@ Docs and comments are mostly Spanish; commit messages are English.
 - Run app: `.\mvnw.cmd spring-boot:run`
 - Verify in order: compile -> test. Compile failures block everything else.
 - No commits without my explicit instruction.
+- No pushes without my explicit instruction.
 
 ## Infrastructure (must be running manually)
 

@@ -9,6 +9,7 @@ import com.gestion.model.Commerce;
 import com.gestion.model.Offer;
 import com.gestion.repository.JpaOfferRepository;
 import com.gestion.service.commerce.CommerceFinderByIdService;
+import com.gestion.service.discount.DiscountRangeValidatorService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,10 +22,10 @@ import java.time.temporal.ChronoUnit;
 public class OfferCreatorService {
     private final JpaOfferRepository offerRepository;
     private final CommerceFinderByIdService commerceFinderByIdService;
-    private final OfferDiscountValidator discountValidator;
     private final OfferDateValidatorService dateValidator;
-    private final OfferOverlapValidator overlapValidator;
+    private final OfferOverlapValidatorService overlapValidator;
     private final OfferStatusResolverService offerStatusResolverService;
+    private final DiscountRangeValidatorService discountRangeValidatorService;
 
     @Transactional
     public OfferResponse createOffer(OfferRequest request, Long commerceId) {
@@ -34,9 +35,13 @@ public class OfferCreatorService {
         Instant normalizedEnd = request.endDate().truncatedTo(ChronoUnit.MICROS);
         Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
-        discountValidator.validate(request.value(), request.discountType());
+        if(request.discountType() == DiscountType.PERCENTAGE){
+            discountRangeValidatorService.validatePercentageNotGreaterThan100(request.value());
+        }
+
         dateValidator.validateOfferDates(normalizedStart, normalizedEnd, now);
-        overlapValidator.validate(commerceId, null, normalizedStart, normalizedEnd,
+
+        overlapValidator.validateNoOverlap(commerceId, null, normalizedStart, normalizedEnd,
                 request.value(), request.discountType(), request.paymentMethods());
 
         OfferRequest normalizedRequest = new OfferRequest(
