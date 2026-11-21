@@ -17,7 +17,7 @@ public class TransactionCreatorService {
     private final JpaTransactionRepository jpaTransactionRepository;
 
     @Transactional
-    public TransactionResponse createSaleTransaction(Sale sale) {
+    public void createSaleTransaction(Sale sale) {
         // Crear transacción tipo VENTA con el total de la venta
         Transaction transaction = new Transaction();
         transaction.setAmount(sale.getTotal());
@@ -26,6 +26,6 @@ public class TransactionCreatorService {
 
         Transaction savedTransaction = jpaTransactionRepository.save(transaction);
 
-        return TransactionMapper.toResponse(savedTransaction);
+//        return TransactionMapper.toResponse(savedTransaction);
     }
 }
