@@ -1,4 +1,4 @@
-package com.gestion.dto.response.transaction;
+    package com.gestion.dto.response.transaction;
 
 import com.gestion.enums.TransactionType;
 import java.math.BigDecimal;

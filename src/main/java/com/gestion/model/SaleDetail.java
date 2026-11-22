@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 
@@ -38,6 +40,7 @@ public class SaleDetail {
     private BigDecimal discountApplied;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "discount_type_applied")
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "discount_type_applied", length = 50)
     private DiscountType discountTypeApplied;
 }

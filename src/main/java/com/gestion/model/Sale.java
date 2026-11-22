@@ -9,7 +9,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -43,13 +45,15 @@ public class Sale {
     private SellPoint sellPoint;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_method")
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "payment_method", length = 50)
     private PaymentMethod paymentMethod;
 
 
     // descuento aplicado por la oferta vigente del metodo de pago (null si no hay oferta)
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_method_discount_type")
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "payment_method_discount_type", length = 50)
     private DiscountType paymentMethodDiscountType;
 
     @Column(name = "payment_method_discount", precision = 12, scale = 2)
@@ -64,6 +68,8 @@ public class Sale {
     private String observations;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "status", length = 50)
     private SaleStatus status;
 
     @CreationTimestamp
