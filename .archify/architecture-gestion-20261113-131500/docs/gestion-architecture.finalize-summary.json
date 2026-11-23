@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\vscode\\proyecto-finalisimo\\gestiON-backend\\.archify\\architecture-gestion-20261113-131500\\candidate.json",
+    "sha256": "3cbe343c8ae69036cc6bd6a263c32e932c5c4240db6440a6676eb69039228be3",
+    "bytes": 3948
+  },
+  "artifact": {
+    "path": "C:\\vscode\\proyecto-finalisimo\\gestiON-backend\\.archify\\architecture-gestion-20261113-131500\\docs\\gestion-architecture.html",
+    "sha256": "690fdceb4a5d69de98cce027b2b0f21235d316c085183fee1e867c7424e87ccb",
+    "bytes": 851740
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\vscode\\proyecto-finalisimo\\gestiON-backend\\.archify\\architecture-gestion-20261113-131500\\docs\\gestion-architecture.finalize.json",
+    "summaryReceipt": "C:\\vscode\\proyecto-finalisimo\\gestiON-backend\\.archify\\architecture-gestion-20261113-131500\\docs\\gestion-architecture.finalize-summary.json",
+    "browserCheckReceipt": "C:\\vscode\\proyecto-finalisimo\\gestiON-backend\\.archify\\architecture-gestion-20261113-131500\\docs\\gestion-architecture.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-11-13T16:17:42.466Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 9213,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

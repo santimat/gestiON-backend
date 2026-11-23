@@ -2,11 +2,11 @@ package com.gestion.controller.commerce;
 
 import com.gestion.dto.response.commerce.CommerceWithOwnerResponse;
 import com.gestion.service.commerce.CommerceWithOwnerSearcherService;
+import com.gestion.utils.PageableFactory;
+import com.gestion.utils.SortableProperties;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,9 +29,7 @@ public class CommercesWithOwnerGetController {
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "DESC") String sortOrder,
             @RequestParam(defaultValue = "updatedAt") String sortBy) {
-        Sort.Direction sortDirection = Sort.Direction.fromString(sortOrder);
-        Sort sortConfig = Sort.by(sortDirection, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sortConfig);
+        Pageable pageable = PageableFactory.create(page, size, sortBy, sortOrder, SortableProperties.COMMERCE);
 
         return ResponseEntity.ok(commerceWithOwnerSearcherService.findAllWithOwner(pageable));
     }

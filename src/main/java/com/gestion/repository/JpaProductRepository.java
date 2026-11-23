@@ -1,6 +1,6 @@
 package com.gestion.repository;
 
-import com.gestion.dto.project.CategoryProductCount;
+import com.gestion.dto.project.category.CategoryProductCount;
 import com.gestion.dto.response.product.ProductLowStockResponse;
 import com.gestion.model.Product;
 import org.springframework.data.domain.Page;
@@ -24,18 +24,24 @@ public interface JpaProductRepository extends JpaRepository<Product, Long> {
 
     @Query("""
             SELECT p FROM Product p
+            JOIN FETCH p.category c
+            LEFT JOIN FETCH p.offer
             WHERE p.commerce.id = :commerceId
-              AND (:categoryId IS NULL OR p.category.id = :categoryId)
+              AND (:categoryId IS NULL OR c.id = :categoryId)
               AND (:searchText IS NULL
                    OR LOWER(p.name) LIKE LOWER(CONCAT('%', :searchText, '%'))
                    OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchText, '%'))
                    OR LOWER(p.category.name) LIKE LOWER(CONCAT('%', :searchText, '%')))
               AND (:active IS NULL OR p.active = :active)
+              AND (:stockStatus IS NULL
+                   OR (:stockStatus = 'LOW_STOCK' AND p.currentStock > 0 AND p.currentStock <= p.minStock)
+                   OR (:stockStatus = 'WITHOUT_STOCK' AND p.currentStock = 0))
             """)
     Page<Product> findAllWithFilters(@Param("commerceId") Long commerceId,
                                      @Param("categoryId") Long categoryId,
                                      @Param("searchText") String searchText,
                                      @Param("active") Boolean active,
+                                     @Param("stockStatus") String stockStatus,
                                      Pageable pageable);
 
     @Query("""

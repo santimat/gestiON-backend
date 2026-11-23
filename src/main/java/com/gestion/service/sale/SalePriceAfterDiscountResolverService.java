@@ -3,6 +3,7 @@ package com.gestion.service.sale;
 import com.gestion.enums.DiscountType;
 import com.gestion.enums.ErrorCode;
 import com.gestion.exception.InvalidDiscountException;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -12,7 +13,7 @@ import java.math.RoundingMode;
 @Service
 public class SalePriceAfterDiscountResolverService {
 
-    public BigDecimal resolvePriceAfterDiscount(BigDecimal subtotal, DiscountType discountType, BigDecimal discount) {
+    private static @NonNull BigDecimal getTotalAfterDiscount(BigDecimal subtotal, DiscountType discountType, BigDecimal discount) {
         BigDecimal totalAfterDiscount;
         switch (discountType) {
             case PERCENTAGE -> {
@@ -24,14 +25,16 @@ public class SalePriceAfterDiscountResolverService {
             default -> throw new InvalidDiscountException(ErrorCode.INVALID_DISCOUNT,
                     "Unsupported discount type");
         }
+        return totalAfterDiscount;
+    }
 
-        // red de seguridad: un total negativo nunca debe persistirse.
-        // la validación de rango vive en SaleDiscountApplierService, pero este
-        // calculador no debe poder devolver un total negativo si se usa de nuevo
-        // desde otro flujo (por ejemplo, cuando las ofertas se apliquen a la venta).
+    public BigDecimal resolvePriceAfterDiscount(BigDecimal subtotal, DiscountType discountType, BigDecimal discount) {
+        BigDecimal totalAfterDiscount = getTotalAfterDiscount(subtotal, discountType, discount);
+
+        // la oferta de metodo de pago no puede dejar el total en negativo
         if (totalAfterDiscount.signum() < 0) {
-            throw new InvalidDiscountException(ErrorCode.INVALID_DISCOUNT,
-                    "The discount cannot be greater than the sale subtotal");
+            throw new InvalidDiscountException(ErrorCode.PAYMENT_METHOD_OFFER_EXCEEDS_SALE_SUBTOTAL,
+                    "The payment method offer's discount cannot be greater than the sale subtotal");
         }
 
         return totalAfterDiscount.setScale(2, RoundingMode.HALF_UP);

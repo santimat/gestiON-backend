@@ -3,7 +3,7 @@ package com.gestion.controller.client;
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.client.ClientResponse;
 import com.gestion.service.client.ClientFinderByDniService;
-import com.gestion.service.client.ClientResponseAssembler;
+import com.gestion.service.client.ClientResponseAssemblerService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class ClientGetController {
     private final ClientFinderByDniService clientFinderByDniService;
-    private final ClientResponseAssembler clientResponseAssembler;
+    private final ClientResponseAssemblerService clientResponseAssembler;
 
     @GetMapping("/{dni}")
     @PreAuthorize("hasRole('OWNER') or hasRole('CASHIER')")

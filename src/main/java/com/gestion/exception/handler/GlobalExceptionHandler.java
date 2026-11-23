@@ -3,26 +3,28 @@ package com.gestion.exception.handler;
 import com.gestion.dto.response.exception.ExceptionResponse;
 import com.gestion.enums.ErrorCode;
 import com.gestion.exception.BusinessException;
-import com.gestion.exception.InvalidDateException;
-import com.gestion.exception.InvalidProductPriceException;
-import com.gestion.exception.OfferHasProductsException;
-import com.gestion.exception.OfferOverlapException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.BindException;
+import org.springframework.validation.method.ParameterValidationResult;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -34,26 +36,6 @@ public class GlobalExceptionHandler {
         return buildResponse(exception.getCode(), exception.getMessage());
     }
 
-    @ExceptionHandler(InvalidDateException.class)
-    public ResponseEntity<ExceptionResponse> handleInvalidDateException(InvalidDateException exception) {
-        return buildResponse(exception.getCode(), exception.getMessage());
-    }
-
-    @ExceptionHandler(InvalidProductPriceException.class)
-    public ResponseEntity<ExceptionResponse> handleInvalidProductPriceException(InvalidProductPriceException exception) {
-        return buildResponse(exception.getCode(), exception.getMessage());
-    }
-
-    @ExceptionHandler(OfferOverlapException.class)
-    public ResponseEntity<ExceptionResponse> handleOfferOverlapException(OfferOverlapException exception) {
-        return buildResponse(exception.getCode(), exception.getMessage());
-    }
-
-    @ExceptionHandler(OfferHasProductsException.class)
-    public ResponseEntity<ExceptionResponse> handleOfferHasProductsException(OfferHasProductsException exception) {
-        return buildResponse(exception.getCode(), exception.getMessage());
-    }
-
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ExceptionResponse> handleAuthenticationException(AuthenticationException exception) {
         return buildResponse(ErrorCode.UNAUTHORIZED, ErrorCode.UNAUTHORIZED.getDefaultMessage());
@@ -61,7 +43,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ExceptionResponse> handleAccessDeniedException(AccessDeniedException exception) {
-        return buildResponse(ErrorCode.ACCESS_DENIED, exception.getMessage());
+        // el mensaje crudo de Spring puede filtrar detalles internos: se usa el del codigo
+        return buildResponse(ErrorCode.ACCESS_DENIED, ErrorCode.ACCESS_DENIED.getDefaultMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -70,6 +53,37 @@ public class GlobalExceptionHandler {
         return buildValidationResponse(exception.getBindingResult().getFieldErrors().stream()
                 .map(error -> new ExceptionResponse.FieldError(error.getField(), error.getDefaultMessage()))
                 .toList());
+    }
+
+    /**
+     * Errores de binding de un @ModelAttribute. En Spring 6+ este caso lo cubre
+     * MethodArgumentNotValidException, pero un BindException pelado puede llegar igual desde otros
+     * caminos de binding, asi que se maneja con el mismo formato de respuesta.
+     */
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ExceptionResponse> handleBindException(BindException exception) {
+        return buildValidationResponse(exception.getBindingResult().getFieldErrors().stream()
+                .map(error -> new ExceptionResponse.FieldError(error.getField(), error.getDefaultMessage()))
+                .toList());
+    }
+
+    /**
+     * Validación nativa de los parametros de los metodos del controller (Spring 6.1+). Por
+     * ejemplo @Min(1) en un @RequestParam: sin este handler caeria en el catch-all y devolveria
+     * 500 en vez de 400.
+     */
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ExceptionResponse> handleHandlerMethodValidationException(HandlerMethodValidationException exception) {
+        List<ExceptionResponse.FieldError> fields = new ArrayList<>();
+
+        for (ParameterValidationResult result : exception.getParameterValidationResults()) {
+            String parameterName = result.getMethodParameter().getParameterName();
+            for (MessageSourceResolvable error : result.getResolvableErrors()) {
+                fields.add(new ExceptionResponse.FieldError(parameterName, error.getDefaultMessage()));
+            }
+        }
+
+        return buildValidationResponse(fields);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -115,6 +129,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponse> handleDataIntegrityViolationException(DataIntegrityViolationException exception) {
         log.error("Data integrity violation: {}", exception.getMostSpecificCause().getMessage(), exception);
         return buildResponse(ErrorCode.DATA_INTEGRITY_VIOLATION, ErrorCode.DATA_INTEGRITY_VIOLATION.getDefaultMessage());
+    }
+
+    /**
+     * Red de seguridad para los parametros de paginacion. PageableFactory ya valida page,
+     * size, sortBy y sortDir antes de armar el PageRequest, asi que en teoria no deberia
+     * llegar nada aca: pero un IllegalArgumentException o un PropertyReferenceException
+     * terminarian en el catch-all y devolverian un 500 por un error del cliente.
+     */
+    @ExceptionHandler({IllegalArgumentException.class, PropertyReferenceException.class})
+    public ResponseEntity<ExceptionResponse> handleInvalidPaginationParameter(Exception exception) {
+        log.warn("Invalid pagination parameter: {}", exception.getMessage());
+        return buildResponse(ErrorCode.INVALID_PARAMETER, ErrorCode.INVALID_PARAMETER.getDefaultMessage());
     }
 
     @ExceptionHandler(Exception.class)

@@ -8,6 +8,7 @@ import com.gestion.repository.JpaSaleDetailRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -15,11 +16,13 @@ import java.util.List;
 public class SaleWithDetailsFinderService {
     private final JpaSaleDetailRepository saleDetailRepository;
     private final SaleFinderByIdAndCommerceIdService saleFinderByIdAndCommerceIdService;
+    private final SalePendingCalculatorService salePendingCalculatorService;
 
-    public SaleResponse findBySaleIdAndCommerceId(Long saleId, Long CommerceId) {
-        Sale sale = saleFinderByIdAndCommerceIdService.findSaleByIdAndCommerceId(saleId, CommerceId);
+    public SaleResponse findBySaleIdAndCommerceId(Long saleId, Long commerceId) {
+        Sale sale = saleFinderByIdAndCommerceIdService.findSaleByIdAndCommerceId(saleId, commerceId);
         List<SaleDetail> saleDetails = saleDetailRepository.findAllBySaleId(sale.getId());
 
-        return SaleMapper.toResponse(sale, saleDetails);
+        BigDecimal totalPending = salePendingCalculatorService.calculateTotalPending(sale);
+        return SaleMapper.toResponse(sale, saleDetails, totalPending);
     }
 }

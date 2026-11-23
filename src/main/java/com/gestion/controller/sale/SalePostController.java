@@ -25,7 +25,7 @@ public class SalePostController {
     @PreAuthorize("hasRole('CASHIER') or hasRole('OWNER')")
     public ResponseEntity<SaleSummaryResponse> createSale(@RequestBody @Valid SaleRequest request,
                                                           @AuthenticationPrincipal UserPrincipal authenticatedUser) {
-        SaleSummaryResponse response = saleCreatorService.createSale(request, authenticatedUser.getId(), authenticatedUser.getCommerceId(), authenticatedUser.getSellPointId());
+        SaleSummaryResponse response = saleCreatorService.createSale(request, authenticatedUser.getId(), authenticatedUser.getCommerceId(), authenticatedUser.getSellPointId(), authenticatedUser.getRole());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

@@ -8,58 +8,52 @@ import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public interface JpaOfferRepository extends JpaRepository<Offer, Long>, JpaSpecificationExecutor<Offer> {
 
-    Page<Offer> findByCommerceId(Long commerceId, Pageable pageable);
-
     Optional<Offer> findByIdAndCommerceId(Long id, Long commerceId);
-
-    Page<Offer> findByCommerceIdAndEndDateBefore(Long commerceId, Instant threshold, Pageable pageable);
-
-    Page<Offer> findByCommerceIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(Long commerceId,
-                                                                                    Instant startDate,
-                                                                                    Instant endDate,
-                                                                                    Pageable pageable);
 
     List<Offer> findOverlappingByCommerceIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(Long commerceId,
                                                                                                Instant startDate,
                                                                                                Instant endDate);
 
-    Page<Offer> findByCommerceIdAndPaymentMethodsContaining(Long commerceId,
-                                                            PaymentMethod paymentMethod,
-                                                            Pageable pageable);
-
-    Page<Offer> findByCommerceIdAndPaymentMethodsContainingAndEndDateBefore(Long commerceId,
-                                                                            PaymentMethod paymentMethod,
-                                                                            Instant threshold,
-                                                                            Pageable pageable);
-
-    Page<Offer> findByCommerceIdAndPaymentMethodsContainingAndStartDateLessThanEqualAndEndDateGreaterThanEqual(Long commerceId,
-                                                                                                                PaymentMethod paymentMethod,
-                                                                                                                Instant startDate,
-                                                                                                                Instant endDate,
-                                                                                                                Pageable pageable);
-
-    Page<Offer> findByCommerceIdAndPaymentMethodsContainingAndStartDateAfter(Long commerceId,
-                                                                            PaymentMethod paymentMethod,
-                                                                            Instant threshold,
-                                                                            Pageable pageable);
-
-    Page<Offer> findByCommerceIdAndStartDateAfter(Long commerceId, Instant threshold, Pageable pageable);
+    @EntityGraph(attributePaths = "paymentMethods")
+    @Query("""
+            SELECT o FROM Offer o
+            WHERE o.commerce.id = :commerceId
+              AND o.offerType = :offerType
+              AND o.startDate <= :now
+              AND o.endDate >= :now
+            """)
+    Page<Offer> findByCommerceIdAndOfferType(@Param("commerceId") Long commerceId,
+                                             @Param("offerType") OfferType offerType,
+                                             @Param("now") Instant now,
+                                             Pageable pageable);
 
     default Page<Offer> findAllWithFilters(Long commerceId, OfferStatus status, PaymentMethod paymentMethod,
                                            OfferType offerType, Instant now, Pageable pageable) {
-        Instant normalizedNow = now.truncatedTo(java.time.temporal.ChronoUnit.MICROS);
 
-        Specification<Offer> specification = (root, query, criteriaBuilder) -> {
+        // se normaliz la fecha, porque algunas base de datos no trabajan igual que Java con la precisión de los
+        // instantes
+        Instant normalizedNow = now.truncatedTo(ChronoUnit.MICROS);
+
+        // root -> entidad
+        // query -> consulta (aplicar metodos de ordenamiento, paginación, etc)
+        // criteriaBuilder -> constructor de criterios (equal, greaterThan, lessThan, etc)
+        Specification<Offer> specification = (root, _, criteriaBuilder) -> {
+
+            // Lista de condiciones para la query
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(criteriaBuilder.equal(root.get("commerce").get("id"), commerceId));
 
@@ -68,22 +62,31 @@ public interface JpaOfferRepository extends JpaRepository<Offer, Long>, JpaSpeci
             }
 
             if (paymentMethod != null) {
+                // isMember -> verifica si un elemento está presente en una colección
                 predicates.add(criteriaBuilder.isMember(paymentMethod, root.get("paymentMethods")));
             }
 
             if (status != null) {
                 switch (status) {
+                    // momento de la consulta > fecha de finalización
                     case EXPIRED -> predicates.add(criteriaBuilder.lessThan(root.get("endDate"), normalizedNow));
+                    // rango de fechas: fecha de inicio <= momento de la consulta <= fecha de finalización
                     case ACTIVE -> predicates.add(criteriaBuilder.and(
                             criteriaBuilder.lessThanOrEqualTo(root.get("startDate"), normalizedNow),
                             criteriaBuilder.greaterThanOrEqualTo(root.get("endDate"), normalizedNow)));
+                    //startDate > momento de la consulta
                     case SCHEDULED -> predicates.add(criteriaBuilder.greaterThan(root.get("startDate"), normalizedNow));
                 }
             }
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            // lo aplicamos como un AND, es decir, todas las condiciones deben cumplirse
+            return criteriaBuilder.and(predicates.toArray(
+                    // referencia para que toArray sepa el tipo de array que debe crear
+                    new Predicate[0]
+            ));
         };
 
+        // all lo que cumpla las condiciones de la especificación, se devuelve paginado
         return findAll(specification, pageable);
     }
 }

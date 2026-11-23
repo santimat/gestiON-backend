@@ -4,11 +4,11 @@ package com.gestion.controller.category;
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.category.CategoryResponse;
 import com.gestion.service.category.CategorySearcherService;
+import com.gestion.utils.PageableFactory;
+import com.gestion.utils.SortableProperties;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,9 +32,7 @@ public class CategoriesGetController {
             @RequestParam(defaultValue = "updatedAt") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) String categoryName) {
-        Sort.Direction sortDirection = Sort.Direction.fromString(sortDir);
-        Sort sortConfig = Sort.by(sortDirection, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sortConfig);
+        Pageable pageable = PageableFactory.create(page, size, sortBy, sortDir, SortableProperties.CATEGORY);
 
         return ResponseEntity.ok(categorySearcherService
                 .searchCategories(authenticatedUser.getCommerceId(), categoryName, pageable));

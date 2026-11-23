@@ -10,7 +10,7 @@ import com.gestion.model.Product;
 import com.gestion.repository.JpaProductRepository;
 import com.gestion.service.category.CategoryFinderByIdAndCommerceIdService;
 import com.gestion.service.commerce.CommerceFinderByIdService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

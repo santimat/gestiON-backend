@@ -3,33 +3,27 @@ package com.gestion.service.offer;
 import com.gestion.dto.request.offer.OfferRequest;
 import com.gestion.dto.response.offer.OfferResponse;
 import com.gestion.enums.DiscountType;
-import com.gestion.enums.ErrorCode;
 import com.gestion.enums.OfferStatus;
-import com.gestion.enums.PaymentMethod;
-import com.gestion.exception.OfferOverlapException;
 import com.gestion.mappers.OfferMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.Offer;
 import com.gestion.repository.JpaOfferRepository;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import com.gestion.service.discount.DiscountRangeValidatorService;
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
 
 @Service
 @AllArgsConstructor
 public class OfferCreatorService {
     private final JpaOfferRepository offerRepository;
     private final CommerceFinderByIdService commerceFinderByIdService;
-    private final OfferDateValidatorService offerDateValidatorService;
-    private final OfferOverlapValidatorService offerOverlapValidatorService;
+    private final OfferDateValidatorService dateValidator;
+    private final OfferOverlapValidatorService overlapValidator;
     private final OfferStatusResolverService offerStatusResolverService;
     private final DiscountRangeValidatorService discountRangeValidatorService;
 
@@ -37,16 +31,19 @@ public class OfferCreatorService {
     public OfferResponse createOffer(OfferRequest request, Long commerceId) {
         Commerce commerce = commerceFinderByIdService.findCommerceById(commerceId);
 
-        // el valor de la oferta depende del tipo: en porcentaje no puede pasar el 100%.
-        // en monto fijo no se valida un máximo porque todavía no existe contra qué total
-        // compararlo (las ofertas aún no se aplican a la venta).
-        if (request.discountType() == DiscountType.PERCENTAGE) {
-            discountRangeValidatorService.validatePercentageNotGreaterThan100(request.value());
-        }
-
         Instant normalizedStart = request.startDate().truncatedTo(ChronoUnit.MICROS);
         Instant normalizedEnd = request.endDate().truncatedTo(ChronoUnit.MICROS);
         Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
+
+        if(request.discountType() == DiscountType.PERCENTAGE){
+            discountRangeValidatorService.validatePercentageNotGreaterThan100(request.value());
+        }
+
+        dateValidator.validateOfferDates(normalizedStart, normalizedEnd, now);
+
+        overlapValidator.validateNoOverlap(commerceId, null, normalizedStart, normalizedEnd,
+                request.value(), request.discountType(), request.paymentMethods());
+
         OfferRequest normalizedRequest = new OfferRequest(
                 request.value(),
                 request.discountType(),
@@ -54,17 +51,6 @@ public class OfferCreatorService {
                 normalizedEnd,
                 request.paymentMethods()
         );
-
-        offerDateValidatorService.validateOfferDates(normalizedStart, normalizedEnd, now);
-
-        offerOverlapValidatorService.validateNoOverlap(
-                commerceId,
-                null,
-                normalizedStart,
-                normalizedEnd,
-                request.value(),
-                request.discountType(),
-                request.paymentMethods());
 
         Offer offerToSave = OfferMapper.toEntity(normalizedRequest, commerce);
         Offer savedOffer = offerRepository.save(offerToSave);

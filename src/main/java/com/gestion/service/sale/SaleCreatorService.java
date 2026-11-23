@@ -1,91 +1,71 @@
 package com.gestion.service.sale;
 
+import com.gestion.dto.project.sale.SalePersistenceResult;
+import com.gestion.dto.project.sale.SalePricingResult;
+import com.gestion.dto.project.sale.SaleValidationResult;
 import com.gestion.dto.request.sale.SaleRequest;
 import com.gestion.dto.response.sale.SaleSummaryResponse;
+import com.gestion.enums.Role;
+import com.gestion.enums.SaleStatus;
 import com.gestion.mappers.SaleMapper;
-import com.gestion.model.Commerce;
 import com.gestion.model.Sale;
-import com.gestion.model.SaleDetail;
-import com.gestion.repository.JpaSaleRepository;
-import com.gestion.service.offer.OfferFinderByPaymentMethodAndCommerceIdService;
-import com.gestion.service.saleDetails.SaleDetailCreatorService;
-import com.gestion.service.saleDetails.SaleDetailsMergerService;
-import com.gestion.service.saleDetails.SaleDetailsValidationResult;
-import com.gestion.service.saleDetails.SaleDetailsValidatorService;
-import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
+import com.gestion.service.commerce.CommerceAvailabilityValidatorService;
 import lombok.AllArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
 
 @Service
 @AllArgsConstructor
 public class SaleCreatorService {
-    private final JpaSaleRepository jpaSaleRepository;
-    private final SaleClientResolverService saleClientResolverService;
-    private final SaleStatusResolverService saleStatusResolverService;
-    private final SaleDiscountApplierService saleDiscountApplierService;
-    private final SaleDetailsMergerService saleDetailsMergerService;
-    private final SaleDetailsValidatorService saleDetailsValidatorService;
-    private final SaleSellPointResolverService saleSellPointResolverService;
-    private final SaleStockUpdaterService saleStockUpdaterService;
-    private final SaleDetailCreatorService saleDetailCreatorService;
-    private final OfferFinderByPaymentMethodAndCommerceIdService offerFinderByPaymentMethodAndCommerceIdService;
-    private final EntityManager entityManager;
+    private final CommerceAvailabilityValidatorService commerceAvailabilityValidator;
+    private final SaleValidationService validationService;
+    private final SaleEntityBuilderService entityBuilder;
+    private final SaleGiftHandlerService giftHandler;
+    private final SalePricingService pricingService;
+    private final SaleSellPointResolverService sellPointResolver;
+    private final SaleClientResolverService clientResolver;
+    private final SaleStockUpdaterService stockUpdater;
+    private final SalePersistenceService persistenceService;
+    private final SaleTransactionService transactionService;
+    private final SalePendingCalculatorService salePendingCalculatorService;
 
     @Transactional
-    public SaleSummaryResponse createSale(SaleRequest request, Long userId, Long commerceId, Long sellPointId) {
-        if (commerceId == null) {
-            throw new AccessDeniedException("Authenticated user does not have a commerce associated");
+    public SaleSummaryResponse createSale(SaleRequest request, Long userId, Long commerceId, Long sellPointId, Role role) {
+        commerceAvailabilityValidator.checkCommerceIsAvailable(commerceId);
+
+        // 1. Validate payment method + merge details + validate stock/prices/offers
+        SaleValidationResult validation = validationService.validateAndMerge(request, commerceId);
+
+        // 2. Build sale entity
+        Sale sale = entityBuilder.build(request, userId, commerceId, validation.subtotal());
+
+        // 3. Handle gift (sets status/total if gift)
+        giftHandler.handleIfGift(request, sale, role);
+
+        // 4. Apply pricing (discount, total, status, partial payment validation)
+        SalePricingResult pricing = pricingService.applyPricing(sale, request, commerceId, validation.subtotal());
+        sale.setTotal(pricing.total());
+        sale.setStatus(pricing.status());
+
+        // 5. Resolve sell point & client
+        sale.setSellPoint(sellPointResolver.resolveSellPoint(sellPointId));
+        sale.setClient(clientResolver.resolveClient(request.clientId(), commerceId));
+
+        // 6. Decrement stock (skips if GIFTED)
+        if (sale.getStatus() != SaleStatus.GIFTED) {
+            stockUpdater.applyStockDecrement(validation.details());
         }
 
-        // merge de items repetidos del mismo produto sumando cantidades
-        Map<Long, Integer> quantitiesByProductId = saleDetailsMergerService.mergeDetails(request.details());
+        // 7. Persist sale + details
+        SalePersistenceResult persistence = persistenceService.persist(sale, validation.details());
 
-        // validaciones previas: si algo falla, no se descuenta stock ni se persiste nada
-        SaleDetailsValidationResult validation =
-                saleDetailsValidatorService.validate(commerceId, quantitiesByProductId);
-        List<SaleDetail> details = validation.details();
-        BigDecimal subtotal = validation.subtotal();
+        // 8. Create transaction if revenue/outflow > 0
+        transactionService.createIfNeeded(request, persistence.savedSale());
 
-        // armado de la venta
-        Sale sale = SaleMapper.toEntity(request);
-        sale.setUser(entityManager.getReference(com.gestion.model.User.class, userId));
-        sale.setCommerce(entityManager.getReference(Commerce.class, commerceId));
-        sale.setSubtotal(subtotal);
-
-        // si el metodo de pago de la venta esta asociado a una oferta activa, el descuento
-        // de la oferta prevalece sobre el descuento manual (decay en request); en caso
-        // contrario queda el descuento manual del request (puede ser null/null -> sin descuento)
-        offerFinderByPaymentMethodAndCommerceIdService
-                .findActiveByPaymentMethodAndCommerceId(sale.getPaymentMethod(), commerceId)
-                .ifPresent(offer -> {
-                    sale.setDiscountType(offer.getDiscountType());
-                    sale.setDiscount(offer.getValue());
-                });
-
-        BigDecimal totalAfterDiscount = saleDiscountApplierService.applyDiscount(
-                subtotal, sale.getDiscountType(), sale.getDiscount());
-
-        sale.setTotal(totalAfterDiscount);
-        sale.setStatus(saleStatusResolverService.resolveStatus(request));
-
-        sale.setSellPoint(saleSellPointResolverService.resolveSellPoint(sellPointId));
-
-        sale.setClient(saleClientResolverService.resolveClient(request.clientId(), commerceId));
-
-        // descuento de stock: solo se llega acá si todos los items pasaron la validación
-        saleStockUpdaterService.applyStockDecrement(details);
-
-        Sale savedSale = jpaSaleRepository.save(sale);
-        saleDetailCreatorService.createDetails(savedSale, details);
-
-        // el summary expone unidades vendidas (SUM quantity), igual que el listado
-        int itemCount = details.stream().mapToInt(SaleDetail::getQuantity).sum();
-        return SaleMapper.toSummaryResponse(savedSale, itemCount);
+        // 9. Build response
+        BigDecimal totalPending = salePendingCalculatorService.calculateTotalPending(persistence.savedSale());
+        return SaleMapper.toSummaryResponse(persistence.savedSale(), persistence.itemCount(), totalPending);
     }
 }

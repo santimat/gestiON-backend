@@ -9,7 +9,7 @@ import com.gestion.repository.JpaCommerceRepository;
 import com.gestion.service.file.FileDeleterService;
 import com.gestion.service.file.FileFinderService;
 import com.gestion.service.file.FileUploaderService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +38,7 @@ public class CommercePartialUpdaterService {
 
         if (request.image() != null) {
             if (commerce.getLogoName() != null) {
-                fileDeleterService.deleteFile(commerce.getLogoName());
+                fileDeleterService.deleteFile(commerce.getLogoName(), minioProperties.dir().businessLogos());
             }
             String newLogoName = fileUploaderService.uploadFile(request.image(), minioProperties.dir().businessLogos());
             commerce.setLogoName(newLogoName);

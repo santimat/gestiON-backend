@@ -5,23 +5,30 @@ Docs and comments are mostly Spanish; commit messages are English.
 
 ## Commands
 
-- No global Maven/Gradle: always use the wrapper — `.\mvnw.cmd <goal>` (Windows) / `./mvnw <goal>` (bash). Java 25 required.
+- No global Maven/Gradle: always use the wrapper — `.\mvnw.cmd <goal>` (Windows) / `./mvnw <goal>` (bash). Java 25
+  required.
 - Typecheck = compile (no linter, formatter, static analysis, or CI config exists):
   `.\mvnw.cmd -q -DskipTests compile`
 - Tests: `.\mvnw.cmd test`; single test: `.\mvnw.cmd test -Dtest=ProyectoFinalApplicationTests`
 - Run app: `.\mvnw.cmd spring-boot:run`
 - Verify in order: compile -> test. Compile failures block everything else.
+- No commits without my explicit instruction.
+- No pushes without my explicit instruction.
 
 ## Infrastructure (must be running manually)
 
-- MySQL at `localhost:3306`, database `gestion`, user `root`/`admin` — hardcoded in
-  `src/main/resources/application.properties`. No profiles, no env-var wiring, no H2/Testcontainers.
+- MySQL at `localhost:3306`, database `gestion`, user `root`/`admin`. Credentials are read from
+  environment variables (`MYSQL_URL`, `MYSQL_USERNAME`, `MYSQL_PASSWORD`) with dev defaults in
+  `src/main/resources/application.properties`. No profiles, no H2/Testcontainers.
 - `docker compose up -d` starts **only** MinIO (console `http://localhost:9001`, `admin`/`admin123`,
-  bucket `gestionbucket`). Needed only for file uploads (product images, commerce logos).
+  bucket `gestionbucket`). MinIO credentials via `MINIO_URL`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`
+  (dev defaults in `application.properties`). Needed only for file uploads (product images, commerce logos).
 - The only test is `@SpringBootTest contextLoads`; it boots the full context, so it **requires MySQL**
   (`ddl-auto=update` connects at startup). It does not require MinIO.
 - Schema comes from JPA entities via `spring.jpa.hibernate.ddl-auto=update`; there is no Flyway/Liquibase,
   and the database must already exist.
+- Copy `.env.example` to `.env` and fill in values, then export to shell before running
+  (e.g. `set -a; source .env; set +a` in bash, or `$env:SPRING_APPLICATION_JSON` in PowerShell).
 
 ## Architecture
 
@@ -45,27 +52,37 @@ Docs and comments are mostly Spanish; commit messages are English.
   example is `service/sale/SaleCreatorService.java` (README's claim that it is used in
   `ProductCreatorService` is stale). Only safe when the id already comes from a validated JWT.
 - Cross-tenant scoping: entity-by-id lookups that serve an endpoint go through a
-  `XFinderByIdAndCommerceIdService` using a `findByIdAndCommerceId` query (derived or JPQL) and answer
-  **404** (never 403) when the row belongs to another commerce. Live examples:
+  `XFinderByIdAndCommerceIdService` using a `findByIdAndCommerceId` query (derived or JPQL) and answer **404** (never
+  403) when the row belongs to another commerce. Live examples:
   `service/sale/SaleFinderByIdAndCommerceIdService`, `service/sellpoint/SellPointFinderByIdAndCommerceIdService`.
   Do not reuse unscoped finders (e.g. `SaleFinderByIdService`) in controllers.
 - When a finder feeds a response that maps several relations, use `@EntityGraph(attributePaths = ...)`
   on the repository method to eager-load them (see `JpaSaleRepository.findByIdAndCommerceId`): lazy
   proxies would blow up outside the transaction/session.
+- **Transactional annotations**: all services use `org.springframework.transaction.annotation.Transactional`
+  (not `jakarta.transaction.Transactional`). Spring's annotation supports `readOnly`, propagation
+  and rollback rules; Jakarta's does not.
+- **Pagination validation**: list endpoints that build `Pageable` manually validate `page >= 0`,
+  `1 <= size <= 100`, `sortBy` against an allow-list, and `sortDir` ∈ {`asc`, `desc`}. Invalid values
+  return `400 INVALID_PARAMETER` (rejected, not clamped). See `PageableFactory` and `SortableProperties`.
 
 ## Security
 
 - JWT is read from a **`token` cookie**, not an `Authorization` header (`config/JwtFilter.java`).
   Testing with curl/browser requires the cookie; there is no bearer-token path.
-- Default is deny-all: only `OPTIONS /**` and `POST /api/auth/login` are public
-  (`config/SecurityConfig.java`). New public endpoints must be added there explicitly.
+- Default is deny-all: only `OPTIONS /**` and `POST /api/auth/login` are public (`config/SecurityConfig.java`). New
+  public endpoints must be added there explicitly.
 - Roles: `SUDO`, `OWNER`, `CASHIER` (`enums/Role.java`). Per-endpoint rules are
   `@PreAuthorize("hasRole('...')")` on the controller (`@EnableMethodSecurity` is active).
 - The JWT carries userId/commerceId/role; controllers take `@AuthenticationPrincipal UserPrincipal`
   and services trust it instead of re-querying the database.
+- **Session revalidation**: on every authenticated request, `JwtFilter` runs a lightweight query
+  (`UserActiveStatus` projection) to check the `active` flag of both the user and their commerce.
+  If either is deactivated, the request is rejected with `403 ACCOUNT_DISABLED` (or `401 UNAUTHORIZED`
+  if the user no longer exists). This means deactivating a user cuts access immediately, without
+  waiting for the JWT to expire.
 
 ## Workflow
 
-- Conventional commits with scopes, e.g. `feat(offer): ...`, `refactor(services): ...`.
 - Working tree often carries in-progress changes across model/mapper/response in one feature;
   recompile after any mapper signature change — call sites live in many services.

@@ -15,4 +15,9 @@ public class CommerceValidatorByCuitService {
         if (commerceRepository.existsByCuit(cuit))
             throw new DuplicateResourceException(ErrorCode.COMMERCE_CUIT_ALREADY_EXISTS, "Commerce with cuit " + cuit + " already exists");
     }
+
+    public void checkExistingCommerceByCuitAndIdNot(String cuit, Long id) {
+        if (commerceRepository.existsByCuitAndIdNot(cuit, id))
+            throw new DuplicateResourceException(ErrorCode.COMMERCE_CUIT_ALREADY_EXISTS, "Commerce with cuit " + cuit + " already exists");
+    }
 }

@@ -16,12 +16,13 @@ public record SaleResponse(
         String userName,
         PaymentMethod paymentMethod,
         BigDecimal subtotal,
-        DiscountType discountType,
-        BigDecimal discount,
+        DiscountType paymentMethodDiscountType,
+        BigDecimal paymentMethodDiscount,
         BigDecimal total,
         Instant createdAt,
         String observations,
         SaleStatus status,
+        BigDecimal totalPending,
         List<SaleDetailResponse> details
 ) {
 }

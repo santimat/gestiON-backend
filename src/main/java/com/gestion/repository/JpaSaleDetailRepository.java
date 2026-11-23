@@ -1,6 +1,6 @@
 package com.gestion.repository;
 
-import com.gestion.dto.project.SaleItemCount;
+import com.gestion.dto.project.sale.SaleItemCount;
 import com.gestion.model.SaleDetail;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +13,9 @@ public interface JpaSaleDetailRepository extends JpaRepository<SaleDetail, Long>
 
     @EntityGraph(attributePaths = "product")
     List<SaleDetail> findAllBySaleId(Long saleId);
+
+    @EntityGraph(attributePaths = "product")
+    List<SaleDetail> findAllBySaleIdIn(List<Long> saleIds);
 
     @Query("""
             SELECT d.sale.id AS saleId, SUM(d.quantity) AS itemCount

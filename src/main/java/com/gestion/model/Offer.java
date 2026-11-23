@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -33,11 +35,13 @@ public class Offer {
     private BigDecimal value;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "discount_type", nullable = false)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "discount_type", nullable = false, length = 50)
     private DiscountType discountType;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "offer_type")
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "offer_type", length = 50)
     private OfferType offerType;
 
     @Column(name = "start_date")
@@ -50,6 +54,7 @@ public class Offer {
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "offer_payment_methods", joinColumns = @JoinColumn(name = "offer_id"))
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_method")
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "payment_method", length = 50)
     private Set<PaymentMethod> paymentMethods = new HashSet<>();
 }

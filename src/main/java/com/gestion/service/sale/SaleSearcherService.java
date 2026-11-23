@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,7 +21,8 @@ import java.util.Objects;
 @AllArgsConstructor
 public class SaleSearcherService {
     private final JpaSaleRepository jpaSaleRepository;
-    private final SaleItemQuantitiesMapperService saleItemQuantitiesMapperService;
+    private final SaleItemQuantitiesService saleItemQuantitiesService;
+    private final SalePendingCalculatorService salePendingCalculatorService;
 
     @Transactional(readOnly = true)
     public Page<SaleSummaryResponse> searchSales(Long commerceId, Long clientId,
@@ -32,9 +34,13 @@ public class SaleSearcherService {
                 commerceId, clientId, status, paymentMethod, normalizedSearchText, pageable);
 
         List<Long> saleIds = sales.getContent().stream().map(Sale::getId).filter(Objects::nonNull).toList();
-        Map<Long, Long> itemCountsBySaleId = saleItemQuantitiesMapperService.mapSaleItemQuantities(saleIds);
+        Map<Long, Long> itemCountsBySaleId = saleItemQuantitiesService.mapSaleItemQuantities(saleIds);
+        Map<Long, BigDecimal> pendingBySaleId = salePendingCalculatorService.calculateTotalPendingMap(sales.getContent());
 
-        return sales.map(sale -> SaleMapper.toSummaryResponse(sale,
-                itemCountsBySaleId.getOrDefault(sale.getId(), 0L).intValue()));
+        return sales.map(sale -> SaleMapper.toSummaryResponse(
+                sale,
+                itemCountsBySaleId.getOrDefault(sale.getId(), 0L).intValue(),
+                pendingBySaleId.get(sale.getId())
+        ));
     }
 }

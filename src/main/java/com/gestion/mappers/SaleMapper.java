@@ -18,12 +18,10 @@ public class SaleMapper {
 
         sale.setPaymentMethod(request.paymentMethod());
         sale.setObservations(request.observations());
-        sale.setDiscountType(request.discountType());
-        sale.setDiscount(request.discount());
         return sale;
     }
 
-    public static SaleResponse toResponse(Sale sale, List<SaleDetail> details) {
+    public static SaleResponse toResponse(Sale sale, List<SaleDetail> details, BigDecimal totalPending) {
         List<SaleDetailResponse> detailResponses = details.stream()
                 .map(SaleDetailMapper::toResponse)
                 .collect(Collectors.toList());
@@ -40,17 +38,18 @@ public class SaleMapper {
                 sale.getUser().getName(),
                 sale.getPaymentMethod(),
                 sale.getSubtotal(),
-                sale.getDiscountType(),
-                sale.getDiscount() != null ? sale.getDiscount() : BigDecimal.ZERO,
+                sale.getPaymentMethodDiscountType(),
+                sale.getPaymentMethodDiscount() != null ? sale.getPaymentMethodDiscount() : BigDecimal.ZERO,
                 sale.getTotal(),
                 sale.getCreatedAt(),
                 sale.getObservations(),
                 sale.getStatus(),
+                totalPending,
                 detailResponses
         );
     }
 
-    public static SaleSummaryResponse toSummaryResponse(Sale sale, Integer itemCount) {
+    public static SaleSummaryResponse toSummaryResponse(Sale sale, Integer itemCount, BigDecimal totalPending) {
         String clientName = sale.getClient() != null
                 ? sale.getClient().getName() + " " + sale.getClient().getLastName()
                 : "Consumidor final";
@@ -62,9 +61,10 @@ public class SaleMapper {
                 sale.getPaymentMethod(),
                 sale.getCreatedAt(),
                 sale.getSubtotal(),
-                sale.getDiscount(),
-                sale.getDiscountType(),
-                sale.getTotal()
+                sale.getPaymentMethodDiscount(),
+                sale.getPaymentMethodDiscountType(),
+                sale.getTotal(),
+                totalPending
         );
     }
 }

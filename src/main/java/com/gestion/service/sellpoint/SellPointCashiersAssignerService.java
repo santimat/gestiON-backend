@@ -6,7 +6,7 @@ import com.gestion.exception.ResourceNotFoundException;
 import com.gestion.model.SellPoint;
 import com.gestion.model.User;
 import com.gestion.repository.JpaUserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -2,7 +2,6 @@ package com.gestion.service.category;
 
 import com.gestion.dto.request.category.CategoryRequest;
 import com.gestion.dto.response.category.CategoryResponse;
-import com.gestion.mappers.CategoryMapper;
 import com.gestion.model.Category;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CategoryUpdaterService {
     private final CategoryFinderByIdAndCommerceIdService categoryFinderByIdAndCommerceIdService;
     private final CategoryValidatorByNameService categoryValidatorByNameService;
+    private final CategoryDetailsResponseBuilderService categoryDetailsResponseBuilderService;
 
     @Transactional
     public CategoryResponse updateCategory(Long categoryId, CategoryRequest request, Long commerceId) {
@@ -24,6 +24,6 @@ public class CategoryUpdaterService {
 
         categoryToUpdate.setName(parsedRequest.name());
         categoryToUpdate.setDescription(parsedRequest.description());
-        return CategoryMapper.toResponse(categoryToUpdate);
+        return categoryDetailsResponseBuilderService.buildResponse(categoryToUpdate, commerceId);
     }
 }

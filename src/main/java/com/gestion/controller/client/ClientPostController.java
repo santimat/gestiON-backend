@@ -4,7 +4,7 @@ import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.client.ClientRequest;
 import com.gestion.dto.response.client.ClientResponse;
 import com.gestion.service.client.ClientCreatorService;
-import com.gestion.service.client.ClientResponseAssembler;
+import com.gestion.service.client.ClientResponseAssemblerService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class ClientPostController {
     private final ClientCreatorService clientCreatorService;
-    private final ClientResponseAssembler clientResponseAssembler;
+    private final ClientResponseAssemblerService clientResponseAssembler;
 
     @PostMapping
     @PreAuthorize("hasRole('OWNER') or hasRole('CASHIER')")

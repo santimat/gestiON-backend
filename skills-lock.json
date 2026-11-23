@@ -6,6 +6,12 @@
       "sourceType": "github",
       "skillPath": "skills/java-springboot/SKILL.md",
       "computedHash": "f1b9c6b1277178fc33e5a612761c1cd1cf6ab5f946d05d69d52026d142c0a0c1"
+    },
+    "archify": {
+      "source": "github/tt-a1i/archify",
+      "sourceType": "github",
+      "skillPath": "~/.junie/skills/archify/SKILL.md",
+      "computedHash": "1382cfb7108b05e500b82af93c04fd7b694430d3908039bd92d634f01c1e7181"
     }
   }
 }
