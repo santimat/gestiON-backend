@@ -17,6 +17,7 @@ public record OfferResponse(
         Instant startDate,
         Instant endDate,
         OfferStatus status,
-        Set<PaymentMethod> paymentMethods
+        Set<PaymentMethod> paymentMethods,
+        Long productCount
 ) {
 }

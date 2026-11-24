@@ -1,6 +1,7 @@
 package com.gestion.repository;
 
 import com.gestion.dto.project.category.CategoryProductCount;
+import com.gestion.dto.project.offer.OfferProductCount;
 import com.gestion.dto.response.product.ProductLowStockResponse;
 import com.gestion.model.Product;
 import org.springframework.data.domain.Page;
@@ -53,6 +54,16 @@ public interface JpaProductRepository extends JpaRepository<Product, Long> {
             """)
     List<CategoryProductCount> countByCategoryIds(@Param("commerceId") Long commerceId,
                                                   @Param("categoryIds") List<Long> categoryIds);
+
+    @Query("""
+            SELECT p.offer.id AS offerId, COUNT(p) AS productCount
+            FROM Product p
+            WHERE p.commerce.id = :commerceId
+              AND p.offer.id IN :offerIds
+            GROUP BY p.offer.id
+            """)
+    List<OfferProductCount> countByOfferIds(@Param("commerceId") Long commerceId,
+                                            @Param("offerIds") List<Long> offerIds);
 
     @Query("""
             SELECT new com.gestion.dto.response.product.ProductLowStockResponse(

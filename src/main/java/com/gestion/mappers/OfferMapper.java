@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class OfferMapper {
-    public static OfferResponse toResponse(Offer offer, OfferStatus offerStatus) {
+    public static OfferResponse toResponse(Offer offer, OfferStatus offerStatus, Long productCount) {
         return new OfferResponse(
                 offer.getId(),
                 offer.getValue(),
@@ -21,7 +21,8 @@ public class OfferMapper {
                 offer.getStartDate(),
                 offer.getEndDate(),
                 offerStatus,
-                offer.getPaymentMethods()
+                offer.getPaymentMethods(),
+                productCount
         );
     }
 

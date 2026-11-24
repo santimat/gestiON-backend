@@ -58,6 +58,6 @@ public class OfferCreatorService {
         OfferStatus offerStatus = offerStatusResolverService.resolveOfferStatus(
                 savedOffer.getStartDate(), savedOffer.getEndDate(), now);
 
-        return OfferMapper.toResponse(savedOffer, offerStatus);
+        return OfferMapper.toResponse(savedOffer, offerStatus, 0L);
     }
 }

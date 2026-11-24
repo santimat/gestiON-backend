@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -33,6 +34,7 @@ public class OfferUpdaterService {
     private final OfferStatusResolverService offerStatusResolverService;
     private final JpaOfferRepository offerRepository;
     private final DiscountRangeValidatorService discountRangeValidatorService;
+    private final OfferProductCounterService offerProductCounterService;
 
     @Transactional
     public OfferResponse updateOffer(Long offerId, OfferUpdateRequest request, Long commerceId) {
@@ -75,6 +77,12 @@ public class OfferUpdaterService {
         OfferStatus offerStatus = offerStatusResolverService.resolveOfferStatus(
                 savedOffer.getStartDate(), savedOffer.getEndDate(), now);
 
-        return OfferMapper.toResponse(savedOffer, offerStatus);
+        long productCount = savedOffer.getOfferType() == OfferType.PRODUCT
+                ? offerProductCounterService
+                        .countProductsByOfferIds(commerceId, List.of(savedOffer.getId()))
+                        .getOrDefault(savedOffer.getId(), 0L)
+                : 0L;
+
+        return OfferMapper.toResponse(savedOffer, offerStatus, productCount);
     }
 }
