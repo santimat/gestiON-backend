@@ -24,6 +24,14 @@ public interface JpaProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByOfferIdAndCommerceId(Long offerId, Long commerceId);
 
     @Query("""
+            SELECT p.id FROM Product p
+            WHERE p.offer.id = :offerId
+              AND p.commerce.id = :commerceId
+            """)
+    List<Long> findIdsByOfferIdAndCommerceId(@Param("offerId") Long offerId,
+                                             @Param("commerceId") Long commerceId);
+
+    @Query("""
             SELECT p FROM Product p
             JOIN FETCH p.category c
             LEFT JOIN FETCH p.offer
