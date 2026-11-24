@@ -62,6 +62,7 @@ public enum ErrorCode {
     PARTIAL_PAYMENT_EXCEEDS_TOTAL(400, "Partially paid amount cannot exceed sale total"),
     SALE_ALREADY_PAYED(409, "Sale is already fully paid"),
     INVALID_PAYMENT_AMOUNT(400, "Payment amount must be greater than zero and not exceed pending amount"),
+    CASHIER_WITHOUT_SELL_POINT(403, "Cashier must have an assigned sell point to create a sale"),
 
     DATA_INTEGRITY_VIOLATION(409, "The operation violates data integrity constraints"),
     INTERNAL_ERROR(500, "An unexpected internal error occurred");

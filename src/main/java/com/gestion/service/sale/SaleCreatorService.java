@@ -9,6 +9,7 @@ import com.gestion.enums.Role;
 import com.gestion.enums.SaleStatus;
 import com.gestion.mappers.SaleMapper;
 import com.gestion.model.Sale;
+import com.gestion.service.cashier.CashierHasSellPointService;
 import com.gestion.service.commerce.CommerceAvailabilityValidatorService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class SaleCreatorService {
     private final CommerceAvailabilityValidatorService commerceAvailabilityValidator;
+    private final CashierHasSellPointService cashierHasSellPointService;
     private final SaleValidationService validationService;
     private final SaleEntityBuilderService entityBuilder;
     private final SaleGiftHandlerService giftHandler;
@@ -34,6 +36,7 @@ public class SaleCreatorService {
     @Transactional
     public SaleSummaryResponse createSale(SaleRequest request, Long userId, Long commerceId, Long sellPointId, Role role) {
         commerceAvailabilityValidator.checkCommerceIsAvailable(commerceId);
+        cashierHasSellPointService.validate(role, sellPointId);
 
         // 1. Validate payment method + merge details + validate stock/prices/offers
         SaleValidationResult validation = validationService.validateAndMerge(request, commerceId);
