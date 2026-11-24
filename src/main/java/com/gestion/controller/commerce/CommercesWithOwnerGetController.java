@@ -25,12 +25,15 @@ public class CommercesWithOwnerGetController {
     @GetMapping
     @PreAuthorize("hasRole('SUDO')")
     public ResponseEntity<Page<CommerceWithOwnerResponse>> getAllCommercesWithOwner(
+            @RequestParam(required = false) String searchText,
+            @RequestParam(required = false) Boolean active,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "DESC") String sortOrder,
             @RequestParam(defaultValue = "updatedAt") String sortBy) {
         Pageable pageable = PageableFactory.create(page, size, sortBy, sortOrder, SortableProperties.COMMERCE);
 
-        return ResponseEntity.ok(commerceWithOwnerSearcherService.findAllWithOwner(pageable));
+        return ResponseEntity.ok(
+                commerceWithOwnerSearcherService.findAllWithOwner(searchText, active, pageable));
     }
 }

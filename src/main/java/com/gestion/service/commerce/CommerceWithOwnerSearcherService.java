@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -21,8 +22,11 @@ public class CommerceWithOwnerSearcherService {
     private final FileFinderService fileFinderService;
     private final MinioProperties minioDirProperties;
 
-    public Page<CommerceWithOwnerResponse> findAllWithOwner(Pageable pageable) {
-        Page<User> owners = userRepository.findAllByRoleWithCommerce(Role.OWNER, pageable);
+    @Transactional(readOnly = true)
+    public Page<CommerceWithOwnerResponse> findAllWithOwner(String searchText, Boolean active, Pageable pageable) {
+        String effectiveSearchText = (searchText == null || searchText.isBlank()) ? null : searchText.trim();
+        Page<User> owners = userRepository.findAllByRoleWithCommerce(
+                Role.OWNER, effectiveSearchText, active, pageable);
 
         return owners.map(owner -> {
             Commerce commerce = owner.getCommerce();

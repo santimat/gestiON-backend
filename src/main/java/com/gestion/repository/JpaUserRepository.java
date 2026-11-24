@@ -22,8 +22,30 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
     Optional<User> findByIdAndCommerceIdAndRole(Long id, Long commerceId, Role role);
 
     // join fetch trae los commerce de los usuarios evitando el n+1
-    @Query("SELECT u FROM User as u JOIN FETCH u.commerce WHERE u.role = :userRole")
-    Page<User> findAllByRoleWithCommerce(@Param("userRole") Role userRole, Pageable pageable);
+    @Query(
+            value = """
+                    SELECT u FROM User u
+                    JOIN FETCH u.commerce c
+                    WHERE u.role = :userRole
+                      AND (:searchText IS NULL
+                           OR LOWER(c.name) LIKE LOWER(CONCAT('%', :searchText, '%'))
+                           OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchText, '%')))
+                      AND (:active IS NULL OR c.active = :active)
+                    """,
+            countQuery = """
+                    SELECT COUNT(u) FROM User u
+                    JOIN u.commerce c
+                    WHERE u.role = :userRole
+                      AND (:searchText IS NULL
+                           OR LOWER(c.name) LIKE LOWER(CONCAT('%', :searchText, '%'))
+                           OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchText, '%')))
+                      AND (:active IS NULL OR c.active = :active)
+                    """
+    )
+    Page<User> findAllByRoleWithCommerce(@Param("userRole") Role userRole,
+                                         @Param("searchText") String searchText,
+                                         @Param("active") Boolean active,
+                                         Pageable pageable);
 
     // join fetch trae el commerce del cajero evitando el n+1
     @Query("""
