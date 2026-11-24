@@ -8,5 +8,7 @@ public record AuthenticatedUserResponse(
         String name,
         String email,
         Role role,
-        boolean active) {
+        boolean active,
+        Long sellPointId
+) {
 }
