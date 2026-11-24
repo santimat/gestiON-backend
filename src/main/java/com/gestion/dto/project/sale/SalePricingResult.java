@@ -1,0 +1,10 @@
+package com.gestion.dto.project.sale;
+
+import com.gestion.enums.SaleStatus;
+import java.math.BigDecimal;
+
+public record SalePricingResult(
+        BigDecimal total,
+        SaleStatus status
+) {
+}

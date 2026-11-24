@@ -12,6 +12,7 @@ errores — para quien la consume.
 - **MinIO** (S3 compatible) para el almacenamiento de imágenes de productos y logos de comercio
 - **Lombok** para reducir boilerplate, **Maven Wrapper** para el build
 - Autenticación por **JWT en cookie `token`** (no se usa header `Authorization`)
+- **Credenciales por variables de entorno**: `MYSQL_*`, `JWT_*`, `MINIO_*`, `ADMIN_*` (con defaults de desarrollo en `application.properties`; copiá `.env.example` a `.env` y exportalo antes de arrancar)
 
 ## Arquitectura
 
@@ -40,7 +41,9 @@ Request → Controller → Service → Repository → MySQL
 ```
 
 `code` es una key estable para manejar el error en el cliente (los mensajes son en inglés, para
-logs). `fields` solo aparece en errores de validación (`VALIDATION_ERROR`).
+logs). `fields` solo aparece en errores de validación (`VALIDATION_ERROR`), y también cuando un
+parámetro de un método del controller no cumple sus restricciones (por ejemplo `limit` con un
+`@Min(1)`): se reporta igual, con el nombre del parámetro en `field`.
 
 ## Autenticación
 
@@ -49,7 +52,9 @@ logs). `fields` solo aparece en errores de validación (`VALIDATION_ERROR`).
    en el navegador). La cookie es `HttpOnly`, `Path=/` y vive 24 horas (`Max-Age=86400`).
 2. El JWT dura 24 horas y lleva los claims `sub` (email), `name`, `userId`, `commerceId`, `role`,
    `active` y `sellPointId` (este último es `null` para OWNER/SUDO). El backend confía en ese
-   contenido sin volver a consultar la base.
+   contenido **salvo el flag `active`**: en cada request autenticado se revalida contra la base
+   (una query mínima que trae el `active` del usuario y del comercio), así que desactivar un
+   usuario le corta el acceso de inmediato, sin esperar a que expire su token.
 3. `POST /api/auth/logout` expira la cookie. **No hay revocación del token en el servidor**: un JWT
    ya emitido sigue siendo válido hasta su expiración, así que el logout es efectivamente local.
    Como tampoco es un endpoint público, requiere una cookie válida (`401` si no la hay).
@@ -60,10 +65,9 @@ Códigos de estado de autenticación:
   para no filtrar si el email existe).
 - `401 UNAUTHORIZED`: no hay cookie `token`, o el token es inválido o expiró.
 - `403 ACCESS_DENIED`: el rol del usuario no alcanza para el endpoint.
-- `403 ACCOUNT_DISABLED`: el **comercio** del usuario está deshabilitado (también lo devuelve
-  `GET /api/auth/me` y el login de un comercio deshabilitado). Ojo: un usuario dado de baja
-  individualmente —el flag `active` de un cajero— **sigue pudiendo autenticarse**, porque ese flag
-  no se valida en el login.
+- `403 ACCOUNT_DISABLED`: el **usuario** está desactivado (su `toggle-active`) o el **comercio**
+  del usuario está deshabilitado. Un usuario desactivado no puede iniciar sesión, y un token que
+  se emitió antes de desactivarlo deja de servir en el siguiente request.
 
 CORS: el origen habilitado es `http://localhost:5173` (el front de desarrollo), con credenciales y
 `Set-Cookie` expuesto. Solo `POST /api/auth/login` y los preflight `OPTIONS` son públicos; el resto
@@ -126,6 +130,27 @@ Defaults de paginación y orden por recurso:
    **`sort=campo,direccion`** (ej.: `?sort=name,asc`) y no con `sortBy`/`sortDir` — enviarle esos
    parámetros no falla, pero el orden se ignora.
 
+### Validación de la paginación
+
+Los listados que arman el `Pageable` a mano (`/api/clients`, `/api/categories`, `/api/products`,
+`/api/products/with-offer`, `/api/sell-points`, `/api/sell-points/{id}/cashiers`, `/api/sales`,
+`/api/offers`, `/api/commerces`) validan sus parámetros:
+
+| Parámetro | Valores válidos | Si viene inválido |
+|---|---|---|
+| `page` | `>= 0` | `400 INVALID_PARAMETER` |
+| `size` | `1` a `100` | `400 INVALID_PARAMETER` |
+| `sortBy` | una propiedad del recurso (allow-list) | `400 INVALID_PARAMETER` |
+| `sortDir` / `sortOrder` | `asc` / `desc` | `400 INVALID_PARAMETER` |
+
+Los parámetros fuera de rango **se rechazan, no se clampean**: si pedís `size=1000` recibís un
+`400` y no una página de 100 elementos. El `size` tiene un tope porque la query agregada del
+resumen de cuenta de los clientes expande `IN :clientIds` a un placeholder por id y MySQL corta en
+65.535 placeholders.
+
+`GET /api/cashiers` no pasa por esta validación: bindea el `Pageable` de Spring Data, que ya
+aplica su propio `max-page-size`.
+
 ## Endpoints
 
 > **Roles**: `SUDO` = solo administrador · `OWNER` = solo dueño · `CASHIER`/`OWNER` = ambos ·
@@ -163,8 +188,8 @@ Defaults de paginación y orden por recurso:
   `409 COMMERCE_CUIT_ALREADY_EXISTS`, `409 COMMERCE_ADDRESS_ALREADY_EXISTS`).
 - `PATCH /api/commerces` **nuevo**: actualización parcial del comercio del OWNER autenticado. Todos
   los campos son opcionales y solo se actualizan los que llegan: `name` (2–100 caracteres),
-  `profitMultiplier` (positivo), `image`. Si mandás `image`, **reemplaza** el logo anterior (el
-  archivo viejo se borra de MinIO). Devuelve el comercio tal como lo ve `GET /api/commerces/current`.
+  `profitMultiplier` (positivo), `image`. Si mandás `image`, **reemplaza** el logo anterior.
+  Devuelve el comercio tal como lo ve `GET /api/commerces/current`.
 - `PATCH /api/commerces/profit-multiplier` solo cambia el multiplicador de ganancia del comercio.
 
 ### Dashboard y estadísticas
@@ -207,7 +232,10 @@ Defaults de paginación y orden por recurso:
 
 - `CategoryRequest`: `name` (hasta 50), `description` (hasta 200). El nombre es único **por
   comercio** (`409 CATEGORY_NAME_ALREADY_EXISTS`). El listado acepta `?categoryName=` (búsqueda
-  parcial, case-insensitive) y cada `CategoryResponse` trae `productCount`.
+  parcial, case-insensitive) y calcula `productCount` (productos de la categoría); el detalle por id
+  devuelve el mismo `productCount` real. Cuando la categoría viene **anidada en un producto**
+  (`category` dentro de `ProductResponse`), `productCount` vale `0`: contarla por producto sería una
+  consulta por fila en el listado.
 - `ProductRequest` / `ProductUpdateRequest`: `name` (hasta 100), `description` (hasta 255),
   `costPrice`, `salePrice`, `profitMultiplier` (opcional), `image` (opcional), `categoryId`,
   `currentStock`, `minStock`. Ambos son `multipart` por la imagen; el resto de los campos viaja como
@@ -220,6 +248,9 @@ Defaults de paginación y orden por recurso:
   profitMultiplier` (el del producto o, si no viene, el del comercio).
 - Los archivos suben a MinIO con un tope de 10 MB (`413 FILE_TOO_LARGE`); solo se aceptan imágenes
   `jpg`, `jpeg`, `png` y `webp` (detección por contenido, `400 INVALID_FILE_TYPE` en otro caso).
+- `imageUrl` es una URL presignada de MinIO, válida por 1 hora. Viene en `null` si el producto no
+  tiene imagen **o si MinIO no está disponible**: en ese caso el resto del catálogo sigue
+  respondiendo con normalidad, solo sin imágenes. El front debe mostrar su placeholder.
 
 ### Clientes y cuentas corrientes
 
@@ -229,7 +260,7 @@ Defaults de paginación y orden por recurso:
 | GET | `/api/clients/{dni}` | CASHIER/OWNER | — | `ClientResponse` (por DNI dentro del comercio) |
 | POST | `/api/clients` | CASHIER/OWNER | `ClientRequest` (JSON) | `ClientResponse` (201) |
 | PUT | `/api/clients/{id}` | CASHIER/OWNER | `ClientRequest` (JSON) | `ClientResponse` |
-| GET | `/api/clients/{clientId}/pending-sales-with-details` | CASHIER/OWNER | — | `PendingSalesWithDetailsResponse` **nuevo** |
+| GET | `/api/clients/{clientId}/pending-sales-with-details` | CASHIER/OWNER | — | `PendingSalesWithDetailsResponse` · `page`, `size`, `sortBy`, `sortDir` |
 
 - **Ojo con los identificadores**: el detalle por cliente usa el **DNI** (`/api/clients/{dni}`), la
   actualización usa el **id de cliente** (`/api/clients/{id}`) y las ventas pendientes también
@@ -244,11 +275,13 @@ Defaults de paginación y orden por recurso:
 - El resumen de cuenta corriente (`salesCount`, `pendingSalesCount`, `totalSpent`, `totalPending`)
   viene calculado en **todos** los endpoints que devuelven un cliente (listado, detalle, alta y
   edición). Un cliente sin ventas devuelve `0` en los contadores y `0.00` en los montos.
-- `GET /api/clients/{clientId}/pending-sales-with-details` **nuevo** devuelve `pendingSalesCount`,
-  `totalPending` y `pendingSales` (lista de `SaleResponse`), ordenadas por fecha de creación
-  (ascendente). Ojo:
+- `GET /api/clients/{clientId}/pending-sales-with-details` devuelve `pendingSalesCount`,
+  `totalPending` y `pendingSales`, que ahora es una **página** de `SaleResponse` (`content` + `page`),
+  ordenadas por fecha de creación (ascendente, es el orden por defecto). `pendingSalesCount` y
+  `totalPending` cubren **todas** las ventas pendientes del cliente, sin importar la página que se
+  pida. Ojo:
   **no valida que el cliente exista** — si no tiene ventas pendientes (o no existe) responde
-  `pendingSalesCount: 0`, `totalPending: 0` y `pendingSales: []`, no `404`.
+  `pendingSalesCount: 0`, `totalPending: 0` y `pendingSales.content` vacío, no `404`.
 - El DNI es único **por comercio** (`409 CLIENT_DNI_ALREADY_EXISTS`).
 
 ### Equipo: cajeros y puntos de venta
@@ -283,12 +316,12 @@ Defaults de paginación y orden por recurso:
 | Método | Ruta | Roles | Request | Response |
 |---|---|---|---|---|
 | GET | `/api/sales` | CASHIER/OWNER | — | `Page<SaleSummaryResponse>` · filtros: `clientId`, `status`, `paymentMethod`, `searchText` (observaciones o nombre del cliente) |
-| GET | `/api/sales/{saleId}` | Auth | — | `SaleResponse` (detalle con todas las líneas) |
+| GET | `/api/sales/{saleId}` | CASHIER/OWNER | — | `SaleResponse` (detalle con todas las líneas) |
 | POST | `/api/sales` | CASHIER/OWNER | `SaleRequest` (JSON) | `SaleSummaryResponse` (201) |
 | PATCH | `/api/sales/{id}/mark-paid` | CASHIER/OWNER | — | `SaleUpdateStatusResponse` |
 
-- `GET /api/sales/{saleId}` no exige un rol concreto: alcanza con estar autenticado. Está scopeado
-  al comercio del JWT, así que un usuario sin comercio (el SUDO) obtiene `404 SALE_NOT_FOUND`.
+- `GET /api/sales/{saleId}` está scopeado al comercio del JWT, así que un usuario sin comercio (el
+  SUDO) obtiene `404 SALE_NOT_FOUND`.
 - Una venta sin `clientId` queda registrada como "Consumidor final".
 
 `SaleRequest`:
@@ -298,8 +331,6 @@ Defaults de paginación y orden por recurso:
   "paymentMethod": "CASH",
   "details": [{ "productId": 3, "quantity": 2 }],
   "clientId": 7,
-  "discountType": "PERCENTAGE",
-  "discount": 10,
   "observations": "..."
 }
 ```
@@ -309,16 +340,28 @@ Defaults de paginación y orden por recurso:
   sumando cantidades. `details` no puede venir vacío y `observations` admite hasta 200 caracteres.
 - Valores de `paymentMethod`: `CASH`, `CARD`, `TRANSFER`, `CREDIT_ACCOUNT`. El fiado
   (`CREDIT_ACCOUNT`) genera la venta con status `PENDING`; el resto, `PAYED`.
-- `discountType` (`PERCENTAGE` / `FIXED_AMOUNT`) y `discount` van juntos; `discount` debe ser mayor
-  que cero, un descuento fijo no puede superar el subtotal (`400 DISCOUNT_EXCEEDS_SUBTOTAL`) y un
-  descuento porcentual no puede superar el 100% (`400 DISCOUNT_PERCENTAGE_EXCEEDS_100`).
-- **Si el método de pago de la venta tiene una oferta vigente, el descuento de esa oferta prevalece
-  sobre el descuento manual del request** (el manual se ignora).
+- **No hay descuento manual**: el request no acepta ningún campo de descuento. Los descuentos salen
+  **solo de las ofertas** (de producto o de método de pago). Un body que encore mande `discount` /
+  `discountType` se ignora sin error, pero tampoco aplica descuento.
+- Las respuestas exponen `paymentMethodDiscount` y `paymentMethodDiscountType`: el descuento y su
+  tipo **aplicados por la oferta vigente del método de pago** en el momento de la venta (`null` /
+  `0` si no había oferta). Se guardan con la venta, así que el histórico no cambia aunque la oferta
+  después venza.
 - **Las dos ofertas se acumulan**: la oferta de producto baja el precio unitario de la línea y el
   subtotal ya sale de esos precios descontados; el descuento del método de pago se aplica después,
   sobre ese subtotal.
-- El descuento de stock es todo-o-nada: si algún ítem no pasa la validación (producto inactivo o
-  sin stock), no se descuenta ni se registra nada (`409 PRODUCT_INACTIVE`, `409 INSUFFICIENT_STOCK`).
+- Cada línea de venta expone `discountApplied` y `discountTypeApplied`: el **valor** de la oferta de
+  producto que se aplicó (`offer.value`) y su tipo (`PERCENTAGE` / `FIXED_AMOUNT`), congelados en el
+  momento de la venta. Sin oferta de producto ambos van en `null`. Se guardan junto a la línea, así
+  que el histórico no cambia aunque la oferta después se edite o venza (no hay link a la oferta:
+  `sale_details` no tiene columna `offer_id`).
+- `price` es el precio unitario **ya descontado**. Para reconstruir el precio de lista de la línea:
+  con `FIXED_AMOUNT`, `price + discountApplied`; con `PERCENTAGE`,
+  `price / (1 - discountApplied / 100)`.
+- Una oferta de método de pago de monto fijo no puede superar el subtotal de la venta
+  (`409 PAYMENT_METHOD_OFFER_EXCEEDS_SALE_SUBTOTAL`); el descuento de stock es todo-o-nada: si algún
+  ítem no pasa la validación (producto inactivo o sin stock), no se descuenta ni se registra nada
+  (`409 PRODUCT_INACTIVE`, `409 INSUFFICIENT_STOCK`).
 - El punto de venta sale del JWT (`sellPointId`) y puede ser `null`; nunca se envía en el request.
 - `mark-paid` solo admite la transición `PENDING → PAYED` (`409 SALE_NOT_PENDING` en otro caso).
 
@@ -371,6 +414,15 @@ Lo incorporado respecto de la versión anterior de este documento:
 - Resumen de cuenta corriente en la respuesta de clientes (`salesCount`, `pendingSalesCount`,
   `totalSpent`, `totalPending`), también en el detalle, el alta y la edición.
 - Filtro de texto en el listado de clientes y en el de cajeros.
+- Validación de los parámetros de paginación: `page`, `size`, `sortBy` y `sortDir` fuera de rango
+  devuelven `400 INVALID_PARAMETER` en vez de `500` o de una página gigante.
+- Revalidación de la sesión en cada request: desactivar un usuario le corta el acceso de
+  inmediato, sin esperar a que expire su token.
+- `PUT /api/commerces/{commerceId}/user/{userId}` ya no actualiza usuarios de otro comercio, y
+  la unicidad de email, cuit y dirección se reporta con su código específico (`409`) y no con un
+  `DATA_INTEGRITY_VIOLATION` genérico.
+- Las credenciales se leen de variables de entorno (`.env`), con los valores de desarrollo como
+  default.
 
 ## Códigos de error
 
@@ -379,7 +431,7 @@ Lo incorporado respecto de la versión anterior de este documento:
 | **Validación de request** | | |
 | `VALIDATION_ERROR` | 400 | Body o parámetros inválidos (incluye `fields[]` por campo) |
 | `INVALID_REQUEST_BODY` | 400 | Body malformado (JSON roto) |
-| `INVALID_PARAMETER` | 400 | Un parámetro tiene un valor inválido |
+| `INVALID_PARAMETER` | 400 | Un parámetro tiene un valor inválido (incluye `page`, `size`, `sortBy` y `sortDir` fuera de rango) |
 | `MISSING_PARAMETER` | 400 | Falta un parámetro requerido |
 | `METHOD_NOT_ALLOWED` | 405 | Verbo HTTP no soportado para la ruta |
 | `UNSUPPORTED_MEDIA_TYPE` | 415 | Content type no soportado |
@@ -388,6 +440,7 @@ Lo incorporado respecto de la versión anterior de este documento:
 | `UNAUTHORIZED` | 401 | Sin cookie `token` o token inválido |
 | `ACCOUNT_DISABLED` | 403 | Comercio del usuario deshabilitado |
 | `ACCESS_DENIED` | 403 | Rol insuficiente para el endpoint |
+| `COMMERCE_NOT_AVAILABLE` | 403 | El usuario autenticado no tiene un comercio asociado |
 | **Recurso inexistente (404)** | | |
 | `USER_NOT_FOUND` | 404 | Usuario inexistente |
 | `CLIENT_NOT_FOUND` | 404 | Cliente inexistente (o de otro comercio) |
@@ -413,11 +466,8 @@ Lo incorporado respecto de la versión anterior de este documento:
 | `DATA_INTEGRITY_VIOLATION` | 409 | La operación viola una restricción de integridad |
 | **Descuentos** | | |
 | `INVALID_DISCOUNT` | 400 | Descuento inválido |
-| `INVALID_DISCOUNT_PREFIX_ZERO` | 400 | Descuento igual a cero (el backend no llega a emitirlo hoy) |
-| `DISCOUNT_WITHOUT_TYPE` | 400 | Monto de descuento sin `discountType` |
-| `TYPE_WITHOUT_DISCOUNT` | 400 | `discountType` sin monto de descuento |
-| `DISCOUNT_EXCEEDS_SUBTOTAL` | 400 | Descuento fijo mayor al subtotal de la venta |
-| `DISCOUNT_PERCENTAGE_EXCEEDS_100` | 400 | Descuento porcentual mayor al 100% (venta u oferta) |
+| `DISCOUNT_PERCENTAGE_EXCEEDS_100` | 400 | Descuento porcentual mayor al 100% (oferta) |
+| `PAYMENT_METHOD_OFFER_EXCEEDS_SALE_SUBTOTAL` | 409 | La oferta de método de pago supera el subtotal de la venta |
 | `PRODUCT_SALE_PRICE_BELOW_COST` | 400 | Precio de venta menor que el costo |
 | **Ofertas** | | |
 | `INVALID_DATE` | 400 | Fecha de oferta en el pasado o fin anterior al inicio |
@@ -439,6 +489,9 @@ Lo incorporado respecto de la versión anterior de este documento:
 # infraestructura: MySQL en localhost:3306 (base "gestion", root/admin) y MinIO (solo para imágenes)
 docker compose up -d   # solo levanta MinIO
 
+# credenciales: copiá .env.example a .env y completá los valores
+cp .env.example .env
+
 ./mvnw spring-boot:run # requiere JDK 25
 ```
 
@@ -447,3 +500,9 @@ docker compose up -d   # solo levanta MinIO
 - **MinIO** (solo necesario para uploads de imágenes/logos): API en `localhost:9000`, consola web en
   `localhost:9001`, credenciales `admin` / `admin123`, bucket `gestionbucket`.
 - Al iniciar la app se crea automáticamente el usuario SUDO `admin@admin.com` / `admin123`.
+- **Credenciales**: `application.properties` lee las credenciales de variables de entorno
+  (`MYSQL_*`, `JWT_*`, `MINIO_*`, `ADMIN_*`) y, si no están, usa los valores de desarrollo que
+  están hardcodeados como default. El archivo `.env` **no** lo lee Spring Boot solo: hay que
+  exportarlo al shell antes de arrancar la app, por ejemplo con
+  `set -a; source .env; set +a` (bash) o `$env:SPRING_APPLICATION_JSON` (PowerShell). El `.env`
+  está en `.gitignore`: no lo commitees.

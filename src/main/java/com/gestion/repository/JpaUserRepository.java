@@ -1,5 +1,6 @@
 package com.gestion.repository;
 
+import com.gestion.dto.project.user.UserActiveStatus;
 import com.gestion.enums.Role;
 import com.gestion.model.User;
 import org.springframework.data.domain.Page;
@@ -24,8 +25,6 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User as u JOIN FETCH u.commerce WHERE u.role = :userRole")
     Page<User> findAllByRoleWithCommerce(@Param("userRole") Role userRole, Pageable pageable);
 
-    Page<User> findAllByRole(Role role, Pageable pageable);
-
     // join fetch trae el commerce del cajero evitando el n+1
     @Query("""
             SELECT u FROM User u
@@ -37,8 +36,19 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
                    OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchText, '%')))
             """)
     Page<User> findAllCashiersWithFilters(@Param("commerceId") Long commerceId,
-                                           @Param("searchText") String searchText,
-                                           Pageable pageable);
+                                          @Param("searchText") String searchText,
+                                          Pageable pageable);
 
     Page<User> findAllBySellPointIdAndCommerceId(Long sellPointId, Long commerceId, Pageable pageable);
+
+    @Query("""
+            SELECT new com.gestion.dto.project.user.UserActiveStatus(
+                u.active,
+                c.active
+            )
+            FROM User u
+            LEFT JOIN u.commerce c
+            WHERE u.id = :userId
+            """)
+    Optional<UserActiveStatus> findActiveStatusById(@Param("userId") Long userId);
 }

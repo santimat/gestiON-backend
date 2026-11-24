@@ -20,7 +20,7 @@ public class ProductImageUploaderService {
     public String uploadProductImage(MultipartFile image, Product product) {
 
         if (product.getImageName() != null) {
-            fileDeleterService.deleteFile(product.getImageName());
+            fileDeleterService.deleteFile(product.getImageName(), minioProperties.dir().productImages());
         }
 
         String imageName = fileUploaderService.uploadFile(image, minioProperties.dir().productImages());

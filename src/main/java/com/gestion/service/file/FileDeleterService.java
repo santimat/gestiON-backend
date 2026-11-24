@@ -18,12 +18,19 @@ public class FileDeleterService {
         this.minioProperties = minioProperties;
     }
 
-    public void deleteFile(String objectName) {
+    public void deleteFile(String objectName, String subDir) {
+        // la clave se arma con el mismo subDir que usa el upload: sin esto la clave nunca
+        // coincidia con el objeto guardado y el borrado era un no-op silencioso.
+        String objectKey = FileObjectKey.of(subDir, objectName);
+        if (objectKey == null) {
+            return;
+        }
+
         try {
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
                             .bucket(minioProperties.bucket())
-                            .object(objectName)
+                            .object(objectKey)
                             .build()
             );
         } catch (Exception e) {

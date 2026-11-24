@@ -3,7 +3,7 @@ package com.gestion.controller.client;
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.client.ClientRequest;
 import com.gestion.dto.response.client.ClientResponse;
-import com.gestion.service.client.ClientResponseAssembler;
+import com.gestion.service.client.ClientResponseAssemblerService;
 import com.gestion.service.client.ClientUpdaterService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class ClientPutController {
     private final ClientUpdaterService clientUpdaterService;
-    private final ClientResponseAssembler clientResponseAssembler;
+    private final ClientResponseAssemblerService clientResponseAssembler;
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('OWNER') or hasRole('CASHIER')")

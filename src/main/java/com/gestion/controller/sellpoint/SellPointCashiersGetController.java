@@ -3,11 +3,11 @@ package com.gestion.controller.sellpoint;
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.user.UserResponse;
 import com.gestion.service.sellpoint.SellPointCashiersFinderService;
+import com.gestion.utils.PageableFactory;
+import com.gestion.utils.SortableProperties;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,9 +32,7 @@ public class SellPointCashiersGetController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        Sort.Direction sortDirection = Sort.Direction.fromString(sortDir);
-        Sort sortConfig = Sort.by(sortDirection, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sortConfig);
+        Pageable pageable = PageableFactory.create(page, size, sortBy, sortDir, SortableProperties.USER);
 
         return ResponseEntity.ok(sellPointCashiersFinderService.findCashiersBySellPoint(sellPointId, authenticatedUser.getCommerceId(), pageable));
     }

@@ -3,7 +3,7 @@ package com.gestion.service.category;
 import com.gestion.dto.response.category.CategoryUpdateActiveResponse;
 import com.gestion.model.Category;
 import com.gestion.repository.JpaCategoryRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

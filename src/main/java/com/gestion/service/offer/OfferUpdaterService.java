@@ -11,12 +11,13 @@ import com.gestion.model.Offer;
 import com.gestion.repository.JpaOfferRepository;
 import com.gestion.service.commerce.CommerceFinderByIdService;
 import com.gestion.service.discount.DiscountRangeValidatorService;
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.Set;
 
 @Service
@@ -25,41 +26,38 @@ public class OfferUpdaterService {
 
     private final OfferFinderByIdAndCommerceIdService offerFinderByIdAndCommerceIdService;
     private final CommerceFinderByIdService commerceFinderByIdService;
-    private final OfferDateValidatorService offerDateValidatorService;
+    private final OfferDateValidatorService dateValidator;
+    private final OfferOverlapValidatorService overlapValidator;
+    private final OfferPaymentMethodsValidatorService paymentMethodsValidator;
+    private final OfferProductPriceValidator productPriceValidator;
     private final OfferStatusResolverService offerStatusResolverService;
-    private final DiscountRangeValidatorService discountRangeValidatorService;
-    private final OfferOverlapValidatorService offerOverlapValidatorService;
-    private final OfferPaymentMethodsValidatorService offerPaymentMethodsValidatorService;
     private final JpaOfferRepository offerRepository;
+    private final DiscountRangeValidatorService discountRangeValidatorService;
 
     @Transactional
     public OfferResponse updateOffer(Long offerId, OfferUpdateRequest request, Long commerceId) {
         Offer offer = offerFinderByIdAndCommerceIdService.findOfferByIdAndCommerceId(offerId, commerceId);
         commerceFinderByIdService.findCommerceById(commerceId);
 
-        if (request.discountType() == DiscountType.PERCENTAGE) {
-            discountRangeValidatorService.validatePercentageNotGreaterThan100(request.value());
-        }
-
         Instant normalizedStart = request.startDate().truncatedTo(ChronoUnit.MICROS);
         Instant normalizedEnd = request.endDate().truncatedTo(ChronoUnit.MICROS);
         Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
-        offerDateValidatorService.validateOfferDatesForUpdate(normalizedStart, normalizedEnd, now, offer.getStartDate());
+        if(request.discountType() == DiscountType.PERCENTAGE){
+            discountRangeValidatorService.validatePercentageNotGreaterThan100(request.value());
+        }
 
+        dateValidator.validateOfferDatesForUpdate(normalizedStart, normalizedEnd, now, offer.getStartDate());
+
+        // Set.of() devuelve una coleccion inmutable: Hibernate la reemplaza al mergear la entidad
+        // y falla con UnsupportedOperationException al intentar limpiarla.
         Set<PaymentMethod> normalizedPaymentMethods =
-                request.paymentMethods() == null ? Set.of() : request.paymentMethods();
+                request.paymentMethods() == null ? new HashSet<>() : new HashSet<>(request.paymentMethods());
 
-        offerPaymentMethodsValidatorService.validateNoAssignedProducts(offerId, commerceId, normalizedPaymentMethods);
+        paymentMethodsValidator.validateNoAssignedProducts(offerId, commerceId, normalizedPaymentMethods);
 
-        offerOverlapValidatorService.validateNoOverlap(
-                commerceId,
-                offerId,
-                normalizedStart,
-                normalizedEnd,
-                request.value(),
-                request.discountType(),
-                request.paymentMethods());
+        overlapValidator.validateNoOverlap(commerceId, offerId, normalizedStart, normalizedEnd,
+                request.value(), request.discountType(), request.paymentMethods());
 
         offer.setValue(request.value());
         offer.setDiscountType(request.discountType());
@@ -67,6 +65,10 @@ public class OfferUpdaterService {
         offer.setEndDate(normalizedEnd);
         offer.setPaymentMethods(normalizedPaymentMethods);
         offer.setOfferType(normalizedPaymentMethods.isEmpty() ? OfferType.PRODUCT : OfferType.PAYMENT_METHOD);
+
+        // si la oferta ya tiene productos asignados, el nuevo descuento no puede superar el precio
+        // de venta de ninguno de ellos.
+        productPriceValidator.validate(offerId, commerceId, offer);
 
         Offer savedOffer = offerRepository.save(offer);
 

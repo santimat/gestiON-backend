@@ -34,6 +34,9 @@ public class AuthLoginService {
         if (!passwordMatches)
             throw new InvalidCredentialsException("Invalid email or password");
 
+        if (!loginUser.isActive())
+            throw new InactiveResourceException(ErrorCode.ACCOUNT_DISABLED, "The account is disabled");
+
         if (loginUser.getCommerce() != null && !authCheckerStatusService.isCommerceUserActive(loginUser.getEmail()))
             throw new InactiveResourceException(ErrorCode.ACCOUNT_DISABLED, "The account is disabled");
 

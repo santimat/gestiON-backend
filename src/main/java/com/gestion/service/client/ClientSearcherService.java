@@ -15,31 +15,14 @@ import java.util.Map;
 @AllArgsConstructor
 public class ClientSearcherService {
     private final JpaClientRepository jpaClientRepository;
-    private final ClientResponseAssembler clientResponseAssembler;
+    private final ClientResponseAssemblerService clientResponseAssembler;
+    private final ClientSearchTextNormalizerService clientSearchTextNormalizer;
 
     @Transactional(readOnly = true)
     public Page<ClientResponse> searchClients(Long commerceId,
                                              String searchText,
-                                             String name,
-                                             String lastName,
                                              Pageable pageable) {
-        String effectiveSearchText = searchText;
-        if ((effectiveSearchText == null || effectiveSearchText.isBlank())
-                && (name != null || lastName != null)) {
-            StringBuilder builder = new StringBuilder();
-            if (name != null) {
-                builder.append(name).append(" ");
-            }
-            if (lastName != null) {
-                builder.append(lastName);
-            }
-            effectiveSearchText = builder.toString().trim();
-            if (effectiveSearchText.isBlank()) {
-                effectiveSearchText = null;
-            }
-        } else if (effectiveSearchText != null && effectiveSearchText.isBlank()) {
-            effectiveSearchText = null;
-        }
+        String effectiveSearchText = clientSearchTextNormalizer.normalize(searchText);
 
         Page<Client> clients = jpaClientRepository
                 .findAllWithFilters(commerceId, effectiveSearchText, pageable);

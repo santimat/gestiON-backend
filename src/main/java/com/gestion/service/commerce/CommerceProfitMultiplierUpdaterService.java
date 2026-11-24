@@ -4,7 +4,7 @@ import com.gestion.dto.response.commerce.CommerceProfitMultiplierResponse;
 import com.gestion.mappers.CommerceProfitMultiplierMapper;
 import com.gestion.model.Commerce;
 import com.gestion.repository.JpaCommerceRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

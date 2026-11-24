@@ -12,7 +12,7 @@ import com.gestion.model.User;
 import com.gestion.properties.MinioProperties;
 import com.gestion.service.file.FileFinderService;
 import com.gestion.service.user.UserUpdaterService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +31,7 @@ public class CommerceWithOwnerUpdaterService {
         Commerce updatedCommerce = commerceUpdaterService.updateCommerce(commerceRequest, commerceId);
 
         UserUpdateRequest userRequest = UserUpdateMapper.toUpdateRequestFromCWOUR(request);
-        User updatedUser = userUpdaterService.updateUser(userRequest, userId);
+        User updatedUser = userUpdaterService.updateUser(userRequest, userId, commerceId);
 
         String businessLogoUrl =
                 fileFinderService.getObjectUrl(updatedCommerce.getLogoName(),

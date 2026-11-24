@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/commerces")
 @AllArgsConstructor
 public class CommerceToggleActivePatchController {
-    private final CommerceActiveUpdaterService commerceUpdaterActiveService;
+    private final CommerceActiveUpdaterService commerceActiveUpdaterService;
 
     @PatchMapping("/{id}/toggle-active")
     @PreAuthorize("hasRole('SUDO')")
     public ResponseEntity<CommerceUpdateActiveResponse> updateActive(@PathVariable Long id) {
-        return ResponseEntity.ok(commerceUpdaterActiveService.toggleActive(id));
+        return ResponseEntity.ok(commerceActiveUpdaterService.toggleActive(id));
     }
 }

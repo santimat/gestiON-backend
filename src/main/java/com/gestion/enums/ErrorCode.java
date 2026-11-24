@@ -9,6 +9,7 @@ public enum ErrorCode {
     ACCOUNT_DISABLED(403, "The account is disabled"),
     UNAUTHORIZED(401, "Authentication is required"),
     ACCESS_DENIED(403, "Access denied"),
+    COMMERCE_NOT_AVAILABLE(403, "The authenticated user has no commerce associated"),
 
     USER_NOT_FOUND(404, "User not found"),
     CLIENT_NOT_FOUND(404, "Client not found"),
@@ -28,6 +29,7 @@ public enum ErrorCode {
     COMMERCE_CUIT_ALREADY_EXISTS(409, "Commerce CUIT is already registered"),
 
     INSUFFICIENT_STOCK(409, "Not enough stock for the requested quantity"),
+    CONCURRENT_STOCK_UPDATE(409, "Stock was modified by another transaction, please retry"),
     PRODUCT_INACTIVE(409, "Product is not available for sale"),
     PRODUCT_SALE_PRICE_BELOW_COST(400, "Sale price cannot be lower than cost price"),
     SALE_NOT_PENDING(409, "Only pending sales can be marked as paid"),
@@ -41,10 +43,8 @@ public enum ErrorCode {
     VALIDATION_ERROR(400, "Request validation failed"),
 
     INVALID_DISCOUNT(400, "Discount is not valid"),
-    INVALID_DISCOUNT_PREFIX_ZERO(400, "Discount cannot be zero"),
-    DISCOUNT_WITHOUT_TYPE(400, "Discount amount requires a discount type"),
-    TYPE_WITHOUT_DISCOUNT(400, "Discount type requires a discount amount"),
-    DISCOUNT_EXCEEDS_SUBTOTAL(400, "Fixed amount discount cannot be greater than the sale subtotal"),
+    OFFER_EXCEEDS_PRODUCT_PRICE(409, "The offer's discount cannot be greater than the product's sale price"),
+    PAYMENT_METHOD_OFFER_EXCEEDS_SALE_SUBTOTAL(409, "The payment method offer's discount cannot be greater than the sale subtotal"),
     DISCOUNT_PERCENTAGE_EXCEEDS_100(400, "Percentage discount cannot be greater than 100"),
 
     INVALID_DATE(400, "Date is not valid"),
@@ -56,6 +56,13 @@ public enum ErrorCode {
     MISSING_PARAMETER(400, "A required request parameter is missing"),
     METHOD_NOT_ALLOWED(405, "HTTP method is not supported for this endpoint"),
     UNSUPPORTED_MEDIA_TYPE(415, "Content type is not supported"),
+
+    OBSERVATION_REQUIRED_FOR_GIFT(400, "Observation is required when marking a sale as gift"),
+    GIFT_ONLY_FOR_OWNER(403, "Only owners can mark a sale as gift"),
+    CLIENT_REQUIRED_FOR_CREDIT_ACCOUNT(400, "Client is required for credit account payment method"),
+    PARTIAL_PAYMENT_EXCEEDS_TOTAL(400, "Partially paid amount cannot exceed sale total"),
+    SALE_ALREADY_PAYED(409, "Sale is already fully paid"),
+    INVALID_PAYMENT_AMOUNT(400, "Payment amount must be greater than zero and not exceed pending amount"),
 
     DATA_INTEGRITY_VIOLATION(409, "The operation violates data integrity constraints"),
     INTERNAL_ERROR(500, "An unexpected internal error occurred");

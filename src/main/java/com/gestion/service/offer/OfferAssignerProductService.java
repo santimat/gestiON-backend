@@ -22,6 +22,7 @@ public class OfferAssignerProductService {
     private final ProductFinderByIdsAndCommerceIdService productFinderByIdsAndCommerceIdService;
     private final ProductFinderByOfferIdAndCommerceIdService productFinderByOfferIdAndCommerceIdService;
     private final OfferFinderByIdAndCommerceIdService offerFinderByIdAndCommerceIdService;
+    private final OfferProductPriceValidatorService offerProductPriceValidatorService;
     private final JpaProductRepository productRepository;
 
 
@@ -40,6 +41,9 @@ public class OfferAssignerProductService {
 
         List<Product> productsToAssign = productFinderByIdsAndCommerceIdService
                 .findProductsByIdsAndCommerceId(request.productIds(), commerceId);
+
+        // validar que el valor de la oferta no deje el precio del producto negativo
+        offerProductPriceValidatorService.validateOfferNotGreaterThanProductPrices(offer, productsToAssign);
 
         for (Product product : productsToUnassign) {
             product.setOffer(null);

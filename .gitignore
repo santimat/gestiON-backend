@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Credenciales locales ###
+.env
+
+*.log
+*.err
+*.txt
+.opencode

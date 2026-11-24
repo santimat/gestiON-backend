@@ -12,7 +12,14 @@ public class UserValidatorByEmailService {
     private final JpaUserRepository userRepository;
 
     public void checkExistingUserByEmail(String email) {
-        if (userRepository.existsByEmail(email))
+        if (userRepository.existsByEmail(email)) {
+            throw new DuplicateResourceException(ErrorCode.EMAIL_ALREADY_EXISTS, "User with email " + email + " " +
+                    "already exists");
+        }
+    }
+
+    public void checkExistingUserByEmailAndIdNot(String email, Long id) {
+        if (userRepository.existsByEmailAndIdNot(email, id))
             throw new DuplicateResourceException(ErrorCode.EMAIL_ALREADY_EXISTS, "User with email " + email + " already exists");
     }
 }

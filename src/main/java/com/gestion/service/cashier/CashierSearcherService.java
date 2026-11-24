@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class CashierSearcherService {
-    private JpaUserRepository jpaUserRepository;
+    private final JpaUserRepository jpaUserRepository;
 
     public Page<UserResponse> searchCashiers(Long commerceId, String searchText, Pageable pageable) {
         String effectiveSearchText = (searchText == null || searchText.isBlank()) ? null : searchText.trim();
