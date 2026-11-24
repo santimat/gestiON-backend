@@ -31,12 +31,14 @@ public class ProductsGetController {
             @RequestParam(required = false) String searchText,
             @RequestParam(required = false) Boolean active,
             @RequestParam(required = false) StockStatus stockStatus,
+            @RequestParam(required = false) Long prioritizeOfferId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "updatedAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
         Pageable pageable = PageableFactory.create(page, size, sortBy, sortDir, SortableProperties.PRODUCT);
         return ResponseEntity.ok(productSearcherService
-                .searchProducts(authenticatedUser.getCommerceId(), categoryId, searchText, active, stockStatus, pageable));
+                .searchProducts(authenticatedUser.getCommerceId(), categoryId, searchText, active, stockStatus,
+                        prioritizeOfferId, pageable));
     }
 }
