@@ -33,6 +33,7 @@ public enum ErrorCode {
     PRODUCT_INACTIVE(409, "Product is not available for sale"),
     PRODUCT_SALE_PRICE_BELOW_COST(400, "Sale price cannot be lower than cost price"),
     SALE_NOT_PENDING(409, "Only pending sales can be marked as paid"),
+    CASHIER_SELL_POINT_REQUIRED(403, "Cashier must have an assigned sell point to create a sale"),
     INVALID_FILE_TYPE(400, "File type is not allowed"),
     FILE_TOO_LARGE(413, "File size exceeds the maximum limit"),
     FILE_UPLOAD_FAILED(500, "File could not be uploaded"),
