@@ -2,6 +2,9 @@ package com.gestion.service.sale;
 
 import com.gestion.dto.request.sale.SaleRequest;
 import com.gestion.dto.response.sale.SaleSummaryResponse;
+import com.gestion.enums.ErrorCode;
+import com.gestion.enums.Role;
+import com.gestion.exception.CashierSellPointRequiredException;
 import com.gestion.mappers.SaleMapper;
 import com.gestion.model.Commerce;
 import com.gestion.model.Sale;
@@ -38,7 +41,13 @@ public class SaleCreatorService {
     private final EntityManager entityManager;
 
     @Transactional
-    public SaleSummaryResponse createSale(SaleRequest request, Long userId, Long commerceId, Long sellPointId) {
+    public SaleSummaryResponse createSale(SaleRequest request, Long userId, Long commerceId, Long sellPointId, Role role) {
+        // Validación: Cajero debe tener punto de venta asignado
+        if (role == Role.CASHIER && sellPointId == null) {
+            throw new CashierSellPointRequiredException(ErrorCode.CASHIER_SELL_POINT_REQUIRED,
+                    ErrorCode.CASHIER_SELL_POINT_REQUIRED.getDefaultMessage());
+        }
+
         if (commerceId == null) {
             throw new AccessDeniedException("Authenticated user does not have a commerce associated");
         }

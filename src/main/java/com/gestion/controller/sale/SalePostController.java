@@ -3,6 +3,7 @@ package com.gestion.controller.sale;
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.request.sale.SaleRequest;
 import com.gestion.dto.response.sale.SaleSummaryResponse;
+import com.gestion.enums.Role;
 import com.gestion.service.sale.SaleCreatorService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -25,7 +26,7 @@ public class SalePostController {
     @PreAuthorize("hasRole('CASHIER') or hasRole('OWNER')")
     public ResponseEntity<SaleSummaryResponse> createSale(@RequestBody @Valid SaleRequest request,
                                                           @AuthenticationPrincipal UserPrincipal authenticatedUser) {
-        SaleSummaryResponse response = saleCreatorService.createSale(request, authenticatedUser.getId(), authenticatedUser.getCommerceId(), authenticatedUser.getSellPointId());
+        SaleSummaryResponse response = saleCreatorService.createSale(request, authenticatedUser.getId(), authenticatedUser.getCommerceId(), authenticatedUser.getSellPointId(), authenticatedUser.getRole());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
