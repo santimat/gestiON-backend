@@ -38,6 +38,10 @@ public class CommerceUpdaterService {
             commerceToUpdate.setProfitMultiplier(request.profitMultiplier());
         }
 
+        if (request.defaultMinStock() != null) {
+            commerceToUpdate.setDefaultMinStock(request.defaultMinStock());
+        }
+
         if (request.logo() != null) {
             if (commerceToUpdate.getLogoName() != null) {
                 fileDeleterService.deleteFile(commerceToUpdate.getLogoName(), minioDirProperties.dir().businessLogos());

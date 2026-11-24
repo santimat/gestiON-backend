@@ -5,6 +5,7 @@ public record CurrentCommerceResponse(
         String name,
         String businessLogoUrl,
         boolean businessActive,
-        Double profitMultiplier
+        Double profitMultiplier,
+        Integer defaultMinStock
 ) {
 }

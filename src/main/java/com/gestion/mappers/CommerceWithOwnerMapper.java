@@ -20,6 +20,7 @@ public class CommerceWithOwnerMapper {
                 businessLogoUrl,
                 commerce.isActive(),
                 commerce.getProfitMultiplier(),
+                commerce.getDefaultMinStock(),
                 commerce.getUpdatedAt()
         );
     }

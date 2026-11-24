@@ -4,6 +4,7 @@ import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,8 +33,8 @@ public record ProductRequest(
         @NotNull(message = "Current stock is required")
         @Positive(message = "Current stock must be a positive number")
         Integer currentStock,
-        @NotNull(message = "Minimum stock is required")
-        @Positive(message = "Minimum stock must be a positive number")
+        @Nullable
+        @PositiveOrZero(message = "Minimum stock must be zero or a positive number")
         Integer minStock
 ) {
 }

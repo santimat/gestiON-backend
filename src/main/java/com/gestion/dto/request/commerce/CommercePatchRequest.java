@@ -15,6 +15,10 @@ public record CommercePatchRequest(
         Double profitMultiplier,
 
         @Nullable
+        @Positive(message = "Default minimum stock must be a positive number")
+        Integer defaultMinStock,
+
+        @Nullable
         MultipartFile image
 ) {
 }

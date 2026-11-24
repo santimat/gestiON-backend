@@ -22,10 +22,20 @@ public class ProductMapper {
         product.setSalePrice(request.salePrice());
         product.setProfitMultiplier(request.profitMultiplier());
         product.setCurrentStock(request.currentStock());
-        product.setMinStock(request.minStock());
+        product.setMinStock(resolveMinStock(request.minStock(), commerce));
         product.setCommerce(commerce);
         product.setCategory(category);
         return product;
+    }
+
+    public static Integer resolveMinStock(Integer requestedMinStock, Commerce commerce) {
+        if (requestedMinStock != null && requestedMinStock > 0) {
+            return requestedMinStock;
+        }
+        if (commerce != null && commerce.getDefaultMinStock() != null) {
+            return commerce.getDefaultMinStock();
+        }
+        return Commerce.DEFAULT_MIN_STOCK;
     }
 
     public static ProductResponse toResponse(Product product,

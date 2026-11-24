@@ -41,6 +41,10 @@ public record CommerceWithOwnerRequest(
 
         @Nullable
         @Positive
-        Double profitMultiplier
+        Double profitMultiplier,
+
+        @Nullable
+        @Positive(message = "Default minimum stock must be a positive number")
+        Integer defaultMinStock
 ) {
 }

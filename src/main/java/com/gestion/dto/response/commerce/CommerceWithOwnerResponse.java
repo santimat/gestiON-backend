@@ -14,6 +14,7 @@ public record CommerceWithOwnerResponse(
         String businessLogoUrl,
         boolean businessActive,
         Double profitMultiplier,
+        Integer defaultMinStock,
         Instant updatedAt
 ) {
 }

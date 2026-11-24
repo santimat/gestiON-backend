@@ -26,8 +26,13 @@ public class CommerceWithOwnerCreatorService {
     @Transactional
     public CommerceWithOwnerResponse createCommerceWithOwner(CommerceWithOwnerRequest request
     ) {
-        Double profitMultiplier = request.profitMultiplier() != null ? request.profitMultiplier() : 1.0;
-        CommerceRequest commerceRequest = CommerceMapper.toRequestFromCWOR(request, profitMultiplier);
+        Double profitMultiplier = request.profitMultiplier() != null
+                ? request.profitMultiplier()
+                : Commerce.DEFAULT_PROFIT_MULTIPLIER;
+        Integer defaultMinStock = request.defaultMinStock() != null
+                ? request.defaultMinStock()
+                : Commerce.DEFAULT_MIN_STOCK;
+        CommerceRequest commerceRequest = CommerceMapper.toRequestFromCWOR(request, profitMultiplier, defaultMinStock);
         Commerce commerce = commerceCreatorService.createCommerce(commerceRequest);
 
         UserRequest userRequest = UserMapper.toRequestFromCWOR(request);

@@ -18,7 +18,7 @@ public class ProductSuggestedPriceCalculatorService {
         }
 
         if (profitMultiplier == null) {
-            profitMultiplier = 1.0;
+            profitMultiplier = Commerce.DEFAULT_PROFIT_MULTIPLIER;
         }
 
         return product.getCostPrice()

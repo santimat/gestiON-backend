@@ -17,6 +17,9 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Commerce {
+    public static final double DEFAULT_PROFIT_MULTIPLIER = 1.0;
+    public static final int DEFAULT_MIN_STOCK = 3;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,6 +41,9 @@ public class Commerce {
 
     @Column(name = "profit_multiplier", nullable = false)
     private Double profitMultiplier;
+
+    @Column(name = "default_min_stock", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 3")
+    private Integer defaultMinStock = DEFAULT_MIN_STOCK;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp

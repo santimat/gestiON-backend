@@ -16,17 +16,23 @@ public class CommerceMapper {
         commerce.setName(request.name());
         commerce.setAddress(request.address());
         commerce.setCuit(request.cuit());
-        commerce.setProfitMultiplier(request.profitMultiplier() != null ? request.profitMultiplier() : 1.0);
+        commerce.setProfitMultiplier(
+                request.profitMultiplier() != null ? request.profitMultiplier() : Commerce.DEFAULT_PROFIT_MULTIPLIER);
+        commerce.setDefaultMinStock(
+                request.defaultMinStock() != null ? request.defaultMinStock() : Commerce.DEFAULT_MIN_STOCK);
         return commerce;
     }
 
-    public static CommerceRequest toRequestFromCWOR(CommerceWithOwnerRequest request, Double profitMultiplier) {
+    public static CommerceRequest toRequestFromCWOR(CommerceWithOwnerRequest request,
+                                                      Double profitMultiplier,
+                                                      Integer defaultMinStock) {
         return new CommerceRequest(
                 request.name(),
                 request.address(),
                 request.cuit(),
                 request.businessLogo(),
-                profitMultiplier
+                profitMultiplier,
+                defaultMinStock
         );
     }
 
@@ -36,7 +42,8 @@ public class CommerceMapper {
                 request.address(),
                 request.cuit(),
                 request.businessLogo(),
-                request.profitMultiplier()
+                request.profitMultiplier(),
+                request.defaultMinStock()
         );
     }
 
@@ -46,7 +53,8 @@ public class CommerceMapper {
                 commerce.getName(),
                 businessLogoUrl,
                 commerce.isActive(),
-                commerce.getProfitMultiplier()
+                commerce.getProfitMultiplier(),
+                commerce.getDefaultMinStock()
         );
     }
 }

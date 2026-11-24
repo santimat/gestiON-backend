@@ -36,7 +36,7 @@ public class ProductUpdaterService {
         product.setSalePrice(request.salePrice());
         product.setProfitMultiplier(request.profitMultiplier());
         product.setCurrentStock(request.currentStock());
-        product.setMinStock(request.minStock());
+        product.setMinStock(ProductMapper.resolveMinStock(request.minStock(), commerce));
         product.setCategory(category);
 
         Product updatedProduct = productRepository.save(product);

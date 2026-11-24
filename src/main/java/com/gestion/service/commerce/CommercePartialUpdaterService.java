@@ -36,6 +36,10 @@ public class CommercePartialUpdaterService {
             commerce.setProfitMultiplier(request.profitMultiplier());
         }
 
+        if (request.defaultMinStock() != null) {
+            commerce.setDefaultMinStock(request.defaultMinStock());
+        }
+
         if (request.image() != null) {
             if (commerce.getLogoName() != null) {
                 fileDeleterService.deleteFile(commerce.getLogoName(), minioProperties.dir().businessLogos());
