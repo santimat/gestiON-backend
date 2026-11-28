@@ -4,14 +4,16 @@ import com.gestion.enums.Role;
 import com.gestion.model.User;
 import com.gestion.properties.AdminProperties;
 import com.gestion.repository.JpaUserRepository;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Component
 @AllArgsConstructor
 public class AdminInitializer implements ApplicationRunner {
@@ -24,6 +26,13 @@ public class AdminInitializer implements ApplicationRunner {
     @Override
     @Transactional
     public void run(@NonNull ApplicationArguments args) {
+        // sin credenciales explicitas no se crea nada: antes se creaba admin@admin.com/admin123
+        // si el despliegue olvidaba las variables de entorno
+        if (!adminProperties.isConfigured()) {
+            log.warn("ADMIN_EMAIL/ADMIN_PASSWORD not set: the initial SUDO user will not be created");
+            return;
+        }
+
         if (userRepository.existsByEmail(adminProperties.email())) return;
 
         User admin = new User();
@@ -31,6 +40,7 @@ public class AdminInitializer implements ApplicationRunner {
         admin.setEmail(adminProperties.email());
         admin.setPassword(passwordEncoder.encode(adminProperties.password()));
         admin.setRole(Role.SUDO);
+        admin.setActive(true);
         userRepository.save(admin);
     }
 }
