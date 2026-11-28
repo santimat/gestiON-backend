@@ -61,5 +61,9 @@ public class User {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    @Version
+    @Column(nullable = false)
+    private long version;
+
 
 }
