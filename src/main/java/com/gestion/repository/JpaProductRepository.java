@@ -6,6 +6,7 @@ import com.gestion.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -19,6 +20,19 @@ public interface JpaProductRepository extends JpaRepository<Product, Long> {
     boolean existsByOfferIdAndCommerceId(Long offerId, Long commerceId);
 
     List<Product> findByIdInAndCommerceId(List<Long> ids, Long commerceId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            UPDATE Product p
+            SET p.currentStock = p.currentStock - :quantity,
+                p.version = p.version + 1
+            WHERE p.id = :productId
+              AND p.commerce.id = :commerceId
+              AND p.currentStock >= :quantity
+            """)
+    int decrementStock(@Param("productId") Long productId,
+                       @Param("commerceId") Long commerceId,
+                       @Param("quantity") int quantity);
 
     List<Product> findByOfferIdAndCommerceId(Long offerId, Long commerceId);
 

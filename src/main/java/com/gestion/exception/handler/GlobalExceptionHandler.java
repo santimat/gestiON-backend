@@ -6,6 +6,7 @@ import com.gestion.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -55,11 +56,6 @@ public class GlobalExceptionHandler {
                 .toList());
     }
 
-    /**
-     * Errores de binding de un @ModelAttribute. En Spring 6+ este caso lo cubre
-     * MethodArgumentNotValidException, pero un BindException pelado puede llegar igual desde otros
-     * caminos de binding, asi que se maneja con el mismo formato de respuesta.
-     */
     @ExceptionHandler(BindException.class)
     public ResponseEntity<ExceptionResponse> handleBindException(BindException exception) {
         return buildValidationResponse(exception.getBindingResult().getFieldErrors().stream()
@@ -67,11 +63,6 @@ public class GlobalExceptionHandler {
                 .toList());
     }
 
-    /**
-     * Validación nativa de los parametros de los metodos del controller (Spring 6.1+). Por
-     * ejemplo @Min(1) en un @RequestParam: sin este handler caeria en el catch-all y devolveria
-     * 500 en vez de 400.
-     */
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<ExceptionResponse> handleHandlerMethodValidationException(HandlerMethodValidationException exception) {
         List<ExceptionResponse.FieldError> fields = new ArrayList<>();
@@ -125,18 +116,18 @@ public class GlobalExceptionHandler {
         return buildResponse(ErrorCode.FILE_TOO_LARGE, ErrorCode.FILE_TOO_LARGE.getDefaultMessage());
     }
 
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ExceptionResponse> handleOptimisticLockingFailureException(OptimisticLockingFailureException exception) {
+        log.warn("Optimistic locking conflict: {}", exception.getMessage());
+        return buildResponse(ErrorCode.CONCURRENT_MODIFICATION, ErrorCode.CONCURRENT_MODIFICATION.getDefaultMessage());
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ExceptionResponse> handleDataIntegrityViolationException(DataIntegrityViolationException exception) {
         log.error("Data integrity violation: {}", exception.getMostSpecificCause().getMessage(), exception);
         return buildResponse(ErrorCode.DATA_INTEGRITY_VIOLATION, ErrorCode.DATA_INTEGRITY_VIOLATION.getDefaultMessage());
     }
 
-    /**
-     * Red de seguridad para los parametros de paginacion. PageableFactory ya valida page,
-     * size, sortBy y sortDir antes de armar el PageRequest, asi que en teoria no deberia
-     * llegar nada aca: pero un IllegalArgumentException o un PropertyReferenceException
-     * terminarian en el catch-all y devolverian un 500 por un error del cliente.
-     */
     @ExceptionHandler({IllegalArgumentException.class, PropertyReferenceException.class})
     public ResponseEntity<ExceptionResponse> handleInvalidPaginationParameter(Exception exception) {
         log.warn("Invalid pagination parameter: {}", exception.getMessage());
