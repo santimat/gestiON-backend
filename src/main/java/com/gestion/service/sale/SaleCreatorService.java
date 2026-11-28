@@ -50,12 +50,12 @@ public class SaleCreatorService {
         sale.setStatus(pricing.status());
 
         // 5. Resolve sell point & client
-        sale.setSellPoint(sellPointResolver.resolveSellPoint(sellPointId));
+        sale.setSellPoint(sellPointResolver.resolveSellPoint(sellPointId, commerceId));
         sale.setClient(clientResolver.resolveClient(request.clientId(), commerceId));
 
         // 6. Decrement stock (skips if GIFTED)
         if (sale.getStatus() != SaleStatus.GIFTED) {
-            stockUpdater.applyStockDecrement(validation.details());
+            stockUpdater.applyStockDecrement(validation.details(), commerceId);
         }
 
         // 7. Persist sale + details
