@@ -1,8 +1,8 @@
 package com.gestion.controller.auth;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
+import com.gestion.service.auth.AuthCookieBuilderService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,14 +12,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth/logout")
 @AllArgsConstructor
 public class AuthLogoutController {
+    private final AuthCookieBuilderService authCookieBuilderService;
+
     @PostMapping
-    public ResponseEntity<String> logout(HttpServletResponse response) {
-        Cookie cookie = new Cookie("token", null);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setSecure(false);
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
-        return ResponseEntity.ok("Logout successfully");
+    public ResponseEntity<String> logout() {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, authCookieBuilderService.buildExpiredCookie().toString())
+                .body("Logout successfully");
     }
 }

@@ -3,12 +3,12 @@ package com.gestion.controller.auth;
 import com.gestion.dto.request.user.UserLoginRequest;
 import com.gestion.dto.response.user.AuthenticatedUserResponse;
 import com.gestion.mappers.AuthenticatedUserMapper;
+import com.gestion.service.auth.AuthCookieBuilderService;
 import com.gestion.service.auth.AuthLoginService;
 import com.gestion.service.jwt.JwtService;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,20 +21,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthLoginPostController {
     private final AuthLoginService authLoginService;
     private final JwtService jwtService;
+    private final AuthCookieBuilderService authCookieBuilderService;
 
     @PostMapping
-    public ResponseEntity<AuthenticatedUserResponse> login(@RequestBody @Valid UserLoginRequest userRequest,
-                                                           HttpServletResponse response) {
+    public ResponseEntity<AuthenticatedUserResponse> login(@RequestBody @Valid UserLoginRequest userRequest) {
         String jwtToken = authLoginService.login(userRequest);
 
-        Cookie cookie = new Cookie("token", jwtToken);
-        cookie.setHttpOnly(true);
-        // https is not required
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(86400);
-        response.addCookie(cookie);
-
-        return ResponseEntity.ok(AuthenticatedUserMapper.toTokenResponseFromClaims(jwtService.getClaimsFromToken(jwtToken)));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, authCookieBuilderService.buildSessionCookie(jwtToken).toString())
+                .body(AuthenticatedUserMapper.toTokenResponseFromClaims(jwtService.getClaimsFromToken(jwtToken)));
     }
 }
