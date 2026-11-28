@@ -5,18 +5,20 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.Length;
 
 import java.math.BigDecimal;
-import java.util.Set;
+import java.util.List;
 
 public record SaleRequest(
         @NotNull(message = "Payment method is required")
         PaymentMethod paymentMethod,
 
         @NotEmpty(message = "At least one detail is required")
+        @Size(max = 200, message = "A sale cannot have more than 200 detail lines")
         @Valid
-        Set<SaleDetailRequest> details,
+        List<@NotNull(message = "Detail cannot be null") SaleDetailRequest> details,
 
         Long clientId,
 
