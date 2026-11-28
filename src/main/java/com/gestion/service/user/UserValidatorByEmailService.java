@@ -13,13 +13,12 @@ public class UserValidatorByEmailService {
 
     public void checkExistingUserByEmail(String email) {
         if (userRepository.existsByEmail(email)) {
-            throw new DuplicateResourceException(ErrorCode.EMAIL_ALREADY_EXISTS, "User with email " + email + " " +
-                    "already exists");
+            throw new DuplicateResourceException(ErrorCode.EMAIL_ALREADY_EXISTS, ErrorCode.EMAIL_ALREADY_EXISTS.getDefaultMessage());
         }
     }
 
     public void checkExistingUserByEmailAndIdNot(String email, Long id) {
         if (userRepository.existsByEmailAndIdNot(email, id))
-            throw new DuplicateResourceException(ErrorCode.EMAIL_ALREADY_EXISTS, "User with email " + email + " already exists");
+            throw new DuplicateResourceException(ErrorCode.EMAIL_ALREADY_EXISTS, ErrorCode.EMAIL_ALREADY_EXISTS.getDefaultMessage());
     }
 }

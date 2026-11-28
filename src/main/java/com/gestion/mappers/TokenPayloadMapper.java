@@ -14,7 +14,8 @@ public class TokenPayloadMapper {
                 commerceId,
                 user.getRole(),
                 user.isActive(),
-                sellPointId
+                sellPointId,
+                user.getVersion()
         );
     }
 }

@@ -9,6 +9,7 @@ public record TokenPayload(
         Long commerceId,
         Role role,
         boolean active,
-        Long sellPointId
+        Long sellPointId,
+        long version
 ) {
 }

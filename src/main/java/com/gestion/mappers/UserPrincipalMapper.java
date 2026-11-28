@@ -12,7 +12,7 @@ public class UserPrincipalMapper {
         userPrincipal.setCommerceId(tokenClaims.get("commerceId", Long.class));
         userPrincipal.setName(tokenClaims.get("name", String.class));
         userPrincipal.setRole(Role.valueOf(tokenClaims.get("role", String.class)));
-        userPrincipal.setActive(tokenClaims.get("active", Boolean.class));
+        userPrincipal.setActive(Boolean.TRUE.equals(tokenClaims.get("active", Boolean.class)));
         userPrincipal.setSellPointId(tokenClaims.get("sellPointId", Long.class));
         return userPrincipal;
     }
