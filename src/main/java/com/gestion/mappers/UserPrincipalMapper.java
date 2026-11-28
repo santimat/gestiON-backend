@@ -1,19 +1,20 @@
 package com.gestion.mappers;
 
 import com.gestion.config.UserPrincipal;
-import com.gestion.enums.Role;
-import io.jsonwebtoken.Claims;
+import com.gestion.dto.project.user.UserSessionSnapshot;
 
 public class UserPrincipalMapper {
-    public static UserPrincipal toEntity(Claims tokenClaims) {
+    // el principal sale del snapshot de la base, no de los claims del JWT: el token solo identifica
+    // al usuario (userId) y prueba que se autentico
+    public static UserPrincipal toEntity(UserSessionSnapshot snapshot) {
         UserPrincipal userPrincipal = new UserPrincipal();
-        userPrincipal.setEmail(tokenClaims.getSubject());
-        userPrincipal.setId(tokenClaims.get("userId", Long.class));
-        userPrincipal.setCommerceId(tokenClaims.get("commerceId", Long.class));
-        userPrincipal.setName(tokenClaims.get("name", String.class));
-        userPrincipal.setRole(Role.valueOf(tokenClaims.get("role", String.class)));
-        userPrincipal.setActive(tokenClaims.get("active", Boolean.class));
-        userPrincipal.setSellPointId(tokenClaims.get("sellPointId", Long.class));
+        userPrincipal.setId(snapshot.userId());
+        userPrincipal.setEmail(snapshot.email());
+        userPrincipal.setName(snapshot.name());
+        userPrincipal.setRole(snapshot.role());
+        userPrincipal.setActive(snapshot.userActive());
+        userPrincipal.setCommerceId(snapshot.commerceId());
+        userPrincipal.setSellPointId(snapshot.sellPointId());
         return userPrincipal;
     }
 }
