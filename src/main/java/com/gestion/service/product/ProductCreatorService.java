@@ -44,6 +44,10 @@ public class ProductCreatorService {
             imageUrl = productImageUploaderService.uploadProductImage(request.image(), newProduct);
         }
 
+        // guardar la imagen es un segundo update que incrementa @Version al hacer flush: se fuerza
+        // aca para que la respuesta lleve la version vigente (la que el cliente manda al editar)
+        productRepository.flush();
+
         BigDecimal suggestedPrice = productSuggestedPriceCalculatorService.calculateSuggestedPrice(newProduct, commerce);
         return ProductMapper.toResponse(newProduct, imageUrl, suggestedPrice, CategoryMapper.toResponse(category));
     }

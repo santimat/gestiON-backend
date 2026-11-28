@@ -18,10 +18,12 @@ public class ProductActiveUpdaterService {
         Product productToUpdate = productFinderByIdAndCommerceIdService.findProductByIdAndCommerceId(productId,
                 commerceId);
         productToUpdate.setActive(!productToUpdate.isActive());
-        Product updatedProduct = productRepository.save(productToUpdate);
+        // flush para que la respuesta lleve la version incrementada (la usa el update del producto)
+        Product updatedProduct = productRepository.saveAndFlush(productToUpdate);
         return new ProductUpdateActiveResponse(
                 updatedProduct.getId(),
-                updatedProduct.isActive()
+                updatedProduct.isActive(),
+                updatedProduct.getVersion()
         );
     }
 }
