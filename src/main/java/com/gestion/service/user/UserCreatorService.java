@@ -22,7 +22,7 @@ public class UserCreatorService {
     @Transactional
     public User createUser(UserRequest request, Role userRole, Commerce commerce) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new DuplicateResourceException(ErrorCode.EMAIL_ALREADY_EXISTS, "User with email " + request.email() + " already exists");
+            throw new DuplicateResourceException(ErrorCode.EMAIL_ALREADY_EXISTS, ErrorCode.EMAIL_ALREADY_EXISTS.getDefaultMessage());
         }
 
         User user = UserMapper.toEntity(request);

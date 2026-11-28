@@ -17,6 +17,6 @@ public class ClientFinderByDniService {
     public Client findByDni(String dni, Long commerceId) {
         return clientRepository.findByDniAndCommerceId(dni, commerceId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CLIENT_NOT_FOUND,
-                        "Client with DNI " + dni + " not found"));
+                        ErrorCode.CLIENT_NOT_FOUND.getDefaultMessage()));
     }
 }

@@ -2,7 +2,7 @@ package com.gestion.dto.request.cashier;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import com.gestion.validation.PasswordPolicy;
 import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.Length;
 
@@ -15,7 +15,8 @@ public record CashierUpdateRequest(
         @Email
         String email,
 
-        @Pattern(regexp = "^$|.{3,50}", message = "Password's length must be between 3 and 50")
+        // opcional: null o vacio = no cambiar la contraseña
+        @PasswordPolicy
         String password,
 
         @Length(min = 10, max = 20, message = "Phone number's length must be between 10 and 20 characters")

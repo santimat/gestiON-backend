@@ -13,6 +13,6 @@ public class UserFinderByEmailService {
     private final JpaUserRepository userRepository;
 
     public User findByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND, "User with email " + email + " not found"));
+        return userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND, ErrorCode.USER_NOT_FOUND.getDefaultMessage()));
     }
 }

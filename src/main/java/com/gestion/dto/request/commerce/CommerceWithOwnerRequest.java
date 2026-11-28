@@ -1,5 +1,6 @@
 package com.gestion.dto.request.commerce;
 
+import com.gestion.validation.PasswordPolicy;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -17,7 +18,7 @@ public record CommerceWithOwnerRequest(
         String email,
 
         @NotBlank(message = "Password is required")
-        @Length(min = 3, message = "Password's length must be at least 3 characters")
+        @PasswordPolicy
         String password,
 
         @NotBlank
