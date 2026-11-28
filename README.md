@@ -51,10 +51,12 @@ parámetro de un método del controller no cumple sus restricciones (por ejemplo
    `token`** con el JWT. Todas las demás requests deben incluir esa cookie (`credentials: include`
    en el navegador). La cookie es `HttpOnly`, `Path=/` y vive 24 horas (`Max-Age=86400`).
 2. El JWT dura 24 horas y lleva los claims `sub` (email), `name`, `userId`, `commerceId`, `role`,
-   `active` y `sellPointId` (este último es `null` para OWNER/SUDO). El backend confía en ese
-   contenido **salvo el flag `active`**: en cada request autenticado se revalida contra la base
-   (una query mínima que trae el `active` del usuario y del comercio), así que desactivar un
-   usuario le corta el acceso de inmediato, sin esperar a que expire su token.
+   `active` y `sellPointId` (este último es `null` para OWNER/SUDO). El backend **solo usa el
+   `userId` del token**: en cada request autenticado arma la sesión con un snapshot de la base (una
+   proyección mínima con email, nombre, rol, `active` del usuario y del comercio, `commerceId` y
+   `sellPointId`). Así desactivar un usuario le corta el acceso de inmediato, y un cambio de rol,
+   de email o de punto de venta impacta en el siguiente request, sin esperar a que expire el token
+   ni a un nuevo login.
 3. `POST /api/auth/logout` expira la cookie. **No hay revocación del token en el servidor**: un JWT
    ya emitido sigue siendo válido hasta su expiración, así que el logout es efectivamente local.
    Como tampoco es un endpoint público, requiere una cookie válida (`401` si no la hay).
@@ -115,8 +117,8 @@ Defaults de paginación y orden por recurso:
 
 | Listado | Parámetros de orden | `size` default | Orden default |
 |---|---|---|---|
-| `/api/commerces` | `sortBy` + `sortOrder` (**excepción 1**) | 5 | `updatedAt` / `DESC` |
-| `/api/cashiers` | `sort=campo,direccion` (**excepción 2**) | 20 | sin orden |
+| `/api/commerces` | `sortBy` + `sortDir` | 5 | `updatedAt` / `desc` |
+| `/api/cashiers` | `sort=campo,direccion` (**excepción**) | 20 | sin orden |
 | `/api/clients` | `sortBy` + `sortDir` | 5 | `updatedAt` / `asc` |
 | `/api/categories` | `sortBy` + `sortDir` | 10 | `updatedAt` / `asc` |
 | `/api/products` y `/api/products/with-offer` | `sortBy` + `sortDir` | 10 | `updatedAt` / `desc` |
@@ -125,8 +127,7 @@ Defaults de paginación y orden por recurso:
 | `/api/sales` | `sortBy` + `sortDir` | 10 | `createdAt` / `desc` |
 | `/api/offers` | `sortBy` + `sortDir` | 10 | `endDate` / `desc` |
 
-1. `GET /api/commerces` usa **`sortOrder`** (no `sortDir`), con valores `ASC`/`DESC`.
-2. `GET /api/cashiers` bindea el `Pageable` de Spring Data, así que el orden se pasa con
+- `GET /api/cashiers` bindea el `Pageable` de Spring Data, así que el orden se pasa con
    **`sort=campo,direccion`** (ej.: `?sort=name,asc`) y no con `sortBy`/`sortDir` — enviarle esos
    parámetros no falla, pero el orden se ignora.
 
@@ -141,7 +142,7 @@ Los listados que arman el `Pageable` a mano (`/api/clients`, `/api/categories`, 
 | `page` | `>= 0` | `400 INVALID_PARAMETER` |
 | `size` | `1` a `100` | `400 INVALID_PARAMETER` |
 | `sortBy` | una propiedad del recurso (allow-list) | `400 INVALID_PARAMETER` |
-| `sortDir` / `sortOrder` | `asc` / `desc` | `400 INVALID_PARAMETER` |
+| `sortDir` | `asc` / `desc` | `400 INVALID_PARAMETER` |
 
 Los parámetros fuera de rango **se rechazan, no se clampean**: si pedís `size=1000` recibís un
 `400` y no una página de 100 elementos. El `size` tiene un tope porque la query agregada del
@@ -179,13 +180,17 @@ aplica su propio `max-page-size`.
 | PATCH | `/api/commerces` | OWNER | `CommercePatchRequest` (multipart) | `CurrentCommerceResponse` **nuevo** |
 | PATCH | `/api/commerces/profit-multiplier` | OWNER | `CommerceProfitMultiplierRequest` (JSON) | `CommerceProfitMultiplierResponse` |
 
-- `GET /api/commerces` lista los **OWNER** con su comercio (una fila por dueño).
+- `GET /api/commerces` lista los **comercios** con su owner (una fila por comercio; si un comercio
+  no tiene owner, los campos del owner vienen en `null`). `sortBy` se aplica a las propiedades del
+  comercio: `id`, `name`, `address`, `cuit`, `active`, `createdAt`, `updatedAt`.
 - `CommerceWithOwnerRequest` (crea comercio + owner juntos): `username`, `email`, `password`,
   `phoneNumber`, `name`, `address`, `cuit`, `businessLogo` (opcional), `profitMultiplier` (opcional,
   por defecto `1.0`). `CommerceWithOwnerUpdateRequest` es igual, sin `password`: el PUT no permite
   cambiar la contraseña del owner.
 - El email, el CUIT y la dirección del comercio son únicos (`409 EMAIL_ALREADY_EXISTS`,
   `409 COMMERCE_CUIT_ALREADY_EXISTS`, `409 COMMERCE_ADDRESS_ALREADY_EXISTS`).
+- El CUIT se acepta con o sin guiones (`20-12345678-9` o `20123456789`) y se guarda siempre como
+  11 dígitos; cualquier otro formato responde `400 VALIDATION_ERROR`.
 - `PATCH /api/commerces` **nuevo**: actualización parcial del comercio del OWNER autenticado. Todos
   los campos son opcionales y solo se actualizan los que llegan: `name` (2–100 caracteres),
   `profitMultiplier` (positivo), `image`. Si mandás `image`, **reemplaza** el logo anterior.
@@ -240,8 +245,12 @@ aplica su propio `max-page-size`.
   `costPrice`, `salePrice`, `profitMultiplier` (opcional), `image` (opcional), `categoryId`,
   `currentStock`, `minStock`. Ambos son `multipart` por la imagen; el resto de los campos viaja como
   partes de texto.
-- `salePrice` y `costPrice` deben ser positivos, igual que `currentStock` y `minStock` (no se puede
-  crear un producto con stock 0). `salePrice` no puede ser menor que `costPrice`
+- `ProductUpdateRequest` además exige `version`: la que vino en el último `ProductResponse` (o en la
+  respuesta del `toggle-active`). Si no coincide con la actual —hubo una venta, otra edición o una
+  asignación de oferta desde que se cargó el producto— responde `409 CONCURRENT_MODIFICATION` y hay
+  que recargarlo antes de guardar. Evita que la edición "devuelva" stock ya vendido.
+- `salePrice` y `costPrice` deben ser positivos; `currentStock` y `minStock` admiten `0`.
+  `salePrice` no puede ser menor que `costPrice`
   (`400 PRODUCT_SALE_PRICE_BELOW_COST`).
 - En `GET /api/products` y `GET /api/products/with-offer`, `searchText` busca en el nombre, la
   descripción y el nombre de la categoría. `suggestedPrice` se calcula como `costPrice ×
@@ -274,7 +283,9 @@ aplica su propio `max-page-size`.
   caracteres; `address` es obligatoria y admite entre 2 y 50.
 - El resumen de cuenta corriente (`salesCount`, `pendingSalesCount`, `totalSpent`, `totalPending`)
   viene calculado en **todos** los endpoints que devuelven un cliente (listado, detalle, alta y
-  edición). Un cliente sin ventas devuelve `0` en los contadores y `0.00` en los montos.
+  edición). Un cliente sin ventas devuelve `0` en los contadores y `0.00` en los montos. Una venta
+  "pendiente" es `PENDING` o `PARTIAL_PAYED`, y `totalPending` es lo que realmente se adeuda: el
+  total de esas ventas menos los pagos ya registrados.
 - `GET /api/clients/{clientId}/pending-sales-with-details` devuelve `pendingSalesCount`,
   `totalPending` y `pendingSales`, que ahora es una **página** de `SaleResponse` (`content` + `page`),
   ordenadas por fecha de creación (ascendente, es el orden por defecto). `pendingSalesCount` y
@@ -337,7 +348,8 @@ aplica su propio `max-page-size`.
 
 - Los precios, el subtotal y el total se calculan **siempre en el servidor**; el request solo envía
   productos y cantidades (`quantity` mínimo 1). Los ítems repetidos del mismo producto se consolidan
-  sumando cantidades. `details` no puede venir vacío y `observations` admite hasta 200 caracteres.
+  sumando cantidades. `details` es una lista (no puede venir vacía, hasta 200 líneas) y
+  `observations` admite hasta 200 caracteres.
 - Valores de `paymentMethod`: `CASH`, `CARD`, `TRANSFER`, `CREDIT_ACCOUNT`. El fiado
   (`CREDIT_ACCOUNT`) genera la venta con status `PENDING`; el resto, `PAYED`.
 - **No hay descuento manual**: el request no acepta ningún campo de descuento. Los descuentos salen
@@ -361,8 +373,14 @@ aplica su propio `max-page-size`.
 - Una oferta de método de pago de monto fijo no puede superar el subtotal de la venta
   (`409 PAYMENT_METHOD_OFFER_EXCEEDS_SALE_SUBTOTAL`); el descuento de stock es todo-o-nada: si algún
   ítem no pasa la validación (producto inactivo o sin stock), no se descuenta ni se registra nada
-  (`409 PRODUCT_INACTIVE`, `409 INSUFFICIENT_STOCK`).
-- El punto de venta sale del JWT (`sellPointId`) y puede ser `null`; nunca se envía en el request.
+  (`409 PRODUCT_INACTIVE`, `409 INSUFFICIENT_STOCK`). El descuento es un `UPDATE` atómico
+  condicionado a que alcance el stock, así que dos ventas simultáneas del mismo producto nunca lo
+  dejan negativo: la que llega tarde recibe `409 INSUFFICIENT_STOCK`.
+- El punto de venta es el asignado actualmente al usuario (`sellPointId` de la sesión) y puede ser
+  `null`; nunca se envía en el request. Si el punto de venta está desactivado, la venta responde
+  `409 SELL_POINT_INACTIVE`.
+- Los pagos sobre una misma venta se serializan (bloqueo de fila): dos pagos simultáneos no pueden
+  superar el pendiente.
 - `mark-paid` solo admite la transición `PENDING → PAYED` (`409 SALE_NOT_PENDING` en otro caso).
 
 ### Ofertas y descuentos
@@ -457,10 +475,12 @@ Lo incorporado respecto de la versión anterior de este documento:
 | `CLIENT_DNI_ALREADY_EXISTS` | 409 | DNI de cliente ya registrado en el comercio |
 | `CATEGORY_NAME_ALREADY_EXISTS` | 409 | Nombre de categoría ya usado en el comercio |
 | `SELL_POINT_NAME_ALREADY_EXISTS` | 409 | Nombre de punto de venta ya usado en el comercio |
+| `SELL_POINT_INACTIVE` | 409 | Venta desde un punto de venta desactivado |
 | `COMMERCE_ADDRESS_ALREADY_EXISTS` | 409 | Dirección de comercio ya registrada |
 | `COMMERCE_CUIT_ALREADY_EXISTS` | 409 | CUIT de comercio ya registrado |
 | **Conflictos de operación (409)** | | |
 | `INSUFFICIENT_STOCK` | 409 | Venta con stock insuficiente |
+| `CONCURRENT_MODIFICATION` | 409 | El recurso cambió desde que se leyó (p. ej. `version` vieja al editar un producto) |
 | `PRODUCT_INACTIVE` | 409 | Venta con un producto inactivo |
 | `SALE_NOT_PENDING` | 409 | `mark-paid` sobre una venta que no está `PENDING` |
 | `DATA_INTEGRITY_VIOLATION` | 409 | La operación viola una restricción de integridad |
