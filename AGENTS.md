@@ -18,10 +18,14 @@ Docs and comments are mostly Spanish; commit messages are English.
 ## Infrastructure (must be running manually)
 
 - MySQL at `localhost:3306`, database `gestion`, user `root`/`admin`. Credentials are read from
-  environment variables (`MYSQL_URL`, `MYSQL_USERNAME`, `MYSQL_PASSWORD`) with dev defaults in
-  `src/main/resources/application.properties`. No profiles, no H2/Testcontainers.
-- `docker compose up -d` starts **only** MinIO (console `http://localhost:9001`, `admin`/`admin123`,
-  bucket `gestionbucket`). MinIO credentials via `MINIO_URL`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`
+  environment variables (`MYSQL_URL`, `MYSQL_USERNAME`, `MYSQL_PASSWORD`). No H2/Testcontainers.
+- **Profiles**: `application.properties` has **no defaults** for secrets/credentials (`JWT_SECRET`,
+  `MYSQL_*`, `MINIO_*`): the app fails at startup if they are missing. Dev defaults (plus DEBUG
+  security logs, `show-sql`, non-`Secure` cookie, CORS to `http://localhost:5173`) live in
+  `application-dev.properties`; run locally with `SPRING_PROFILES_ACTIVE=dev`. The test uses
+  `@ActiveProfiles("dev")`. `JwtProperties`/`AdminProperties`/`AuthCookieProperties` are `@Validated`.
+- `docker compose up -d` starts **only** MinIO (console `http://localhost:9001`, credentials
+  `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` from `.env`, required by compose; bucket `gestionbucket`). MinIO credentials via `MINIO_URL`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`
   (dev defaults in `application.properties`). Needed only for file uploads (product images, commerce logos).
 - The only test is `@SpringBootTest contextLoads`; it boots the full context, so it **requires MySQL**
   (`ddl-auto=update` connects at startup). It does not require MinIO.
@@ -68,10 +72,22 @@ Docs and comments are mostly Spanish; commit messages are English.
 
 ## Security
 
-- JWT is read from a **`token` cookie**, not an `Authorization` header (`config/JwtFilter.java`).
-  Testing with curl/browser requires the cookie; there is no bearer-token path.
-- Default is deny-all: only `OPTIONS /**` and `POST /api/auth/login` are public (`config/SecurityConfig.java`). New
-  public endpoints must be added there explicitly.
+- JWT is read from a **`token` cookie** (name configurable, `app.auth.cookie.name`), not an
+  `Authorization` header (`config/JwtFilter.java`). Testing with curl/browser requires the cookie;
+  there is no bearer-token path. Build/clear the cookie only through `AuthCookieBuilderService`
+  (`ResponseCookie` with `Secure`/`SameSite` from config, `Max-Age` from `jwt.expiration`).
+- **CSRF is enabled** (cookie `XSRF-TOKEN` + header `X-XSRF-TOKEN`, plain handler, no XOR) for every
+  non-safe method except the login. curl tests of POST/PUT/PATCH/DELETE must send both the cookie
+  and the header (`GET /api/auth/csrf` returns the token). Sessions are `STATELESS` (no JSESSIONID).
+- Default is deny-all: only `OPTIONS /**`, `POST /api/auth/login` and `GET /api/auth/csrf` are public
+  (`config/SecurityConfig.java`). New public endpoints must be added there explicitly.
+- Security filters (`JwtFilter`, `LoginRateLimitFilter`) are `@Component` but their servlet
+  auto-registration is disabled with `FilterRegistrationBean(enabled=false)`: they run only inside
+  the security chain. Errors written from filters go through `SecurityErrorWriter`.
+- Login rate limit: in-memory Caffeine counters in `AuthLoginAttemptLimiterService` (per IP in
+  `LoginRateLimitFilter`, per email failures in `AuthLoginService`) → `429 TOO_MANY_LOGIN_ATTEMPTS`.
+- Passwords on create/update use `@PasswordPolicy` (8 chars min, 72 UTF-8 bytes max); the login
+  request only has `@NotBlank`.
 - Roles: `SUDO`, `OWNER`, `CASHIER` (`enums/Role.java`). Per-endpoint rules are
   `@PreAuthorize("hasRole('...')")` on the controller (`@EnableMethodSecurity` is active).
 - The JWT carries userId/commerceId/role; controllers take `@AuthenticationPrincipal UserPrincipal`
@@ -81,6 +97,14 @@ Docs and comments are mostly Spanish; commit messages are English.
   If either is deactivated, the request is rejected with `403 ACCOUNT_DISABLED` (or `401 UNAUTHORIZED`
   if the user no longer exists). This means deactivating a user cuts access immediately, without
   waiting for the JWT to expire.
+- **Token version**: `User` has a JPA `@Version` that travels as the `ver` claim; `JwtFilter` rejects
+  with 401 when it no longer matches. Any update to a `User` row (password, email, sell point,
+  active...) therefore logs that user out everywhere; `POST /api/auth/logout-all` bumps it explicitly
+  (`JpaUserRepository.incrementVersion`). Don't modify the current user's own `User` row as a side
+  effect of an unrelated request, or you'll end their session.
+- Never put PII (email, DNI) in exception messages: they are logged by `GlobalExceptionHandler`.
+  `IllegalArgumentException` is **not** mapped to 400 (it surfaces as 500); throw
+  `InvalidParameterException` for client errors.
 
 ## Workflow
 
