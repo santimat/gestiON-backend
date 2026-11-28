@@ -32,8 +32,10 @@ public class FileUploaderService {
         if (file.getSize() > 10 * 1024 * 1024) // 10 MB
             throw new FileException(ErrorCode.FILE_TOO_LARGE, "File size exceeds the maximum limit of 10 MB");
 
-        // 3. Crear nombre único para el archivo
-        String objectName = UUID.randomUUID() + "-" + file.getOriginalFilename();
+        // 3. Crear nombre único para el archivo. No se usa el nombre original del cliente: puede
+        // traer "/", "..", caracteres de control o superar el VARCHAR(255) de la columna, y filtra
+        // nombres de archivos del usuario. La extension sale del MIME detectado por contenido.
+        String objectName = UUID.randomUUID() + mimeTypeService.extensionFor(fileMimeType);
 
         try {
             // 4. Subir el archivo
