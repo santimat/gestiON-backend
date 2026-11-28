@@ -43,6 +43,10 @@ public class ProductUpdaterService {
 
         String productImageUrl = imageUpdater.updateImageIfPresent(request.image(), updatedProduct);
 
+        // Hibernate incrementa @Version recien al hacer flush: sin esto la respuesta devolveria la
+        // version anterior y el siguiente update del cliente recibiria un 409 falso
+        productRepository.flush();
+
         BigDecimal suggestedPrice = suggestedPriceCalculator.calculateSuggestedPrice(updatedProduct, commerce);
         return ProductMapper.toResponse(updatedProduct, productImageUrl, suggestedPrice, CategoryMapper.toResponse(category));
     }

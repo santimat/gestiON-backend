@@ -19,6 +19,7 @@ public record ProductResponse(
         Long offerId,
         CategoryResponse category,
         boolean active,
-        Instant updatedAt
+        Instant updatedAt,
+        Long version
 ) {
 }

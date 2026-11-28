@@ -1,6 +1,6 @@
 package com.gestion.repository;
 
-import com.gestion.dto.project.user.UserActiveStatus;
+import com.gestion.dto.project.user.UserSessionSnapshot;
 import com.gestion.enums.Role;
 import com.gestion.model.User;
 import org.springframework.data.domain.Page;
@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface JpaUserRepository extends JpaRepository<User, Long> {
@@ -22,9 +24,8 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByIdAndCommerceIdAndRole(Long id, Long commerceId, Role role);
 
-    // join fetch trae los commerce de los usuarios evitando el n+1
-    @Query("SELECT u FROM User as u JOIN FETCH u.commerce WHERE u.role = :userRole")
-    Page<User> findAllByRoleWithCommerce(@Param("userRole") Role userRole, Pageable pageable);
+    // owners de una pagina de comercios, en una sola query (el listado pagina sobre Commerce)
+    List<User> findAllByRoleAndCommerceIdIn(Role role, Collection<Long> commerceIds);
 
     // join fetch trae el commerce del cajero evitando el n+1
     @Query("""
@@ -42,17 +43,26 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
 
     Page<User> findAllBySellPointIdAndCommerceId(Long sellPointId, Long commerceId, Pageable pageable);
 
+    // snapshot de la sesion que JwtFilter lee en cada request: proyeccion minima (sin cargar
+    // entidades) con los datos que el principal necesita y que pueden cambiar despues del login.
     @Query("""
-            SELECT new com.gestion.dto.project.user.UserActiveStatus(
+            SELECT new com.gestion.dto.project.user.UserSessionSnapshot(
+                u.id,
+                u.email,
+                u.name,
+                u.role,
                 u.active,
+                c.id,
                 c.active,
+                sp.id,
                 u.version
             )
             FROM User u
             LEFT JOIN u.commerce c
+            LEFT JOIN u.sellPoint sp
             WHERE u.id = :userId
             """)
-    Optional<UserActiveStatus> findActiveStatusById(@Param("userId") Long userId);
+    Optional<UserSessionSnapshot> findSessionSnapshotById(@Param("userId") Long userId);
 
     // invalida todos los tokens emitidos para el usuario (el claim "ver" deja de coincidir)
     @Modifying

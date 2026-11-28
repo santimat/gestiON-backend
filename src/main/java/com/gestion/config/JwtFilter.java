@@ -1,11 +1,11 @@
 package com.gestion.config;
 
-import com.gestion.dto.project.user.UserActiveStatus;
+import com.gestion.dto.project.user.UserSessionSnapshot;
 import com.gestion.enums.ErrorCode;
 import com.gestion.mappers.UserPrincipalMapper;
 import com.gestion.properties.AuthCookieProperties;
 import com.gestion.service.jwt.JwtService;
-import com.gestion.service.user.UserActiveStatusFinderService;
+import com.gestion.service.user.UserSessionSnapshotFinderService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -23,6 +23,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
 
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Solo se agrega a la cadena de Spring Security; el auto-registro como filtro del servlet container
@@ -32,7 +33,7 @@ import java.io.IOException;
 @AllArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
-    private final UserActiveStatusFinderService userActiveStatusFinderService;
+    private final UserSessionSnapshotFinderService userSessionSnapshotFinderService;
     private final SecurityErrorWriter securityErrorWriter;
     private final AuthCookieProperties cookieProperties;
 
@@ -50,34 +51,38 @@ public class JwtFilter extends OncePerRequestFilter {
         Cookie cookie = WebUtils.getCookie(request, cookieProperties.name());
 
         if (cookie != null && StringUtils.hasText(cookie.getValue())) {
-            ParsedToken parsedToken = parseToken(cookie.getValue());
+            TokenIdentity tokenIdentity = parseToken(cookie.getValue());
 
-            // token invalido, vencido o sin los claims obligatorios: se sigue sin autenticar y el
-            // entry point de seguridad responde 401 si el endpoint lo requiere
-            if (parsedToken != null) {
-                UserPrincipal userPrincipal = parsedToken.principal();
+            // token invalido, vencido o sin userId/ver: se sigue sin autenticar y el entry point de
+            // seguridad responde 401 si el endpoint lo requiere
+            if (tokenIdentity != null) {
+                // el token solo identifica al usuario: rol, comercio, punto de venta y estado activo
+                // se leen de la base en cada request (una proyeccion minima, sin cargar entidades).
+                // Asi un usuario desactivado, o al que le cambiaron el rol o el punto de venta, ve el
+                // cambio en el siguiente request en vez de conservar los datos del login hasta que
+                // el token expire.
+                Optional<UserSessionSnapshot> snapshot = userSessionSnapshotFinderService
+                        .findSessionSnapshotByUserId(tokenIdentity.userId());
 
-                UserActiveStatus activeStatus = userActiveStatusFinderService
-                        .findActiveStatusByUserId(userPrincipal.getId());
-
-                if (activeStatus == null) {
+                if (snapshot.isEmpty()) {
                     // el usuario ya no existe: el token es de una cuenta borrada
                     securityErrorWriter.write(response, ErrorCode.UNAUTHORIZED);
                     return;
                 }
 
-                // el usuario cambio (contraseña, email, rol, punto de venta) o hizo logout de todos
-                // los dispositivos despues de emitirse este token: la sesion ya no es valida
-                if (activeStatus.version() != parsedToken.version()) {
+                // el usuario cambio (p. ej. su contraseña) o hizo logout de todos los dispositivos
+                // despues de emitirse este token: la sesion ya no es valida
+                if (snapshot.get().version() != tokenIdentity.version()) {
                     securityErrorWriter.write(response, ErrorCode.UNAUTHORIZED);
                     return;
                 }
 
-                if (!activeStatus.isSessionValid()) {
+                if (!snapshot.get().isSessionValid()) {
                     securityErrorWriter.write(response, ErrorCode.ACCOUNT_DISABLED);
                     return;
                 }
 
+                UserPrincipal userPrincipal = UserPrincipalMapper.toEntity(snapshot.get());
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
@@ -87,22 +92,20 @@ public class JwtFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private record ParsedToken(UserPrincipal principal, long version) {
+    private record TokenIdentity(Long userId, long version) {
     }
 
-    // verifica firma y expiracion una sola vez y exige los claims que el principal necesita: un
-    // token sin ellos (p. ej. emitido antes de agregar "ver") o con un rol desconocido se trata como
-    // invalido, en vez de dejar escapar un NPE / IllegalArgumentException como 500
-    private ParsedToken parseToken(String token) {
+    // verifica firma y expiracion una sola vez y exige los claims que el filtro necesita: un token
+    // sin ellos (p. ej. emitido antes de agregar "ver") se trata como invalido
+    private TokenIdentity parseToken(String token) {
         try {
             Claims claims = jwtService.getClaimsFromToken(token);
+            Long userId = claims.get("userId", Long.class);
             Long version = claims.get(JwtService.VERSION_CLAIM, Long.class);
-            if (version == null
-                    || claims.get("userId", Long.class) == null
-                    || claims.get("role", String.class) == null) {
+            if (userId == null || version == null) {
                 return null;
             }
-            return new ParsedToken(UserPrincipalMapper.toEntity(claims), version);
+            return new TokenIdentity(userId, version);
         } catch (JwtException | IllegalArgumentException exception) {
             return null;
         }

@@ -27,11 +27,12 @@ public enum ErrorCode {
     CLIENT_DNI_ALREADY_EXISTS(409, "Client DNI is already registered"),
     CATEGORY_NAME_ALREADY_EXISTS(409, "Category name already exists in this commerce"),
     SELL_POINT_NAME_ALREADY_EXISTS(409, "Sell point name already exists in this commerce"),
+    SELL_POINT_INACTIVE(409, "Sell point is not active"),
     COMMERCE_ADDRESS_ALREADY_EXISTS(409, "Commerce address is already registered"),
     COMMERCE_CUIT_ALREADY_EXISTS(409, "Commerce CUIT is already registered"),
 
     INSUFFICIENT_STOCK(409, "Not enough stock for the requested quantity"),
-    CONCURRENT_STOCK_UPDATE(409, "Stock was modified by another transaction, please retry"),
+    CONCURRENT_MODIFICATION(409, "The resource was modified by another operation, reload it and retry"),
     PRODUCT_INACTIVE(409, "Product is not available for sale"),
     PRODUCT_SALE_PRICE_BELOW_COST(400, "Sale price cannot be lower than cost price"),
     SALE_NOT_PENDING(409, "Only pending sales can be marked as paid"),

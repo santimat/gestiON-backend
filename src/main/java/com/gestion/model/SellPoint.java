@@ -42,6 +42,6 @@ public class SellPoint {
     private Instant createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at", updatable = false)
+    @Column(name = "updated_at")
     private Instant updatedAt;
 }

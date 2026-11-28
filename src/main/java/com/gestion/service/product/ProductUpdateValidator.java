@@ -2,6 +2,7 @@ package com.gestion.service.product;
 
 import com.gestion.dto.project.product.ProductUpdateValidationResult;
 import com.gestion.dto.request.product.ProductUpdateRequest;
+import com.gestion.exception.StaleResourceException;
 import com.gestion.model.Category;
 import com.gestion.model.Commerce;
 import com.gestion.model.Offer;
@@ -23,6 +24,12 @@ public class ProductUpdateValidator {
 
     public ProductUpdateValidationResult validate(Long productId, ProductUpdateRequest request, Long commerceId) {
         Product product = productFinder.findProductByIdAndCommerceId(productId, commerceId);
+
+        if (product.getVersion() != null && !product.getVersion().equals(request.version())) {
+            throw new StaleResourceException("Product with id " + productId
+                    + " was modified by another operation, reload it and retry");
+        }
+
         Commerce commerce = commerceFinder.findCommerceById(commerceId);
         Category category = categoryFinder.findCategoryByIdAndCommerceId(request.categoryId(), commerceId);
 

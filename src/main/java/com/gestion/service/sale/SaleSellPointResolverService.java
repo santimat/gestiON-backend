@@ -1,7 +1,9 @@
 package com.gestion.service.sale;
 
+import com.gestion.enums.ErrorCode;
+import com.gestion.exception.InactiveResourceException;
 import com.gestion.model.SellPoint;
-import jakarta.persistence.EntityManager;
+import com.gestion.service.sellpoint.SellPointFinderByIdAndCommerceIdService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -9,13 +11,20 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class SaleSellPointResolverService {
-    private final EntityManager entityManager;
+    private final SellPointFinderByIdAndCommerceIdService sellPointFinderByIdAndCommerceIdService;
 
-    public SellPoint resolveSellPoint(Long sellPointId) {
+    public SellPoint resolveSellPoint(Long sellPointId, Long commerceId) {
         if (sellPointId == null) {
             return null;
         }
-        // el id viene del JWT (generado con el user validado, no del request): proxy directo
-        return entityManager.getReference(SellPoint.class, sellPointId);
+
+        SellPoint sellPoint = sellPointFinderByIdAndCommerceIdService
+                .findSellPointByIdAndCommerceId(sellPointId, commerceId);
+
+        if (!sellPoint.isActive()) {
+            throw new InactiveResourceException(ErrorCode.SELL_POINT_INACTIVE,
+                    "Sell point '" + sellPoint.getName() + "' is not active");
+        }
+        return sellPoint;
     }
 }

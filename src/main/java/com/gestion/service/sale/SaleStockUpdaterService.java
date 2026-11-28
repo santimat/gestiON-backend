@@ -1,26 +1,39 @@
 package com.gestion.service.sale;
 
 import com.gestion.enums.ErrorCode;
-import com.gestion.exception.ConcurrentStockUpdateException;
+import com.gestion.exception.InsufficientStockException;
 import com.gestion.model.Product;
 import com.gestion.model.SaleDetail;
-import jakarta.persistence.OptimisticLockException;
+import com.gestion.repository.JpaProductRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 
 
 @Service
+@AllArgsConstructor
 public class SaleStockUpdaterService {
 
-    public void applyStockDecrement(List<SaleDetail> details) {
-        for (SaleDetail detail : details) {
+    private final JpaProductRepository productRepository;
+
+    @Transactional
+    public void applyStockDecrement(List<SaleDetail> details, Long commerceId) {
+        List<SaleDetail> orderedDetails = details.stream()
+                .sorted(Comparator.comparing(detail -> detail.getProduct().getId()))
+                .toList();
+
+        for (SaleDetail detail : orderedDetails) {
             Product product = detail.getProduct();
-            try {
-                product.setCurrentStock(product.getCurrentStock() - detail.getQuantity());
-            } catch (OptimisticLockException e) {
-                throw new ConcurrentStockUpdateException(ErrorCode.CONCURRENT_STOCK_UPDATE,
-                        "Stock for product '" + product.getName() + "' was modified by another transaction, please retry");
+            int updatedRows = productRepository.decrementStock(product.getId(), commerceId, detail.getQuantity());
+
+            if (updatedRows == 0) {
+                // otra venta consumio el stock entre la validacion y el descuento
+                throw new InsufficientStockException(ErrorCode.INSUFFICIENT_STOCK,
+                        "Not enough stock for product '" + product.getName()
+                                + "' (requested: " + detail.getQuantity() + ")");
             }
         }
     }

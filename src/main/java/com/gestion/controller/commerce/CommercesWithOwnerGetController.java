@@ -27,9 +27,9 @@ public class CommercesWithOwnerGetController {
     public ResponseEntity<Page<CommerceWithOwnerResponse>> getAllCommercesWithOwner(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "DESC") String sortOrder,
-            @RequestParam(defaultValue = "updatedAt") String sortBy) {
-        Pageable pageable = PageableFactory.create(page, size, sortBy, sortOrder, SortableProperties.COMMERCE);
+            @RequestParam(defaultValue = "updatedAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        Pageable pageable = PageableFactory.create(page, size, sortBy, sortDir, SortableProperties.COMMERCE);
 
         return ResponseEntity.ok(commerceWithOwnerSearcherService.findAllWithOwner(pageable));
     }

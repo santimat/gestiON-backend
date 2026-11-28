@@ -49,7 +49,8 @@ public class ProductMapper {
                 product.getOffer() != null ? product.getOffer().getId() : null,
                 categoryResponse,
                 product.isActive(),
-                product.getUpdatedAt()
+                product.getUpdatedAt(),
+                product.getVersion()
         );
     }
 

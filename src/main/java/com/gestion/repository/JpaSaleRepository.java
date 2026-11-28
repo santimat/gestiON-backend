@@ -1,15 +1,18 @@
 package com.gestion.repository;
 
 import com.gestion.dto.project.client.ClientAccountSummary;
+import com.gestion.dto.project.client.ClientPendingPaymentSum;
 import com.gestion.dto.response.sale.TopProductsSoldResponse;
 import com.gestion.enums.PaymentMethod;
 import com.gestion.enums.SaleStatus;
 import com.gestion.model.Sale;
 import com.gestion.model.SaleDetail;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -48,19 +51,21 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
             SELECT s FROM Sale s
             WHERE s.commerce.id = :commerceId
               AND s.client.id = :clientId
-              AND s.status = com.gestion.enums.SaleStatus.PENDING
+              AND s.status IN (com.gestion.enums.SaleStatus.PENDING, com.gestion.enums.SaleStatus.PARTIAL_PAYED)
             """)
     Page<Sale> findPendingByClientIdAndCommerceId(@Param("commerceId") Long commerceId,
                                                   @Param("clientId") Long clientId,
                                                   Pageable pageable);
 
+    // "pendiente" = PENDING o PARTIAL_PAYED. totalPending es la suma de los totales de esas ventas:
+    // los pagos parciales se restan en ClientAccountSummaryService con sumPendingSalesPaymentsByClientIds.
     @Query("""
             SELECT new com.gestion.dto.project.client.ClientAccountSummary(
                 s.client.id,
                 SUM(CASE WHEN s.status = com.gestion.enums.SaleStatus.PAYED THEN 1 ELSE 0 END),
-                SUM(CASE WHEN s.status = com.gestion.enums.SaleStatus.PENDING THEN 1 ELSE 0 END),
+                SUM(CASE WHEN s.status IN (com.gestion.enums.SaleStatus.PENDING, com.gestion.enums.SaleStatus.PARTIAL_PAYED) THEN 1 ELSE 0 END),
                 SUM(CASE WHEN s.status = com.gestion.enums.SaleStatus.PAYED THEN s.total END),
-                SUM(CASE WHEN s.status = com.gestion.enums.SaleStatus.PENDING THEN s.total END))
+                SUM(CASE WHEN s.status IN (com.gestion.enums.SaleStatus.PENDING, com.gestion.enums.SaleStatus.PARTIAL_PAYED) THEN s.total END))
             FROM Sale s
             WHERE s.commerce.id = :commerceId
               AND s.client.id IN :clientIds
@@ -69,6 +74,29 @@ public interface JpaSaleRepository extends JpaRepository<Sale, Long> {
     List<ClientAccountSummary> findAccountSummariesByClientIds(
             @Param("clientIds") Collection<Long> clientIds,
             @Param("commerceId") Long commerceId);
+
+    // pagos ya registrados sobre las ventas pendientes de cada cliente
+    @Query("""
+            SELECT new com.gestion.dto.project.client.ClientPendingPaymentSum(
+                s.client.id,
+                COALESCE(SUM(t.amount), 0))
+            FROM Transaction t
+            JOIN t.sale s
+            WHERE s.commerce.id = :commerceId
+              AND s.client.id IN :clientIds
+              AND s.status IN (com.gestion.enums.SaleStatus.PENDING, com.gestion.enums.SaleStatus.PARTIAL_PAYED)
+              AND t.type = com.gestion.enums.TransactionType.PAYMENT
+            GROUP BY s.client.id
+            """)
+    List<ClientPendingPaymentSum> sumPendingSalesPaymentsByClientIds(
+            @Param("clientIds") Collection<Long> clientIds,
+            @Param("commerceId") Long commerceId);
+
+    // bloqueo de fila (SELECT ... FOR UPDATE) para el registro de pagos: dos pagos concurrentes sobre
+    // la misma venta se serializan y el segundo ve el pendiente ya actualizado.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT s FROM Sale s WHERE s.id = :id AND s.commerce.id = :commerceId")
+    Optional<Sale> findForUpdateByIdAndCommerceId(@Param("id") Long id, @Param("commerceId") Long commerceId);
 
     // @EntityGraph para cargar las relaciones junto con la entidad Sale, evitando el problema de N+1
     @EntityGraph(attributePaths = {"client", "sellPoint", "user"})

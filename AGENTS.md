@@ -26,7 +26,7 @@ Docs and comments are mostly Spanish; commit messages are English.
   `@ActiveProfiles("dev")`. `JwtProperties`/`AdminProperties`/`AuthCookieProperties` are `@Validated`.
 - `docker compose up -d` starts **only** MinIO (console `http://localhost:9001`, credentials
   `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` from `.env`, required by compose; bucket `gestionbucket`). MinIO credentials via `MINIO_URL`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`
-  (dev defaults in `application.properties`). Needed only for file uploads (product images, commerce logos).
+  (dev defaults in `application-dev.properties`). Needed only for file uploads (product images, commerce logos).
 - The only test is `@SpringBootTest contextLoads`; it boots the full context, so it **requires MySQL**
   (`ddl-auto=update` connects at startup). It does not require MinIO.
 - Schema comes from JPA entities via `spring.jpa.hibernate.ddl-auto=update`; there is no Flyway/Liquibase,
@@ -90,18 +90,18 @@ Docs and comments are mostly Spanish; commit messages are English.
   request only has `@NotBlank`.
 - Roles: `SUDO`, `OWNER`, `CASHIER` (`enums/Role.java`). Per-endpoint rules are
   `@PreAuthorize("hasRole('...')")` on the controller (`@EnableMethodSecurity` is active).
-- The JWT carries userId/commerceId/role; controllers take `@AuthenticationPrincipal UserPrincipal`
-  and services trust it instead of re-querying the database.
-- **Session revalidation**: on every authenticated request, `JwtFilter` runs a lightweight query
-  (`UserActiveStatus` projection) to check the `active` flag of both the user and their commerce.
-  If either is deactivated, the request is rejected with `403 ACCOUNT_DISABLED` (or `401 UNAUTHORIZED`
-  if the user no longer exists). This means deactivating a user cuts access immediately, without
-  waiting for the JWT to expire.
+- Controllers take `@AuthenticationPrincipal UserPrincipal` and services trust it instead of
+  re-querying the database.
+- **Session snapshot**: the JWT is only used to identify the user (`userId` + `ver` claims). On every
+  authenticated request `JwtFilter` loads a `UserSessionSnapshot` projection (email, name, role,
+  user/commerce `active`, `commerceId`, `sellPointId`, `version`) and builds the `UserPrincipal` from
+  it, so role, sell point or deactivation changes apply on the next request. Deactivated
+  user/commerce → `403 ACCOUNT_DISABLED`; user no longer exists → `401 UNAUTHORIZED`.
 - **Token version**: `User` has a JPA `@Version` that travels as the `ver` claim; `JwtFilter` rejects
-  with 401 when it no longer matches. Any update to a `User` row (password, email, sell point,
-  active...) therefore logs that user out everywhere; `POST /api/auth/logout-all` bumps it explicitly
-  (`JpaUserRepository.incrementVersion`). Don't modify the current user's own `User` row as a side
-  effect of an unrelated request, or you'll end their session.
+  with 401 when it no longer matches the snapshot. Any update to a `User` row (password, email, sell
+  point, active...) therefore logs that user out everywhere; `POST /api/auth/logout-all` bumps it
+  explicitly (`JpaUserRepository.incrementVersion`). Don't modify the current user's own `User` row as
+  a side effect of an unrelated request, or you'll end their session.
 - Never put PII (email, DNI) in exception messages: they are logged by `GlobalExceptionHandler`.
   `IllegalArgumentException` is **not** mapped to 400 (it surfaces as 500); throw
   `InvalidParameterException` for client errors.
