@@ -6,13 +6,14 @@ import com.gestion.model.User;
 import jakarta.annotation.Nullable;
 
 public class CommerceWithOwnerMapper {
-    public static CommerceWithOwnerResponse toCommerceWithOwnerResponse(Commerce commerce, User user,
+    // owner puede ser null: un comercio sin owner se lista igual, con los datos del owner en null
+    public static CommerceWithOwnerResponse toCommerceWithOwnerResponse(Commerce commerce, @Nullable User owner,
                                                                         @Nullable String businessLogoUrl) {
         return new CommerceWithOwnerResponse(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getPhoneNumber(),
+                owner != null ? owner.getId() : null,
+                owner != null ? owner.getName() : null,
+                owner != null ? owner.getEmail() : null,
+                owner != null ? owner.getPhoneNumber() : null,
                 commerce.getId(),
                 commerce.getName(),
                 commerce.getCuit(),
