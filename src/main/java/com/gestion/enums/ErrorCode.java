@@ -10,6 +10,8 @@ public enum ErrorCode {
     UNAUTHORIZED(401, "Authentication is required"),
     ACCESS_DENIED(403, "Access denied"),
     COMMERCE_NOT_AVAILABLE(403, "The authenticated user has no commerce associated"),
+    CSRF_TOKEN_INVALID(403, "CSRF token is missing or invalid"),
+    TOO_MANY_LOGIN_ATTEMPTS(429, "Too many login attempts, please try again later"),
 
     USER_NOT_FOUND(404, "User not found"),
     CLIENT_NOT_FOUND(404, "Client not found"),
