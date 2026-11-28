@@ -128,8 +128,18 @@ public class GlobalExceptionHandler {
         return buildResponse(ErrorCode.DATA_INTEGRITY_VIOLATION, ErrorCode.DATA_INTEGRITY_VIOLATION.getDefaultMessage());
     }
 
-    @ExceptionHandler({IllegalArgumentException.class, PropertyReferenceException.class})
-    public ResponseEntity<ExceptionResponse> handleInvalidPaginationParameter(Exception exception) {
+    /**
+     * Red de seguridad para el ordenamiento. PageableFactory ya valida sortBy contra un allow-list,
+     * asi que en teoria no deberia llegar nada aca: pero una propiedad inexistente terminaria en el
+     * catch-all y devolveria un 500 por un error del cliente.
+     * <p>
+     * IllegalArgumentException NO se mapea a 400: es una excepcion generica que tambien lanzan bugs
+     * internos (p. ej. PeriodRangeService con una granularidad no soportada), y reportarla como error
+     * del cliente con un warning ocultaba fallos reales. Los errores del cliente se lanzan como
+     * BusinessException (InvalidParameterException).
+     */
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ExceptionResponse> handleInvalidPaginationParameter(PropertyReferenceException exception) {
         log.warn("Invalid pagination parameter: {}", exception.getMessage());
         return buildResponse(ErrorCode.INVALID_PARAMETER, ErrorCode.INVALID_PARAMETER.getDefaultMessage());
     }

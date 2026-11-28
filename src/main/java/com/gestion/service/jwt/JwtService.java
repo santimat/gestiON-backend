@@ -14,6 +14,8 @@ import java.util.Date;
 
 @Service
 public class JwtService {
+    public static final String VERSION_CLAIM = "ver";
+
     private final JwtProperties jwtProperties;
     private final SecretKey secretKey;
 
@@ -31,6 +33,8 @@ public class JwtService {
                 .claim("role", payload.role().toString())
                 .claim("active", payload.active())
                 .claim("sellPointId", payload.sellPointId())
+                // version del usuario al emitir el token: JwtFilter la compara con la de la base
+                .claim(VERSION_CLAIM, payload.version())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtProperties.expiration()))
                 .signWith(secretKey)
@@ -45,4 +49,7 @@ public class JwtService {
                 .getPayload();
     }
 
+    public long getExpirationMillis() {
+        return jwtProperties.expiration();
+    }
 }

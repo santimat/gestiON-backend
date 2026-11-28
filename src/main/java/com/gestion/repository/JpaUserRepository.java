@@ -6,6 +6,7 @@ import com.gestion.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -53,7 +54,8 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
                 u.active,
                 c.id,
                 c.active,
-                sp.id
+                sp.id,
+                u.version
             )
             FROM User u
             LEFT JOIN u.commerce c
@@ -61,4 +63,9 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
             WHERE u.id = :userId
             """)
     Optional<UserSessionSnapshot> findSessionSnapshotById(@Param("userId") Long userId);
+
+    // invalida todos los tokens emitidos para el usuario (el claim "ver" deja de coincidir)
+    @Modifying
+    @Query("UPDATE User u SET u.version = u.version + 1 WHERE u.id = :userId")
+    int incrementVersion(@Param("userId") Long userId);
 }

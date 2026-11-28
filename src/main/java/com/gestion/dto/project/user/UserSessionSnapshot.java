@@ -10,7 +10,9 @@ public record UserSessionSnapshot(
         boolean userActive,
         Long commerceId,
         Boolean commerceActive,
-        Long sellPointId
+        Long sellPointId,
+        // @Version del usuario: JwtFilter la compara con el claim "ver" del token
+        long version
 ) {
 
     // commerceActive es null para SUDO (no tiene comercio)

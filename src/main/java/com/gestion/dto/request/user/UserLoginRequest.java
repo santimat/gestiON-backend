@@ -2,14 +2,14 @@ package com.gestion.dto.request.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import org.hibernate.validator.constraints.Length;
 
 public record UserLoginRequest(
         @Email
         @NotBlank
         String email,
+        // sin reglas de largo: no se revela la politica ni se rechazan contraseñas creadas con una
+        // politica anterior. AuthLoginService trata las de mas de 72 bytes como credenciales invalidas.
         @NotBlank
-        @Length(min = 3, max = 50, message = "Password's length must be between 3 and 50")
         String password
 ) {
 }

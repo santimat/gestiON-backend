@@ -15,7 +15,7 @@ public class ClientValidatorByDniService {
     public void checkExistingClientByDni(ClientRequest request, Long commerceId) {
         if (clientRepository.existsByDniAndCommerceId(request.dni().strip(), commerceId)) {
             throw new DuplicateResourceException(ErrorCode.CLIENT_DNI_ALREADY_EXISTS,
-                    "Client with DNI " + request.dni() + " already exists in this commerce");
+                    ErrorCode.CLIENT_DNI_ALREADY_EXISTS.getDefaultMessage());
         }
     }
 
@@ -23,7 +23,7 @@ public class ClientValidatorByDniService {
     public void checkExistingClientByDni(ClientRequest request, Long commerceId, Long clientIdToExclude) {
         if (clientRepository.existsByDniAndCommerceIdAndIdNot(request.dni().strip(), commerceId, clientIdToExclude)) {
             throw new DuplicateResourceException(ErrorCode.CLIENT_DNI_ALREADY_EXISTS,
-                    "Client with DNI " + request.dni() + " already exists in this commerce");
+                    ErrorCode.CLIENT_DNI_ALREADY_EXISTS.getDefaultMessage());
         }
     }
 }

@@ -14,7 +14,7 @@ public class CashierValidatorByEmailService {
     public void checkExistingCashierByEmail(Long userIdToExclude, String email) {
         if (userRepository.existsByEmailAndIdNot(email, userIdToExclude)) {
             throw new DuplicateResourceException(ErrorCode.EMAIL_ALREADY_EXISTS,
-                    "User with email " + email + " already exists");
+                    ErrorCode.EMAIL_ALREADY_EXISTS.getDefaultMessage());
         }
     }
 }

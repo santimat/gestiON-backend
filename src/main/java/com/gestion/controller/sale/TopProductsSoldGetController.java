@@ -3,6 +3,7 @@ package com.gestion.controller.sale;
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.sale.TopProductsSoldResponse;
 import com.gestion.service.sale.TopProductsSoldFinderService;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,13 +21,15 @@ import java.util.List;
 @AllArgsConstructor
 public class TopProductsSoldGetController {
 
+    private static final long MAX_LIMIT = 50;
+
     private final TopProductsSoldFinderService topProductsSoldFinderService;
 
     @GetMapping("/top-products")
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<List<TopProductsSoldResponse>> getTopProductsSold(
             @AuthenticationPrincipal UserPrincipal authenticatedUser,
-            @RequestParam(defaultValue = "5") @Min(1) int limit) {
+            @RequestParam(defaultValue = "5") @Min(1) @Max(MAX_LIMIT) int limit) {
         return ResponseEntity.ok(topProductsSoldFinderService
                 .getTopProductsSold(authenticatedUser.getCommerceId(), limit));
     }

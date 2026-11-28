@@ -12,7 +12,7 @@ errores — para quien la consume.
 - **MinIO** (S3 compatible) para el almacenamiento de imágenes de productos y logos de comercio
 - **Lombok** para reducir boilerplate, **Maven Wrapper** para el build
 - Autenticación por **JWT en cookie `token`** (no se usa header `Authorization`)
-- **Credenciales por variables de entorno**: `MYSQL_*`, `JWT_*`, `MINIO_*`, `ADMIN_*` (con defaults de desarrollo en `application.properties`; copiá `.env.example` a `.env` y exportalo antes de arrancar)
+- **Credenciales por variables de entorno**: `MYSQL_*`, `JWT_*`, `MINIO_*`, `ADMIN_*`. Los defaults de desarrollo viven solo en el perfil `dev` (`application-dev.properties`); sin ese perfil las credenciales son obligatorias y la app no arranca si faltan. Copiá `.env.example` a `.env` y exportalo antes de arrancar
 
 ## Arquitectura
 
@@ -49,31 +49,56 @@ parámetro de un método del controller no cumple sus restricciones (por ejemplo
 
 1. `POST /api/auth/login` con `{ "email", "password" }` → devuelve el usuario y setea la **cookie
    `token`** con el JWT. Todas las demás requests deben incluir esa cookie (`credentials: include`
-   en el navegador). La cookie es `HttpOnly`, `Path=/` y vive 24 horas (`Max-Age=86400`).
-2. El JWT dura 24 horas y lleva los claims `sub` (email), `name`, `userId`, `commerceId`, `role`,
-   `active` y `sellPointId` (este último es `null` para OWNER/SUDO). El backend **solo usa el
-   `userId` del token**: en cada request autenticado arma la sesión con un snapshot de la base (una
-   proyección mínima con email, nombre, rol, `active` del usuario y del comercio, `commerceId` y
-   `sellPointId`). Así desactivar un usuario le corta el acceso de inmediato, y un cambio de rol,
-   de email o de punto de venta impacta en el siguiente request, sin esperar a que expire el token
-   ni a un nuevo login.
-3. `POST /api/auth/logout` expira la cookie. **No hay revocación del token en el servidor**: un JWT
-   ya emitido sigue siendo válido hasta su expiración, así que el logout es efectivamente local.
-   Como tampoco es un endpoint público, requiere una cookie válida (`401` si no la hay).
+   en el navegador). La cookie es `HttpOnly`, `Path=/`, `Secure` (configurable con `COOKIE_SECURE`;
+   el perfil `dev` la pone en `false`), `SameSite=Lax` (configurable con `COOKIE_SAME_SITE`) y su
+   `Max-Age` sale de `jwt.expiration` (12 horas por defecto), así que vence junto con el token.
+2. El JWT lleva los claims `sub` (email), `name`, `userId`, `commerceId`, `role`, `active`,
+   `sellPointId` (`null` para OWNER/SUDO) y `ver` (la versión del usuario al emitirse). El backend
+   **solo usa `userId` y `ver` del token**: en cada request autenticado arma la sesión con un
+   snapshot de la base (una proyección mínima con email, nombre, rol, `active` del usuario y del
+   comercio, `commerceId`, `sellPointId` y versión). Así desactivar un usuario le corta el acceso de
+   inmediato, y un cambio de rol, de email o de punto de venta impacta en el siguiente request.
+   Además, si `ver` no coincide con la versión actual (el `@Version` de `User`, que sube con
+   **cualquier cambio del usuario**: contraseña, email, nombre, punto de venta, activo), el token se
+   rechaza con `401` y el usuario tiene que volver a loguearse.
+3. `POST /api/auth/logout` expira la cookie de este navegador (el token en sí no se revoca).
+   `POST /api/auth/logout-all` incrementa la versión del usuario: invalida **todas** sus sesiones
+   (este y otros dispositivos) y responde `204`.
+4. **CSRF** (double-submit cookie): toda respuesta setea la cookie `XSRF-TOKEN` (legible por JS) y
+   todo `POST`/`PUT`/`PATCH`/`DELETE` autenticado debe reenviar su valor en el header
+   `X-XSRF-TOKEN`; si falta o no coincide responde `403 CSRF_TOKEN_INVALID`. El login está exento.
+   Si front y back quedan en dominios distintos (JS no puede leer cookies del back),
+   `GET /api/auth/csrf` (público) devuelve `{ headerName, token }`. Con axios alcanza con
+   `withCredentials: true` + `withXSRFToken: true` (usa por defecto `XSRF-TOKEN`/`X-XSRF-TOKEN`).
+5. **Rate limit del login** (caché en memoria, por instancia): más de 20 intentos por IP o 5 fallos
+   por email dentro de una ventana de 15 minutos → `429 TOO_MANY_LOGIN_ATTEMPTS` (con header
+   `Retry-After` en el caso de la IP). Configurable con `LOGIN_*`. Detrás de un reverse proxy hay que
+   configurar `FORWARD_HEADERS_STRATEGY` para que la IP sea la del cliente.
 
 Códigos de estado de autenticación:
 
-- `401 INVALID_CREDENTIALS`: email o contraseña incorrectos en el login (mismo error en ambos casos,
-  para no filtrar si el email existe).
-- `401 UNAUTHORIZED`: no hay cookie `token`, o el token es inválido o expiró.
+- `401 INVALID_CREDENTIALS`: email o contraseña incorrectos en el login (mismo error y mismo tiempo
+  de respuesta en ambos casos, para no filtrar si el email existe).
+- `401 UNAUTHORIZED`: no hay cookie `token`, el token es inválido o expiró, o la sesión fue revocada
+  (cambio del usuario o logout-all).
 - `403 ACCESS_DENIED`: el rol del usuario no alcanza para el endpoint.
+- `403 CSRF_TOKEN_INVALID`: falta el header `X-XSRF-TOKEN` o no coincide con la cookie.
 - `403 ACCOUNT_DISABLED`: el **usuario** está desactivado (su `toggle-active`) o el **comercio**
   del usuario está deshabilitado. Un usuario desactivado no puede iniciar sesión, y un token que
   se emitió antes de desactivarlo deja de servir en el siguiente request.
+- `429 TOO_MANY_LOGIN_ATTEMPTS`: demasiados intentos de login.
 
-CORS: el origen habilitado es `http://localhost:5173` (el front de desarrollo), con credenciales y
-`Set-Cookie` expuesto. Solo `POST /api/auth/login` y los preflight `OPTIONS` son públicos; el resto
-de las rutas cae en deny-all.
+Contraseñas (alta y cambio de usuarios/cajeros): mínimo 8 caracteres y máximo 72 bytes (límite de
+BCrypt). El login no valida largo.
+
+CORS: los orígenes habilitados salen de `CORS_ALLOWED_ORIGINS` (separados por coma; el perfil `dev`
+usa `http://localhost:5173`), con credenciales y solo los headers `Content-Type` y `X-XSRF-TOKEN`.
+Sin orígenes configurados no se habilita CORS. Públicos: `POST /api/auth/login`, `GET /api/auth/csrf`
+y los preflight `OPTIONS`; el resto de las rutas cae en deny-all.
+
+Despliegue: la app debe ir detrás de TLS (reverse proxy) con `FORWARD_HEADERS_STRATEGY=native` (o
+`framework`). Las respuestas incluyen `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`,
+`Referrer-Policy: no-referrer` y los headers por defecto de Spring Security (HSTS solo sobre HTTPS).
 
 ### Roles
 
@@ -165,6 +190,8 @@ aplica su propio `max-page-size`.
 |---|---|---|---|---|
 | POST | `/api/auth/login` | **Público** | `UserLoginRequest` (JSON: `email`, `password`) | `AuthenticatedUserResponse` + cookie `token` |
 | POST | `/api/auth/logout` | Auth | — | texto (`Logout successfully`) + cookie `token` expirada |
+| POST | `/api/auth/logout-all` | Auth | — | `204` + cookie `token` expirada; invalida todas las sesiones del usuario |
+| GET | `/api/auth/csrf` | **Público** | — | `{ headerName, token }` + cookie `XSRF-TOKEN` |
 | GET | `/api/auth/me` | Auth | — | `AuthenticatedUserResponse` |
 
 ### Comercios y configuración del negocio
@@ -455,9 +482,11 @@ Lo incorporado respecto de la versión anterior de este documento:
 | `UNSUPPORTED_MEDIA_TYPE` | 415 | Content type no soportado |
 | **Autenticación y autorización** | | |
 | `INVALID_CREDENTIALS` | 401 | Email o contraseña incorrectos |
-| `UNAUTHORIZED` | 401 | Sin cookie `token` o token inválido |
+| `UNAUTHORIZED` | 401 | Sin cookie `token`, token inválido o sesión revocada |
 | `ACCOUNT_DISABLED` | 403 | Comercio del usuario deshabilitado |
 | `ACCESS_DENIED` | 403 | Rol insuficiente para el endpoint |
+| `CSRF_TOKEN_INVALID` | 403 | Falta el header `X-XSRF-TOKEN` o no coincide con la cookie |
+| `TOO_MANY_LOGIN_ATTEMPTS` | 429 | Demasiados intentos de login por IP o por email |
 | `COMMERCE_NOT_AVAILABLE` | 403 | El usuario autenticado no tiene un comercio asociado |
 | **Recurso inexistente (404)** | | |
 | `USER_NOT_FOUND` | 404 | Usuario inexistente |
@@ -512,17 +541,21 @@ docker compose up -d   # solo levanta MinIO
 # credenciales: copiá .env.example a .env y completá los valores
 cp .env.example .env
 
-./mvnw spring-boot:run # requiere JDK 25
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run # requiere JDK 25
 ```
 
 - **MySQL**: `localhost:3306`, base `gestion`, usuario `root` / `admin`. La base debe existir
   previamente; el schema lo genera Hibernate al arrancar (`ddl-auto=update`).
 - **MinIO** (solo necesario para uploads de imágenes/logos): API en `localhost:9000`, consola web en
-  `localhost:9001`, credenciales `admin` / `admin123`, bucket `gestionbucket`.
-- Al iniciar la app se crea automáticamente el usuario SUDO `admin@admin.com` / `admin123`.
-- **Credenciales**: `application.properties` lee las credenciales de variables de entorno
-  (`MYSQL_*`, `JWT_*`, `MINIO_*`, `ADMIN_*`) y, si no están, usa los valores de desarrollo que
-  están hardcodeados como default. El archivo `.env` **no** lo lee Spring Boot solo: hay que
+  `localhost:9001`, credenciales `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` del `.env` (compose las
+  exige), bucket `gestionbucket`.
+- Al iniciar la app se crea el usuario SUDO con `ADMIN_EMAIL` / `ADMIN_PASSWORD` si no existe; sin
+  esas variables no se crea (el perfil `dev` usa `admin@admin.com` / `admin123`).
+- **Credenciales y perfiles**: `application.properties` lee las credenciales de variables de entorno
+  (`MYSQL_*`, `JWT_*`, `MINIO_*`, `ADMIN_*`) **sin defaults**. Los valores de desarrollo, los logs
+  DEBUG, `show-sql`, la cookie sin `Secure` y el CORS a localhost viven en
+  `application-dev.properties` y se activan con `SPRING_PROFILES_ACTIVE=dev`. Nunca actives `dev`
+  en un entorno expuesto. El archivo `.env` **no** lo lee Spring Boot solo: hay que
   exportarlo al shell antes de arrancar la app, por ejemplo con
   `set -a; source .env; set +a` (bash) o `$env:SPRING_APPLICATION_JSON` (PowerShell). El `.env`
   está en `.gitignore`: no lo commitees.

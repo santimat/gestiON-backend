@@ -6,8 +6,9 @@ services:
       - "127.0.0.1:9000:9000"
       - "127.0.0.1:9001:9001"
     environment:
-      MINIO_ROOT_USER: admin
-      MINIO_ROOT_PASSWORD: admin123
+      # mismas credenciales que usa la app; docker compose las lee del archivo .env (ver .env.example)
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:?Defini MINIO_ACCESS_KEY en .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?Defini MINIO_SECRET_KEY en .env (minimo 8 caracteres)}
     volumes:
       - minio-data:/data
     command: server /data --console-address ":9001"

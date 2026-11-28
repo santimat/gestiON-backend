@@ -7,17 +7,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
-import java.util.Set;
+import java.util.Map;
 
 @Service
 public class MimeTypeService {
 
     // Tika detecta por contenido: un .jpg real se reporta como "image/jpeg", nunca como
     // "image/jpg", asi que ese valor del allow-list era inalcanzable.
-    private static final Set<String> ALLOWED_MIME_TYPES = Set.of(
-            "image/png",
-            "image/jpeg",
-            "image/webp"
+    // allow-list con la extension que se usa en la clave del objeto en MinIO
+    private static final Map<String, String> ALLOWED_MIME_TYPES = Map.of(
+            "image/png", ".png",
+            "image/jpeg", ".jpg",
+            "image/webp", ".webp"
     );
 
     private final Tika tika = new Tika();
@@ -31,6 +32,10 @@ public class MimeTypeService {
     }
 
     public boolean isAllowed(String mimeType) {
-        return ALLOWED_MIME_TYPES.contains(mimeType);
+        return ALLOWED_MIME_TYPES.containsKey(mimeType);
+    }
+
+    public String extensionFor(String mimeType) {
+        return ALLOWED_MIME_TYPES.getOrDefault(mimeType, "");
     }
 }

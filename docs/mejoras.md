@@ -153,6 +153,24 @@ Los riesgos más importantes que encontré son:
 
 ## Fase 1 — Seguridad
 
+> **Estado (2026-11-27): implementada** (rama `santimat/mejoras-fase-1`). Decisiones tomadas:
+> - 1.1: sin rotación del secret (el proyecto no está desplegado). Los defaults de desarrollo pasaron
+>   al perfil `dev`; sin perfil, `JWT_SECRET`, `MYSQL_*` y `MINIO_*` son obligatorios (validación al
+>   arranque). Sin `ADMIN_EMAIL`/`ADMIN_PASSWORD` no se crea el SUDO. De paso: el SUDO se creaba con
+>   `active=false`.
+> - 1.2: `AuthCookieBuilderService` con `ResponseCookie`; `Secure=true` y `SameSite=Lax` por defecto
+>   (configurables), `Max-Age` derivado de `jwt.expiration` (default bajado a 12 h).
+> - 1.3: CSRF double-submit con `CookieCsrfTokenRepository` + handler plano (sin XOR, para que
+>   cookie, header y `GET /api/auth/csrf` usen el mismo valor). Login exento. Sesión `STATELESS`.
+> - 1.4: filtro simple con caché (Caffeine): por IP en `LoginRateLimitFilter`, por email (solo
+>   fallos) en `AuthLoginService`. Estado por instancia; un atacante puede bloquear 15 min el login
+>   de una cuenta conocida (trade-off aceptado del bloqueo por email).
+> - 1.7: `@Version` en `User` como versión del token (claim `ver`). Cualquier update del usuario
+>   invalida sus sesiones; `POST /api/auth/logout-all` la incrementa a mano. `logout` sigue siendo local.
+> - 1.11: el chequeo de claims obligatorios devuelve 401 en vez de NPE; el JWT se parsea una vez.
+> - 1.12: límites elegidos: `top-products` `limit ≤ 50`, `productIds ≤ 500`, `cashierIds ≤ 100`,
+>   `details ≤ 200`.
+
 ### 1.1 Secretos y credenciales por defecto versionados — Impacto Alto · Esfuerzo S
 - **Evidencia**: `src/main/resources/application.properties:17` (`jwt.secret` con default fijo) y `:30`
   (`admin.password=admin123`); también MinIO `admin/admin123` en properties y `docker-compose.yml`.

@@ -3,6 +3,8 @@ package com.gestion.controller.cashier;
 import com.gestion.config.UserPrincipal;
 import com.gestion.dto.response.user.UserResponse;
 import com.gestion.service.cashier.CashierSearcherService;
+import com.gestion.utils.PageableFactory;
+import com.gestion.utils.SortableProperties;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,7 +27,12 @@ public class CashiersGetController {
     public ResponseEntity<Page<UserResponse>> getAllCashiers(
             @AuthenticationPrincipal UserPrincipal authenticatedUser,
             @RequestParam(required = false) String searchText,
-            Pageable pageable) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        Pageable pageable = PageableFactory.create(page, size, sortBy, sortDir, SortableProperties.USER);
+
         Page<UserResponse> cashiers = cashierSearcherService
                 .searchCashiers(authenticatedUser.getCommerceId(), searchText, pageable);
         return ResponseEntity.ok(cashiers);
