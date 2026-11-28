@@ -74,13 +74,13 @@ Docs and comments are mostly Spanish; commit messages are English.
   public endpoints must be added there explicitly.
 - Roles: `SUDO`, `OWNER`, `CASHIER` (`enums/Role.java`). Per-endpoint rules are
   `@PreAuthorize("hasRole('...')")` on the controller (`@EnableMethodSecurity` is active).
-- The JWT carries userId/commerceId/role; controllers take `@AuthenticationPrincipal UserPrincipal`
-  and services trust it instead of re-querying the database.
-- **Session revalidation**: on every authenticated request, `JwtFilter` runs a lightweight query
-  (`UserActiveStatus` projection) to check the `active` flag of both the user and their commerce.
-  If either is deactivated, the request is rejected with `403 ACCOUNT_DISABLED` (or `401 UNAUTHORIZED`
-  if the user no longer exists). This means deactivating a user cuts access immediately, without
-  waiting for the JWT to expire.
+- Controllers take `@AuthenticationPrincipal UserPrincipal` and services trust it instead of
+  re-querying the database.
+- **Session snapshot**: the JWT is only used to identify the user (`userId` claim). On every
+  authenticated request `JwtFilter` loads a `UserSessionSnapshot` projection (email, name, role,
+  user/commerce `active`, `commerceId`, `sellPointId`) and builds the `UserPrincipal` from it, so role,
+  sell point or deactivation changes apply on the next request. Deactivated user/commerce →
+  `403 ACCOUNT_DISABLED`; user no longer exists → `401 UNAUTHORIZED`.
 
 ## Workflow
 
